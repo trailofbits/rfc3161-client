@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: pyproject.toml
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Setup rust
+        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+        with:
+          components: rustfmt
+          toolchain: 1.81.0
+
+      - name: install uv
+        run: >
+          curl --no-progress-meter --location --fail
+          --proto '=https' --tlsv1.2
+          "https://astral.sh/uv/install.sh"
+          | sh
+
+      - name: lint
+        run: make lint INSTALL_EXTRA=lint

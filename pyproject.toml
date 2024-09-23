@@ -1,0 +1,53 @@
+[project]
+name = "sigstore-tsp"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: Apache Software License",
+]
+dynamic = ["version"]
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Trail of Bits", email = "opensource@trailofbits.com" },
+]
+dependencies = [
+    "maturin>=1.7,<2.0"
+]
+
+[project.optional-dependencies]
+doc = []
+test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
+lint = [
+    "ruff ~= 0.6.7"
+]
+dev = ["sigstore-tsp[test,lint,doc]"]
+
+[project.urls]
+Homepage = "https://pypi.org/project/sigstore-tsp"
+Documentation = "https://trailofbits.github.io/sigstore-tsp/"
+Issues = "https://github.com/trailofbits/sigstore-tsp/issues"
+Source = "https://github.com/trailofbits/sigstore-tsp"
+
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "src"
+manifest-path = "rust/Cargo.toml"
+
+[tool.ruff]
+line-length = 100
+include = ["src/**/*.py"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+# D203 and D213 are incompatible with D211 and D212 respectively.
+# COM812 and ISC001 can cause conflicts when using ruff as a formatter.
+# See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
+ignore = ["D203", "D213", "COM812", "ISC001"]
