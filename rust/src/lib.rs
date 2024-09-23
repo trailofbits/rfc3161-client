@@ -67,7 +67,6 @@ pub struct TsaPolicyId {
 //    extensions               [0] IMPLICIT Extensions    OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct RawTimeStampReq<'a> {
-    #[default(1)]
     pub version: u8, // TODO(dm) Do we want to change this to an ENUM?
 
     pub message_imprint: MessageImprint<'a>,
@@ -76,7 +75,7 @@ pub struct RawTimeStampReq<'a> {
 
     pub nonce: Option<asn1::BigUint<'a>>,
 
-    #[default(false)]
+    // #[default(false)]
     pub cert_req: bool,
     // pub extensions: Option<extensions::RawExtensions<'a>>,
 }
@@ -281,4 +280,51 @@ fn sigstore_tsp(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_timestamp_response, m)?)?;
     m.add_function(wrap_pyfunction!(parse_timestamp_request, m)?)?;
     Ok(())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn request_test() {
+        // See TESTING.md
+        // openssl ts -query -data README.md -no_nonce -sha512 -cert -out file.tsq
+        let enc_request = hex::decode("30590201013051300d060960864801650304020305000440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c30101ff")
+                           .expect("Decoding failed");
+        let request = asn1::parse_single::<RawTimeStampReq>(&enc_request).unwrap();
+
+        assert_eq!(request.version, 1);
+    }
+
+    #[test]
+    fn simple_test() {
+        // 300d06096086480165030402030500
+        let algo_identifier = asn1::write_single(&AlgorithmIdentifier {
+            oid: asn1::DefinedByMarker::marker(),
+            params: AlgorithmParameters::Sha512(Some(()))
+        });
+        match algo_identifier {
+            Ok(vec) => { println!("AlgorithmIdentifier {}", hex::encode(&vec)) },
+            Err(_) => { todo!() }
+        }
+
+        let enc_test = hex::decode("300d06096086480165030402030500").expect("Decoding failed");
+        let algo_identifier_round = asn1::parse_single::<AlgorithmIdentifier>(&enc_test).unwrap();
+
+
+        let message_imprint = asn1::write_single(&MessageImprint {
+            hash_algorithm: AlgorithmIdentifier {
+                oid: asn1::DefinedByMarker::marker(),
+                params: AlgorithmParameters::Sha512(Some(())),
+            },
+            hashed_message: asn1::BitString::new(&hex::decode("C05812F7DF5C643047235D400DE272F03BD3D319F71F0C75C4B57948CCF2CDF85F8FEB422DEDCFA9EC26C102B08F778332AD9BE18F759AEBE93D64DCC65F49C3").expect(""), 0).unwrap(),
+        });
+        match message_imprint {
+            Ok(vec) => { println!("MessageImprint {}", hex::encode(&vec)) },
+            Err(_) => { todo!() }
+        }
+
+    }
 }

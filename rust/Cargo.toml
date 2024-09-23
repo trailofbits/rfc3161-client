@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 pyo3 = "0.22.0"
 asn1 = "0.17"
 self_cell = "1"
+hex = "0.4"
