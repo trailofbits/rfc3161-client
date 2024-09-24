@@ -3,11 +3,25 @@ use std::sync::Arc;
 
 use pyo3::prelude::*;
 
+use asn1::Asn1DefinedByWritable;
+
 #[derive(asn1::Asn1Read, asn1::Asn1Write, PartialEq, Hash, Clone, Eq, Debug)]
 pub struct AlgorithmIdentifier<'a> {
     pub oid: asn1::DefinedByMarker<asn1::ObjectIdentifier>,
     #[defined_by(oid)]
     pub params: AlgorithmParameters<'a>,
+}
+
+impl AlgorithmIdentifier<'_> {
+    pub fn oid(&self) -> &asn1::ObjectIdentifier {
+        self.params.item()
+    }
+}
+
+// WORKAROUND: TODO(DM)
+#[derive(asn1::Asn1Read, asn1::Asn1Write, PartialEq, Hash, Clone, Eq, Debug)]
+pub struct AlgorithmIdentifier2 {
+    pub oid: asn1::ObjectIdentifier,
 }
 
 // We restrict here to only HASH algorithms
@@ -41,20 +55,14 @@ pub enum AlgorithmParameters<'a> {
 //         hashedMessage                OCTET STRING  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct MessageImprint<'a> {
-    pub hash_algorithm: AlgorithmIdentifier<'a>,
-    pub hashed_message: asn1::BitString<'a>,
+    pub hash_algorithm: AlgorithmIdentifier2,
+    pub hashed_message: &'a [u8],
 }
 
 // pub struct RawExtensions<'a> {
 //     asn1::SequenceOf<'a, Extension<'a>>,
 //     asn1::SequenceOfWriter<'a, Extension<'a>, Vec<Extension<'a>>>,
 // }
-
-// TSAPolicyId ::= OBJECT IDENTIFIER
-#[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub struct TsaPolicyId {
-    pub policy_id: asn1::ObjectIdentifier,
-}
 
 /// TimeStampReq ::= SEQUENCE  {
 //    version                  INTEGER  { v1(1) },
@@ -71,11 +79,11 @@ pub struct RawTimeStampReq<'a> {
 
     pub message_imprint: MessageImprint<'a>,
 
-    pub req_policy: Option<TsaPolicyId>,
+    pub req_policy: Option<asn1::ObjectIdentifier>,
 
     pub nonce: Option<asn1::BigUint<'a>>,
 
-    // #[default(false)]
+    #[default(false)]
     pub cert_req: bool,
     // pub extensions: Option<extensions::RawExtensions<'a>>,
 }
@@ -184,7 +192,7 @@ struct Accuracy<'a> {
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub(crate) struct TSTInfo<'a> {
     pub version: u8,
-    pub policy: TsaPolicyId,
+    pub policy: Option<asn1::ObjectIdentifier>,
     pub message_imprint: MessageImprint<'a>,
     pub serial_number: asn1::BigUint<'a>,
     pub gen_time: asn1::GeneralizedTime,
@@ -290,16 +298,16 @@ mod tests {
     #[test]
     fn request_test() {
         // See TESTING.md
-        // openssl ts -query -data README.md -no_nonce -sha512 -cert -out file.tsq
-        let enc_request = hex::decode("30590201013051300d060960864801650304020305000440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c30101ff")
-                           .expect("Decoding failed");
+        // openssl ts -query -data README.md -sha512 -cert -out file.tsq
+        let enc_request = hex::decode("305f020101304f300b06096086480165030402030440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c306092a864886f70d01010d")
+                          .expect("Decoding failed");
         let request = asn1::parse_single::<RawTimeStampReq>(&enc_request).unwrap();
 
         assert_eq!(request.version, 1);
     }
 
     #[test]
-    fn simple_test() {
+    fn algorithm_identifier_issue() {
         // 300d06096086480165030402030500
         let algo_identifier = asn1::write_single(&AlgorithmIdentifier {
             oid: asn1::DefinedByMarker::marker(),
@@ -310,21 +318,35 @@ mod tests {
             Err(_) => { todo!() }
         }
 
-        let enc_test = hex::decode("300d06096086480165030402030500").expect("Decoding failed");
-        let algo_identifier_round = asn1::parse_single::<AlgorithmIdentifier>(&enc_test).unwrap();
+        let algo_identifier2 = asn1::write_single(&AlgorithmIdentifier2 {
+            oid: oid::SHA512_OID,
+        });
+        match algo_identifier2 {
+            Ok(vec) => { println!("AlgorithmIdentifier {}", hex::encode(&vec)) },
+            Err(_) => { todo!() }
+        }
+    }
 
-
+    #[test]
+    fn message_imprint() {
         let message_imprint = asn1::write_single(&MessageImprint {
-            hash_algorithm: AlgorithmIdentifier {
-                oid: asn1::DefinedByMarker::marker(),
-                params: AlgorithmParameters::Sha512(Some(())),
+//             hash_algorithm: AlgorithmIdentifier {
+//                 oid: asn1::DefinedByMarker::marker(),
+//                 params: AlgorithmParameters::Sha512(Some(())),
+//             },
+            hash_algorithm: AlgorithmIdentifier2 {
+                oid: oid::SHA512_OID,
             },
-            hashed_message: asn1::BitString::new(&hex::decode("C05812F7DF5C643047235D400DE272F03BD3D319F71F0C75C4B57948CCF2CDF85F8FEB422DEDCFA9EC26C102B08F778332AD9BE18F759AEBE93D64DCC65F49C3").expect(""), 0).unwrap(),
+            hashed_message: &hex::decode("C05812F7DF5C643047235D400DE272F03BD3D319F71F0C75C4B57948CCF2CDF85F8FEB422DEDCFA9EC26C102B08F778332AD9BE18F759AEBE93D64DCC65F49C3").expect(""),
         });
         match message_imprint {
             Ok(vec) => { println!("MessageImprint {}", hex::encode(&vec)) },
             Err(_) => { todo!() }
         }
 
+        let enc_message_imprint = hex::decode("304f300b06096086480165030402030440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c3")
+                                  .expect("Decoding failure");
+        let request = asn1::parse_single::<MessageImprint>(&enc_message_imprint).unwrap();
+        assert_eq!(request.hash_algorithm.oid, oid::SHA512_OID);
     }
 }
