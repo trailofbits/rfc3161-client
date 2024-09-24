@@ -18,11 +18,6 @@ impl AlgorithmIdentifier<'_> {
     }
 }
 
-// WORKAROUND: TODO(DM)
-#[derive(asn1::Asn1Read, asn1::Asn1Write, PartialEq, Hash, Clone, Eq, Debug)]
-pub struct AlgorithmIdentifier2 {
-    pub oid: asn1::ObjectIdentifier,
-}
 
 // We restrict here to only HASH algorithms
 #[derive(asn1::Asn1DefinedByRead, asn1::Asn1DefinedByWrite, PartialEq, Eq, Hash, Clone, Debug)]
@@ -55,7 +50,7 @@ pub enum AlgorithmParameters<'a> {
 //         hashedMessage                OCTET STRING  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct MessageImprint<'a> {
-    pub hash_algorithm: AlgorithmIdentifier2,
+    pub hash_algorithm: AlgorithmIdentifier<'a>,
     pub hashed_message: &'a [u8],
 }
 
@@ -149,8 +144,8 @@ impl TimeStampReq {
 //       failInfo      PKIFailureInfo  OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub(crate) struct PKIStatusInfo<'a> {
-    status: asn1::Enumerated, // TODO: This is not ENUMERATED in the standard but INTEGER
-    status_string: Option<asn1::Utf8String<'a>>,
+    status: u8,
+    status_string: Option<asn1::SequenceOf<'a, asn1::Utf8String<'a>>>,
     fail_info: Option<asn1::BitString<'a>>, // TODO: Should replace this with an enum ?
 }
 
@@ -296,57 +291,53 @@ mod tests {
     use super::*;
 
     #[test]
-    fn request_test() {
+    fn test_parse_timestamp_request() {
         // See TESTING.md
         // openssl ts -query -data README.md -sha512 -cert -out file.tsq
-        let enc_request = hex::decode("305f020101304f300b06096086480165030402030440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c306092a864886f70d01010d")
-                          .expect("Decoding failed");
+        let enc_request = hex::decode("30640201013051300d060960864801650304020305000440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c3020900fce125b1e42c03110101ff")
+                          .unwrap();
         let request = asn1::parse_single::<RawTimeStampReq>(&enc_request).unwrap();
 
         assert_eq!(request.version, 1);
-    }
 
-    #[test]
-    fn algorithm_identifier_issue() {
-        // 300d06096086480165030402030500
-        let algo_identifier = asn1::write_single(&AlgorithmIdentifier {
-            oid: asn1::DefinedByMarker::marker(),
-            params: AlgorithmParameters::Sha512(Some(()))
-        });
-        match algo_identifier {
-            Ok(vec) => { println!("AlgorithmIdentifier {}", hex::encode(&vec)) },
-            Err(_) => { todo!() }
-        }
+        assert_eq!(request.message_imprint.hash_algorithm,
+            AlgorithmIdentifier {
+                oid: asn1::DefinedByMarker::marker(),
+                params: AlgorithmParameters::Sha512(Some(()))
+            }
+        );
 
-        let algo_identifier2 = asn1::write_single(&AlgorithmIdentifier2 {
-            oid: oid::SHA512_OID,
-        });
-        match algo_identifier2 {
-            Ok(vec) => { println!("AlgorithmIdentifier {}", hex::encode(&vec)) },
-            Err(_) => { todo!() }
-        }
-    }
+        assert_eq!(
+            request.message_imprint.hashed_message,
+            &hex::decode("C05812F7DF5C643047235D400DE272F03BD3D319F71F0C75C4B57948CCF2CDF85F8FEB422DEDCFA9EC26C102B08F778332AD9BE18F759AEBE93D64DCC65F49C3").unwrap()
+        );
 
-    #[test]
-    fn message_imprint() {
-        let message_imprint = asn1::write_single(&MessageImprint {
-//             hash_algorithm: AlgorithmIdentifier {
-//                 oid: asn1::DefinedByMarker::marker(),
-//                 params: AlgorithmParameters::Sha512(Some(())),
-//             },
-            hash_algorithm: AlgorithmIdentifier2 {
-                oid: oid::SHA512_OID,
+        match request.req_policy {
+            Some(request_policy) => {
+                // TODO(dm)
+                println!("request_policy  {}", request_policy.to_string());
             },
-            hashed_message: &hex::decode("C05812F7DF5C643047235D400DE272F03BD3D319F71F0C75C4B57948CCF2CDF85F8FEB422DEDCFA9EC26C102B08F778332AD9BE18F759AEBE93D64DCC65F49C3").expect(""),
-        });
-        match message_imprint {
-            Ok(vec) => { println!("MessageImprint {}", hex::encode(&vec)) },
-            Err(_) => { todo!() }
+            None => {},
         }
 
-        let enc_message_imprint = hex::decode("304f300b06096086480165030402030440c05812f7df5c643047235d400de272f03bd3d319f71f0c75c4b57948ccf2cdf85f8feb422dedcfa9ec26c102b08f778332ad9be18f759aebe93d64dcc65f49c3")
-                                  .expect("Decoding failure");
-        let request = asn1::parse_single::<MessageImprint>(&enc_message_imprint).unwrap();
-        assert_eq!(request.hash_algorithm.oid, oid::SHA512_OID);
+        match request.nonce {
+            Some(nonce_value) => {
+                assert_eq!(nonce_value.as_bytes(), hex::decode("00fce125b1e42c0311").unwrap())
+            },
+            None => { assert!(false, "Missing nonce."); }
+        }
+
+        assert_eq!(request.cert_req, true);
     }
+
+    #[test]
+    fn test_parse_timestamp_response() {
+        //let enc_response = fs::read("file.tsr").expect("Failed to read the file");
+        //let response = asn1::parse_single::<RawTimeStampResp>(&enc_response).unwrap();
+
+        let enc_response = hex::decode("3003020100").unwrap();
+        let pki_status_info = asn1::parse_single::<PKIStatusInfo>(&enc_response).unwrap();
+        assert_eq!(pki_status_info.status, 0);
+    }
+
 }
