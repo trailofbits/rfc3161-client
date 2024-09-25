@@ -1,3 +1,7 @@
+// This file is dual licensed under the terms of the Apache License, Version
+// 2.0, and the BSD License. See the LICENSE file in the root of this repository
+// for complete details.
+
 // X.509v3 extensions
 pub const EXTENSION_REQUEST: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 113549, 1, 9, 14);
 pub const MS_EXTENSION_REQUEST: asn1::ObjectIdentifier =
