@@ -8,8 +8,6 @@ pub mod name;
 pub mod oid;
 pub mod tsp;
 
-use std::sync::Arc;
-
 use pyo3::prelude::*;
 use tsp::{RawTimeStampReq, RawTimeStampResp};
 
@@ -23,7 +21,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampReq {
-    raw: Arc<OwnedTimeStamReq>,
+    raw: OwnedTimeStamReq,
 }
 
 #[pyo3::pymethods]
@@ -44,7 +42,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampResp {
-    raw: Arc<OwnedTimeStamResp>,
+    raw: OwnedTimeStamResp,
 }
 
 #[pyo3::pymethods]
