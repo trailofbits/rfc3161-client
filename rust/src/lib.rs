@@ -10,7 +10,7 @@ pub mod tsp;
 
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
-use sha2::{Sha512, Digest};
+use sha2::{Digest, Sha512};
 use tsp::{RawTimeStampReq, RawTimeStampResp};
 
 self_cell::self_cell!(
@@ -84,14 +84,13 @@ pub(crate) fn create_timestamp_request(
     py: pyo3::Python<'_>,
     data: pyo3::Py<pyo3::types::PyBytes>,
 ) -> PyResult<TimeStampReq> {
-
     let data_bytes = data.as_bytes(py);
     let hash = sha2::Sha512::digest(data_bytes);
 
     let message_imprint = tsp::MessageImprint {
-        hash_algorithm: common::AlgorithmIdentifier { 
-            oid: asn1::DefinedByMarker::marker(), 
-            params: common::AlgorithmParameters::Sha512(Some(())) 
+        hash_algorithm: common::AlgorithmIdentifier {
+            oid: asn1::DefinedByMarker::marker(),
+            params: common::AlgorithmParameters::Sha512(Some(())),
         },
         hashed_message: hash.as_slice(),
     };
@@ -112,16 +111,15 @@ pub(crate) fn create_timestamp_request(
     };
 
     let request_bytes = asn1::write_single(&timestamp_request)
-                        .map_err(|e| PyValueError::new_err(format!("Serialization error: {:?}", e)));
+        .map_err(|e| PyValueError::new_err(format!("Serialization error: {:?}", e)));
     let py_bytes = pyo3::types::PyBytes::new_bound(py, &request_bytes.unwrap()).unbind();
-    
+
     let raw = OwnedTimeStamReq::try_new(py_bytes, |data| asn1::parse_single(data.as_bytes(py)))
         .map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("ASN.1 parse error: {:?}", e))
         })?;
-    
-    Ok(TimeStampReq { raw: raw.into() })
 
+    Ok(TimeStampReq { raw: raw.into() })
 }
 
 /// A Python module implemented in Rust.
