@@ -32,12 +32,12 @@ pub struct ExtendedCertificateInfo<'a> {
 pub enum CertificateChoices<'a> {
     Certificate(Certificate<'a>),
     #[implicit(0)]
-    ExtendedCertificate(asn1::Null),  // Obsolete
+    ExtendedCertificate(asn1::Null), // Obsolete
     #[implicit(1)]
-    AttributeCertificateV1(asn1::Null),  // Obsolete
+    AttributeCertificateV1(asn1::Null), // Obsolete
     #[implicit(2)]
     AttributeCertificateV2(AttributeCertificateV2),
-    OtherCertificateFormat(asn1::Null),  // TODO(dm)
+    OtherCertificateFormat(asn1::Null), // TODO(dm)
 }
 
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Hash, PartialEq, Eq, Clone)]
