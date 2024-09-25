@@ -1,6 +1,9 @@
 SHELL := /bin/bash
 
-ALL_PY_SRCS := $(shell find src -name '*.py')
+PY_IMPORT = sigstore_tsp
+
+ALL_PY_SRCS := $(shell find src -name '*.py') \
+		$(shell find test -name '*.py')
 
 # Optionally overriden by the user, if they're using a virtual environment manager.
 VENV ?= .venv
@@ -62,3 +65,11 @@ reformat:
 .PHONY: doc
 doc:
 	@echo "No documentation set up"
+
+
+.PHONY: test tests
+test tests: $(VENV)/pyvenv.cfg
+	. $(VENV_BIN)/activate && \
+		pytest --cov=$(PY_IMPORT) $(T) $(TEST_ARGS) && \
+		python -m coverage report -m $(COV_ARGS)
+	cargo test --manifest-path rust/Cargo.toml
