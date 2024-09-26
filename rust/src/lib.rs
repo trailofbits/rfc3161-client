@@ -10,7 +10,7 @@ pub mod tsp;
 
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
-use sha2::{Digest, Sha512};
+use sha2::Digest;
 use tsp::{RawTimeStampReq, RawTimeStampResp};
 
 self_cell::self_cell!(
@@ -31,6 +31,22 @@ impl TimeStampReq {
     #[getter]
     fn version(&self) -> PyResult<u8> {
         Ok(self.raw.borrow_dependent().version)
+    }
+
+    fn as_bytes<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let result = asn1::write_single(&self.raw.borrow_dependent());
+        match result {
+            Ok(request_bytes) => {
+                Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes))
+            },
+            Err(e) => {
+                Err(pyo3::exceptions::PyValueError::new_err(format!("{e}")))
+            }
+        }
+        
     }
 }
 
