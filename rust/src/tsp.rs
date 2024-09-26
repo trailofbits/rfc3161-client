@@ -59,9 +59,9 @@ pub struct RawTimeStampReq<'a> {
 //       failInfo      PKIFailureInfo  OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub(crate) struct PKIStatusInfo<'a> {
-    status: u8,
-    status_string: Option<asn1::SequenceOf<'a, asn1::Utf8String<'a>>>,
-    fail_info: Option<asn1::BitString<'a>>,
+    pub status: u8,
+    pub status_string: Option<asn1::SequenceOf<'a, asn1::Utf8String<'a>>>,
+    pub fail_info: Option<asn1::BitString<'a>>,
 }
 
 //   Accuracy ::= SEQUENCE {

@@ -40,6 +40,7 @@ build-backend = "maturin"
 features = ["pyo3/extension-module"]
 python-source = "src"
 manifest-path = "rust/Cargo.toml"
+module-name = "sigstore_tsp._rust"
 
 [tool.ruff]
 line-length = 100

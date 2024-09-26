@@ -48,7 +48,42 @@ pub struct TimeStampResp {
 }
 
 #[pyo3::pymethods]
-impl TimeStampResp {}
+impl TimeStampResp {
+    #[getter]
+    fn status(&self) -> pyo3::PyResult<u8> {
+        Ok(self.raw.borrow_dependent().status.status)
+    }
+
+    #[getter]
+    fn status_string<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::types::PyList>> {
+        let opt_status_strings = &self.raw.borrow_dependent().status.status_string;
+        match opt_status_strings {
+            Some(status_strings) => {
+                let status_list = pyo3::types::PyList::empty_bound(py);
+                for status_string in status_strings.clone() {
+                    let _ = status_list
+                        .append(pyo3::types::PyString::new_bound(py, status_string.as_str()));
+                }
+                Ok(status_list)
+            }
+            None => {
+                return Err(pyo3::exceptions::PyNotImplementedError::new_err(
+                    "No status string is not yet implemented.",
+                ))
+            }
+        }
+    }
+
+    // #[getter]
+    // fn fail_info(
+    //     &self,
+    // ) -> pyo3::PyResult<String> {
+    //     Ok(self.raw.borrow_dependent().status.status)
+    // }
+}
 
 #[pyo3::pyfunction]
 #[pyo3(signature = (data))]
@@ -123,14 +158,25 @@ pub(crate) fn create_timestamp_request(
 }
 
 /// A Python module implemented in Rust.
-#[pymodule]
-fn sigstore_tsp(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<TimeStampReq>()?;
-    m.add_class::<TimeStampResp>()?;
-    m.add_function(wrap_pyfunction!(parse_timestamp_response, m)?)?;
-    m.add_function(wrap_pyfunction!(create_timestamp_request, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_timestamp_request, m)?)?;
-    Ok(())
+#[pyo3::pymodule]
+mod sigstore_tsp {
+
+    use super::*;
+
+    #[pyo3::pymodule]
+    mod _rust {
+
+        use super::*;
+
+        #[pymodule_export]
+        use super::parse_timestamp_response;
+
+        #[pymodule_export]
+        use super::create_timestamp_request;
+
+        #[pymodule_export]
+        use super::parse_timestamp_request;
+    }
 }
 
 #[cfg(test)]
