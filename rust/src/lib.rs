@@ -26,11 +26,60 @@ pub struct TimeStampReq {
     raw: OwnedTimeStamReq,
 }
 
+pub(crate) fn big_asn1_uint_to_py<'p>(
+    py: pyo3::Python<'p>,
+    v: asn1::BigUint<'_>,
+) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    let int_type = py.get_type_bound::<pyo3::types::PyLong>();
+    Ok(int_type.call_method1(
+        pyo3::intern!(py, "from_bytes"),
+        (v.as_bytes(), pyo3::intern!(py, "big")),
+    )?)
+}
+
+pub(crate) fn oid_to_py_oid<'p>(
+    py: pyo3::Python<'p>,
+    oid: &asn1::ObjectIdentifier,
+) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    Ok(pyo3::Bound::new(py, ObjectIdentifier { oid: oid.clone() })?.into_any())
+}
+
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+pub(crate) struct ObjectIdentifier {
+    pub(crate) oid: asn1::ObjectIdentifier,
+}
+
+#[pyo3::pymethods]
+impl ObjectIdentifier {
+    #[new]
+    fn new(value: &str) -> PyResult<Self> {
+        let oid = asn1::ObjectIdentifier::from_string(value)
+            .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("Invalid value"))?;
+        Ok(ObjectIdentifier { oid })
+    }
+
+    #[getter]
+    fn dotted_string(&self) -> String {
+        self.oid.to_string()
+    }
+}
+
 #[pyo3::pymethods]
 impl TimeStampReq {
     #[getter]
     fn version(&self) -> PyResult<u8> {
         Ok(self.raw.borrow_dependent().version)
+    }
+
+    #[getter]
+    fn nonce<'p>(&self, py: pyo3::Python<'p>) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        match self.raw.borrow_dependent().nonce {
+            Some(nonce) => {
+                let py_nonce = big_asn1_uint_to_py(py, nonce)?;
+                Ok(py_nonce)
+            }
+            None => todo!(),
+        }
     }
 
     fn as_bytes<'p>(
@@ -39,14 +88,17 @@ impl TimeStampReq {
     ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
         let result = asn1::write_single(&self.raw.borrow_dependent());
         match result {
-            Ok(request_bytes) => {
-                Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes))
-            },
-            Err(e) => {
-                Err(pyo3::exceptions::PyValueError::new_err(format!("{e}")))
-            }
+            Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
         }
-        
+    }
+
+    #[getter]
+    fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        match &self.raw.borrow_dependent().req_policy {
+            Some(req_policy) => oid_to_py_oid(py, &req_policy),
+            None => todo!(),
+        }
     }
 }
 
@@ -61,6 +113,21 @@ self_cell::self_cell!(
 #[pyo3::pyclass]
 pub struct TimeStampResp {
     raw: OwnedTimeStamResp,
+}
+
+impl TimeStampResp {
+    fn get_tst_info(&self) -> pyo3::PyResult<tsp::TSTInfo<'_>> {
+        let timestamp_token = self.raw.borrow_dependent().time_stamp_token.as_ref();
+        match timestamp_token {
+            Some(content) => match &content.content {
+                tsp::Content::SignedData(signed_data) => {
+                    let tst_info = signed_data.as_inner().content_info.tst_info().unwrap();
+                    Ok(tst_info)
+                }
+            },
+            None => Err(pyo3::exceptions::PyValueError::new_err("")),
+        }
+    }
 }
 
 #[pyo3::pymethods]
@@ -93,12 +160,36 @@ impl TimeStampResp {
         }
     }
 
-    // #[getter]
-    // fn fail_info(
-    //     &self,
-    // ) -> pyo3::PyResult<String> {
-    //     Ok(self.raw.borrow_dependent().status.status)
-    // }
+    // TST INFO
+    #[getter]
+    fn tst_info_version(&self) -> pyo3::PyResult<u8> {
+        let tst_info = self.get_tst_info()?;
+        Ok(tst_info.version)
+    }
+
+    #[getter]
+    fn tst_info_nonce<'p>(&self, py: pyo3::Python<'p>) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        let tst_info = self.get_tst_info()?;
+        match tst_info.nonce {
+            Some(nonce) => {
+                let py_nonce = big_asn1_uint_to_py(py, nonce)?;
+                Ok(py_nonce)
+            }
+            None => todo!(),
+        }
+    }
+
+    #[getter]
+    fn tst_info_policy<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        let tst_info = self.get_tst_info()?;
+        match tst_info.policy {
+            Some(policy_id) => oid_to_py_oid(py, &policy_id),
+            None => todo!(),
+        }
+    }
 }
 
 #[pyo3::pyfunction]

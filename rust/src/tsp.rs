@@ -69,7 +69,7 @@ pub(crate) struct PKIStatusInfo<'a> {
 //          millis     [0] INTEGER  (1..999)    OPTIONAL,
 //          micros     [1] INTEGER  (1..999)    OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-struct Accuracy<'a> {
+pub(crate) struct Accuracy<'a> {
     seconds: Option<asn1::BigUint<'a>>,
     millis: Option<u8>,
     micros: Option<u8>,
@@ -79,17 +79,17 @@ struct Accuracy<'a> {
 //      -- contentType is id-signedData ([CMS])
 //      -- content is SignedData ([CMS])
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-struct TimeStampToken<'a> {
+pub struct TimeStampToken<'a> {
     pub _content_type: asn1::DefinedByMarker<asn1::ObjectIdentifier>,
 
     #[defined_by(_content_type)]
-    pub content: Content<'a>,
+    pub(crate) content: Content<'a>,
 }
 
 pub const PKCS7_SIGNED_DATA_OID: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 113549, 1, 7, 2);
 
 #[derive(asn1::Asn1DefinedByWrite, asn1::Asn1DefinedByRead)]
-pub enum Content<'a> {
+pub(crate) enum Content<'a> {
     #[defined_by(PKCS7_SIGNED_DATA_OID)]
     SignedData(asn1::Explicit<Box<cms::SignedData<'a>>, 0>),
 }

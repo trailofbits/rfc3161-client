@@ -6,7 +6,6 @@ use crate::name;
 // IssuerAndSerialNumber ::= SEQUENCE {
 //     issuer Name,
 //     serialNumber CertificateSerialNumber }
-
 #[derive(asn1::Asn1Write, asn1::Asn1Read)]
 pub struct IssuerAndSerialNumber<'a> {
     pub issuer: name::Name<'a>,
@@ -22,11 +21,10 @@ pub struct IssuerAndSerialNumber<'a> {
 //     signatureAlgorithm SignatureAlgorithmIdentifier,
 //     signature SignatureValue,
 //     unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
-
 #[derive(asn1::Asn1Write, asn1::Asn1Read)]
 pub struct SignerInfo<'a> {
     pub version: u8,
-    // Of note, this is not exactly the standard here because we are not implementing
+    // Of note, this is a slight deviation from the standard here because we are not implementing
     // the SignerIdentifier CHOICE.
     pub issuer_and_serial_number: IssuerAndSerialNumber<'a>,
     pub digest_algorithm: common::AlgorithmIdentifier<'a>,
@@ -40,6 +38,13 @@ pub struct SignerInfo<'a> {
     pub unauthenticated_attributes: Option<csr::Attributes<'a>>,
 }
 
+//    SignedData ::= SEQUENCE {
+//      version CMSVersion,
+//      digestAlgorithms DigestAlgorithmIdentifiers,
+//      encapContentInfo EncapsulatedContentInfo,
+//      certificates [0] IMPLICIT CertificateSet OPTIONAL,
+//      crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+//      signerInfos SignerInfos }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub(crate) struct SignedData<'a> {
     pub version: u8,
@@ -52,9 +57,13 @@ pub(crate) struct SignedData<'a> {
     #[implicit(1)]
     pub crls: Option<asn1::Sequence<'a>>,
 
+    // SignerInfos ::= SET OF SignerInfo
     pub signer_infos: asn1::SetOf<'a, SignerInfo<'a>>,
 }
 
+//    EncapsulatedContentInfo ::= SEQUENCE {
+//      eContentType ContentType,
+//      eContent [0] EXPLICIT OCTET STRING OPTIONAL }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub(crate) struct ContentInfo<'a> {
     pub content_type: asn1::ObjectIdentifier,
