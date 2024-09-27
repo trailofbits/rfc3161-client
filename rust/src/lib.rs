@@ -8,10 +8,12 @@ pub mod name;
 pub mod oid;
 pub mod tsp;
 
+use std::sync::Arc;
+
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
-use tsp::{RawTimeStampReq, RawTimeStampResp};
+use tsp::{MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp};
 
 self_cell::self_cell!(
     struct OwnedTimeStamReq {
@@ -23,7 +25,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampReq {
-    raw: OwnedTimeStamReq,
+    raw: Arc<OwnedTimeStamReq>,
 }
 
 pub(crate) fn big_asn1_uint_to_py<'p>(
@@ -64,6 +66,40 @@ impl ObjectIdentifier {
     }
 }
 
+self_cell::self_cell!(
+    struct OwnedMessageImprint {
+        owner: Arc<OwnedTimeStamReq>,
+        #[covariant]
+        dependent: RawMessageImprint,
+    }
+);
+
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+pub(crate) struct PyMessageImprint {
+    pub contents: OwnedMessageImprint,
+}
+
+#[pyo3::pymethods]
+impl PyMessageImprint {
+    #[getter]
+    fn hash_algorithm<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        let hash_algoritm = self.contents.borrow_dependent().hash_algorithm.oid();
+        oid_to_py_oid(py, hash_algoritm)
+    }
+
+    #[getter]
+    fn message<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let message = self.contents.borrow_dependent().hashed_message;
+        Ok(pyo3::types::PyBytes::new_bound(py, message))
+    }
+}
+
 #[pyo3::pymethods]
 impl TimeStampReq {
     #[getter]
@@ -99,6 +135,21 @@ impl TimeStampReq {
             Some(req_policy) => oid_to_py_oid(py, &req_policy),
             None => todo!(),
         }
+    }
+
+    #[getter]
+    fn cert_req(&self) -> pyo3::PyResult<bool> {
+        Ok(self.raw.borrow_dependent().cert_req)
+    }
+
+    #[getter]
+    fn message_imprint(&self) -> PyResult<PyMessageImprint> {
+        Ok(PyMessageImprint {
+            contents: OwnedMessageImprint::try_new(Arc::clone(&self.raw), |v| {
+                Ok::<_, ()>(v.borrow_dependent().message_imprint.clone())
+            })
+            .unwrap(),
+        })
     }
 }
 
@@ -267,13 +318,10 @@ pub(crate) fn create_timestamp_request(
 /// A Python module implemented in Rust.
 #[pyo3::pymodule]
 mod sigstore_tsp {
-
     use super::*;
 
     #[pyo3::pymodule]
     mod _rust {
-
-        use super::*;
 
         #[pymodule_export]
         use super::parse_timestamp_response;

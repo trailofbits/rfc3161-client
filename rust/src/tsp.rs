@@ -6,7 +6,7 @@ use crate::name;
 //    MessageImprint ::= SEQUENCE  {
 //         hashAlgorithm                AlgorithmIdentifier,
 //         hashedMessage                OCTET STRING  }
-#[derive(asn1::Asn1Read, asn1::Asn1Write)]
+#[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct MessageImprint<'a> {
     pub hash_algorithm: common::AlgorithmIdentifier<'a>,
     pub hashed_message: &'a [u8],
@@ -23,7 +23,7 @@ pub struct MessageImprint<'a> {
 //    extensions               [0] IMPLICIT Extensions    OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct RawTimeStampReq<'a> {
-    pub version: u8, // TODO(dm) Do we want to change this to an ENUM?
+    pub version: u8,
 
     pub message_imprint: MessageImprint<'a>,
 

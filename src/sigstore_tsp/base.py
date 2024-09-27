@@ -16,19 +16,6 @@ class HashAlgorithm(enum.Enum):
 _AllowedHashTypes = HashAlgorithm
 
 
-class TimestampRequest:
-    def __init__(self, raw: _rust.TimeStampRequest) -> None:
-        self.raw = raw
-
-    @property
-    def nonce(self) -> int:
-        return self.raw.nonce
-
-    @property
-    def policy_oid(self) -> _rust.ObjectIdentifier:
-        return self.raw.policy
-
-
 class TimestampRequestBuilder:
     """Timestamp Request Builder class."""
 
@@ -145,6 +132,6 @@ class TimestampResponse:
         return PKIStatus(self.raw.status)
 
 
-def decode_timestamp_response(data: bytes) -> TimestampResponse:
+def decode_timestamp_response(data: bytes) -> _rust.TimestampResponse:
     """Decode a Timestamp response."""
-    return TimestampResponse(_rust.parse_timestamp_response(data))
+    return _rust.parse_timestamp_response(data)
