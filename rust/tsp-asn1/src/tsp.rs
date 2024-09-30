@@ -56,7 +56,7 @@ pub struct RawTimeStampReq<'a> {
 //       statusString  PKIFreeText     OPTIONAL,
 //       failInfo      PKIFailureInfo  OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct PKIStatusInfo<'a> {
+pub struct PKIStatusInfo<'a> {
     pub status: u8,
     pub status_string: Option<asn1::SequenceOf<'a, asn1::Utf8String<'a>>>,
     pub fail_info: Option<asn1::BitString<'a>>,
@@ -67,7 +67,7 @@ pub(crate) struct PKIStatusInfo<'a> {
 //          millis     [0] INTEGER  (1..999)    OPTIONAL,
 //          micros     [1] INTEGER  (1..999)    OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct Accuracy<'a> {
+pub struct Accuracy<'a> {
     seconds: Option<asn1::BigUint<'a>>,
     millis: Option<u8>,
     micros: Option<u8>,
@@ -81,13 +81,13 @@ pub struct TimeStampToken<'a> {
     pub _content_type: asn1::DefinedByMarker<asn1::ObjectIdentifier>,
 
     #[defined_by(_content_type)]
-    pub(crate) content: Content<'a>,
+    pub content: Content<'a>,
 }
 
 pub const PKCS7_SIGNED_DATA_OID: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 113549, 1, 7, 2);
 
 #[derive(asn1::Asn1DefinedByWrite, asn1::Asn1DefinedByRead)]
-pub(crate) enum Content<'a> {
+pub enum Content<'a> {
     #[defined_by(PKCS7_SIGNED_DATA_OID)]
     SignedData(asn1::Explicit<Box<cms::SignedData<'a>>, 0>),
 }
@@ -133,7 +133,7 @@ impl<'a> cms::ContentInfo<'a> {
 //     tsa                          [0] GeneralName          OPTIONAL,
 //     extensions                   [1] IMPLICIT Extensions  OPTIONAL   }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct TSTInfo<'a> {
+pub struct TSTInfo<'a> {
     pub version: u8,
     pub policy: Option<asn1::ObjectIdentifier>,
     pub message_imprint: MessageImprint<'a>,
@@ -151,7 +151,7 @@ pub(crate) struct TSTInfo<'a> {
 //       status                  PKIStatusInfo,
 //       timeStampToken          TimeStampToken     OPTIONAL  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct RawTimeStampResp<'a> {
+pub struct RawTimeStampResp<'a> {
     pub status: PKIStatusInfo<'a>,
     pub time_stamp_token: Option<TimeStampToken<'a>>,
 }

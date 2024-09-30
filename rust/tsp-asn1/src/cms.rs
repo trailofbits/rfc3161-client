@@ -43,7 +43,7 @@ pub struct SignerInfo<'a> {
 //      crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
 //      signerInfos SignerInfos }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct SignedData<'a> {
+pub struct SignedData<'a> {
     pub version: u8,
     pub digest_algorithms: asn1::SetOf<'a, cryptography_x509::common::AlgorithmIdentifier<'a>>,
     pub content_info: ContentInfo<'a>,
@@ -62,7 +62,7 @@ pub(crate) struct SignedData<'a> {
 //      eContentType ContentType,
 //      eContent [0] EXPLICIT OCTET STRING OPTIONAL }
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
-pub(crate) struct ContentInfo<'a> {
+pub struct ContentInfo<'a> {
     pub content_type: asn1::ObjectIdentifier,
 
     #[explicit(0)]

@@ -1,14 +1,9 @@
-pub mod certificate;
-pub mod cms;
-pub mod name;
-pub mod tsp;
-
 use std::sync::Arc;
 
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
-use tsp::{MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp};
+use tsp_asn1::tsp::{MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp};
 
 self_cell::self_cell!(
     struct OwnedTimeStamReq {
@@ -162,11 +157,11 @@ pub struct TimeStampResp {
 }
 
 impl TimeStampResp {
-    fn get_tst_info(&self) -> pyo3::PyResult<tsp::TSTInfo<'_>> {
+    fn get_tst_info(&self) -> pyo3::PyResult<tsp_asn1::tsp::TSTInfo<'_>> {
         let timestamp_token = self.raw.borrow_dependent().time_stamp_token.as_ref();
         match timestamp_token {
             Some(content) => match &content.content {
-                tsp::Content::SignedData(signed_data) => {
+                tsp_asn1::tsp::Content::SignedData(signed_data) => {
                     let tst_info = signed_data.as_inner().content_info.tst_info().unwrap();
                     Ok(tst_info)
                 }
@@ -275,7 +270,7 @@ pub(crate) fn create_timestamp_request(
     let data_bytes = data.as_bytes(py);
     let hash = sha2::Sha512::digest(data_bytes);
 
-    let message_imprint = tsp::MessageImprint {
+    let message_imprint = tsp_asn1::tsp::MessageImprint {
         hash_algorithm: cryptography_x509::common::AlgorithmIdentifier {
             oid: asn1::DefinedByMarker::marker(),
             params: cryptography_x509::common::AlgorithmParameters::Sha512(Some(())),
