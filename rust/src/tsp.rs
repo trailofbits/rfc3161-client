@@ -1,6 +1,4 @@
 use crate::cms;
-use crate::common;
-use crate::extensions;
 use crate::name;
 
 //    MessageImprint ::= SEQUENCE  {
@@ -8,7 +6,7 @@ use crate::name;
 //         hashedMessage                OCTET STRING  }
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct MessageImprint<'a> {
-    pub hash_algorithm: common::AlgorithmIdentifier<'a>,
+    pub hash_algorithm: cryptography_x509::common::AlgorithmIdentifier<'a>,
     pub hashed_message: &'a [u8],
 }
 
@@ -34,7 +32,7 @@ pub struct RawTimeStampReq<'a> {
     #[default(false)]
     pub cert_req: bool,
 
-    pub extensions: Option<extensions::RawExtensions<'a>>,
+    pub extensions: Option<cryptography_x509::extensions::RawExtensions<'a>>,
 }
 
 //    PKIStatus ::= INTEGER {
@@ -146,7 +144,7 @@ pub(crate) struct TSTInfo<'a> {
     pub ordering: bool,
     pub nonce: Option<asn1::BigUint<'a>>,
     pub tsa: Option<name::GeneralNameWrapper<'a>>,
-    pub extensions: Option<extensions::RawExtensions<'a>>,
+    pub extensions: Option<cryptography_x509::extensions::RawExtensions<'a>>,
 }
 
 //    TimeStampResp ::= SEQUENCE  {
@@ -174,9 +172,9 @@ mod tests {
 
         assert_eq!(
             request.message_imprint.hash_algorithm,
-            common::AlgorithmIdentifier {
+            cryptography_x509::common::AlgorithmIdentifier {
                 oid: asn1::DefinedByMarker::marker(),
-                params: common::AlgorithmParameters::Sha512(Some(()))
+                params: cryptography_x509::common::AlgorithmParameters::Sha512(Some(()))
             }
         );
 
@@ -219,7 +217,7 @@ mod tests {
         assert_eq!(tst_info.version, 1);
 
         let enc_general_name = hex::decode("a482010d308201093111300f060355040a13084672656520545341310c300a060355040b130354534131763074060355040d136d54686973206365727469666963617465206469676974616c6c79207369676e7320646f63756d656e747320616e642074696d65207374616d70207265717565737473206d616465207573696e672074686520667265657473612e6f7267206f6e6c696e65207365727669636573311830160603550403130f7777772e667265657473612e6f72673122302006092a864886f70d0109011613627573696c657a617340676d61696c2e636f6d3112301006035504071309577565727a62757267310b3009060355040613024445310f300d0603550408130642617965726e").unwrap();
-        let general_name = asn1::parse_single::<name::GeneralName>(&enc_general_name).unwrap();
+        let general_name = asn1::parse_single::<cryptography_x509::name::GeneralName>(&enc_general_name).unwrap();
 
         let enc_seq_general_name = hex::decode("a0820111a482010d308201093111300f060355040a13084672656520545341310c300a060355040b130354534131763074060355040d136d54686973206365727469666963617465206469676974616c6c79207369676e7320646f63756d656e747320616e642074696d65207374616d70207265717565737473206d616465207573696e672074686520667265657473612e6f7267206f6e6c696e65207365727669636573311830160603550403130f7777772e667265657473612e6f72673122302006092a864886f70d0109011613627573696c657a617340676d61696c2e636f6d3112301006035504071309577565727a62757267310b3009060355040613024445310f300d0603550408130642617965726e").unwrap();
         let general_name =

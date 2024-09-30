@@ -69,6 +69,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cryptography-x509"
+version = "0.1.0"
+source = "git+https://github.com/pyca/cryptography.git#cb5ad845146af67ddeda1ce8fdf00e1755f86a82"
+dependencies = [
+ "asn1",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -286,6 +294,7 @@ name = "sigstore-tsp"
 version = "0.1.0"
 dependencies = [
  "asn1",
+ "cryptography-x509",
  "hex",
  "pyo3",
  "rand",

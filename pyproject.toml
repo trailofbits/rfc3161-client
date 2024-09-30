@@ -37,7 +37,8 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+# features = []
+features = ["pyo3/abi3-py39", "pyo3/extension-module"]
 python-source = "src"
 manifest-path = "rust/Cargo.toml"
 module-name = "sigstore_tsp._rust"

@@ -1,11 +1,6 @@
 pub mod certificate;
 pub mod cms;
-pub mod common;
-pub mod crl;
-pub mod csr;
-pub mod extensions;
 pub mod name;
-pub mod oid;
 pub mod tsp;
 
 use std::sync::Arc;
@@ -281,9 +276,9 @@ pub(crate) fn create_timestamp_request(
     let hash = sha2::Sha512::digest(data_bytes);
 
     let message_imprint = tsp::MessageImprint {
-        hash_algorithm: common::AlgorithmIdentifier {
+        hash_algorithm: cryptography_x509::common::AlgorithmIdentifier {
             oid: asn1::DefinedByMarker::marker(),
-            params: common::AlgorithmParameters::Sha512(Some(())),
+            params: cryptography_x509::common::AlgorithmParameters::Sha512(Some(())),
         },
         hashed_message: hash.as_slice(),
     };
