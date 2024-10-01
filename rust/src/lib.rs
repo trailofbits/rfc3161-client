@@ -62,7 +62,7 @@ impl TimeStampReq {
             contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
                 RawMessageImprint::parse_data(v.as_bytes(py))
             })
-            .unwrap(),
+            .map_err(|_| PyValueError::new_err("invalid message imprint"))?,
         })
     }
 
@@ -342,7 +342,7 @@ impl PyTSTInfo {
                 self.raw.borrow_owner().clone().borrow_owner().clone_ref(py),
                 |v| RawMessageImprint::parse_data(v.as_bytes(py)),
             )
-            .unwrap(),
+            .map_err(|_| PyValueError::new_err("invalid message imprint"))?,
         })
     }
 
