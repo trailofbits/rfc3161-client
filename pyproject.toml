@@ -15,7 +15,8 @@ authors = [
     { name = "Trail of Bits", email = "opensource@trailofbits.com" },
 ]
 dependencies = [
-    "maturin>=1.7,<2.0"
+    "maturin>=1.7,<2.0",
+    "cryptography"
 ]
 
 [project.optional-dependencies]
@@ -37,7 +38,6 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-# features = []
 features = ["pyo3/abi3-py39", "pyo3/extension-module"]
 python-source = "src"
 manifest-path = "rust/Cargo.toml"

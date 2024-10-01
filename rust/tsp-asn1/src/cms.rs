@@ -42,7 +42,7 @@ pub struct SignerInfo<'a> {
 //      certificates [0] IMPLICIT CertificateSet OPTIONAL,
 //      crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
 //      signerInfos SignerInfos }
-#[derive(asn1::Asn1Read, asn1::Asn1Write)]
+#[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct SignedData<'a> {
     pub version: u8,
     pub digest_algorithms: asn1::SetOf<'a, cryptography_x509::common::AlgorithmIdentifier<'a>>,
@@ -61,7 +61,7 @@ pub struct SignedData<'a> {
 //    EncapsulatedContentInfo ::= SEQUENCE {
 //      eContentType ContentType,
 //      eContent [0] EXPLICIT OCTET STRING OPTIONAL }
-#[derive(asn1::Asn1Read, asn1::Asn1Write)]
+#[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct ContentInfo<'a> {
     pub content_type: asn1::ObjectIdentifier,
 

@@ -1,6 +1,3 @@
-use crate::cms;
-use crate::name;
-
 //    MessageImprint ::= SEQUENCE  {
 //         hashAlgorithm                AlgorithmIdentifier,
 //         hashedMessage                OCTET STRING  }
@@ -66,11 +63,11 @@ pub struct PKIStatusInfo<'a> {
 //          seconds        INTEGER              OPTIONAL,
 //          millis     [0] INTEGER  (1..999)    OPTIONAL,
 //          micros     [1] INTEGER  (1..999)    OPTIONAL  }
-#[derive(asn1::Asn1Read, asn1::Asn1Write)]
+#[derive(asn1::Asn1Read, asn1::Asn1Write, Copy, Clone)]
 pub struct Accuracy<'a> {
-    seconds: Option<asn1::BigUint<'a>>,
-    millis: Option<u8>,
-    micros: Option<u8>,
+    pub seconds: Option<asn1::BigUint<'a>>,
+    pub millis: Option<u8>,
+    pub micros: Option<u8>,
 }
 
 //    TimeStampToken ::= ContentInfo
@@ -89,13 +86,13 @@ pub const PKCS7_SIGNED_DATA_OID: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 
 #[derive(asn1::Asn1DefinedByWrite, asn1::Asn1DefinedByRead)]
 pub enum Content<'a> {
     #[defined_by(PKCS7_SIGNED_DATA_OID)]
-    SignedData(asn1::Explicit<Box<cms::SignedData<'a>>, 0>),
+    SignedData(asn1::Explicit<Box<crate::cms::SignedData<'a>>, 0>),
 }
 
 // https://www.ietf.org/rfc/rfc3161.txt - Section 2.4.2
 pub const TST_INFO_OID: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 113549, 1, 9, 16, 1, 4);
 
-impl<'a> cms::ContentInfo<'a> {
+impl<'a> crate::cms::ContentInfo<'a> {
     pub fn tst_info(&self) -> Result<TSTInfo<'a>, asn1::ParseError> {
         // Check if the content_type matches TST_INFO_OID
         if self.content_type != TST_INFO_OID {
@@ -143,7 +140,7 @@ pub struct TSTInfo<'a> {
     #[default(false)]
     pub ordering: bool,
     pub nonce: Option<asn1::BigUint<'a>>,
-    pub tsa: Option<name::GeneralNameWrapper<'a>>,
+    pub tsa: Option<crate::name::GeneralNameWrapper<'a>>,
     pub extensions: Option<cryptography_x509::extensions::RawExtensions<'a>>,
 }
 
