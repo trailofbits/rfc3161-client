@@ -19,8 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          cache: "pip"
-          cache-dependency-path: pyproject.toml
+          # cache: "pip"
+          # cache-dependency-path: pyproject.toml
 
       - name: install uv
         run: >
