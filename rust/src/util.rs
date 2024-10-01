@@ -57,18 +57,23 @@ pub(crate) fn oid_to_py_oid<'p>(
 }
 
 pub static DATETIME_DATETIME: LazyPyImport = LazyPyImport::new("datetime", &["datetime"]);
+pub static DATETIME_TIMEZONE_UTC: LazyPyImport =
+    LazyPyImport::new("datetime", &["timezone", "utc"]);
 
-pub fn datetime_to_py<'p>(
+pub(crate) fn datetime_to_py_utc<'p>(
     py: pyo3::Python<'p>,
     dt: &asn1::DateTime,
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    DATETIME_DATETIME.get(py)?.call1((
+    let timezone = types::DATETIME_TIMEZONE_UTC.get(py)?;
+    types::DATETIME_DATETIME.get(py)?.call1((
         dt.year(),
         dt.month(),
         dt.day(),
         dt.hour(),
         dt.minute(),
         dt.second(),
+        0,
+        timezone,
     ))
 }
 

@@ -42,17 +42,6 @@ impl TimeStampReq {
         }
     }
 
-    fn as_bytes<'p>(
-        &self,
-        py: pyo3::Python<'p>,
-    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
-        let result = asn1::write_single(&self.raw.borrow_dependent());
-        match result {
-            Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
-            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
-        }
-    }
-
     #[getter]
     fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
         match &self.raw.borrow_dependent().req_policy {
@@ -74,6 +63,17 @@ impl TimeStampReq {
             })
             .unwrap(),
         })
+    }
+
+    fn as_bytes<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let result = asn1::write_single(&self.raw.borrow_dependent());
+        match result {
+            Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
+        }
     }
 }
 
@@ -355,7 +355,7 @@ impl PyTSTInfo {
     #[getter]
     fn gen_time<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
         let gen_time = &self.raw.borrow_dependent().gen_time;
-        crate::util::datetime_to_py(py, gen_time.as_datetime())
+        crate::util::datetime_to_py_utc(py, gen_time.as_datetime())
     }
 
     #[getter]
