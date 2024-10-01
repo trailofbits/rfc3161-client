@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 
-from sigstore_tsp import _rust
+from sigstore_tsp import _rust, tsp
 
 
 class HashAlgorithm(enum.Enum):
@@ -81,7 +81,7 @@ class TimestampRequestBuilder:
             self._data, self._algorithm, request_policy, self._cert_req, self._extensions
         )
 
-    def build(self) -> _rust.TimeStampRequest:
+    def build(self) -> tsp.TimeStampRequest:
         """Build a TimestampRequest."""
         if self._data is None:
             msg = "Data must be for a Timestamp Request."
@@ -93,45 +93,6 @@ class TimestampRequestBuilder:
         return _rust.create_timestamp_request(self._data)
 
 
-# //    PKIStatus ::= INTEGER {
-# //       granted                (0),
-# //       -- when the PKIStatus contains the value zero a TimeStampToken, as
-# //          requested, is present.
-# //       grantedWithMods        (1),
-# //        -- when the PKIStatus contains the value one a TimeStampToken,
-# //          with modifications, is present.
-# //       rejection              (2),
-# //       waiting                (3),
-# //       revocationWarning      (4),
-# //        -- this message contains a warning that a revocation is
-# //        -- imminent
-# //       revocationNotification (5)
-# //        -- notification that a revocation has occurred  }
-class PKIStatus(enum.IntEnum):
-    GRANTED = 0
-    GRANTED_WITH_MODS = 1
-    REJECTION = 2
-    WAITING = 3
-    REVOCATION_WARNING = 4
-    REVOCATION_NOTIFICATION = 5
-
-
-class TstInfo:
-    def __init__(self, raw: _rust.TimeStampResponse) -> None:
-        self.version: int = raw.tst_info_version
-        self.policy: _rust.ObjectIdentifier = raw.tst_info_policy
-
-
-class TimestampResponse:
-    def __init__(self, raw: _rust.TimeStampResponse) -> None:
-        self.raw: _rust.TimeStampResponse = raw
-        self.tst_info: TstInfo = TstInfo(raw)
-
-    @property
-    def status(self) -> PKIStatus:
-        return PKIStatus(self.raw.status)
-
-
-def decode_timestamp_response(data: bytes) -> _rust.TimestampResponse:
+def decode_timestamp_response(data: bytes) -> tsp.TimeStampResponse:
     """Decode a Timestamp response."""
     return _rust.parse_timestamp_response(data)
