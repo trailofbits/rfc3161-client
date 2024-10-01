@@ -335,16 +335,16 @@ impl PyTSTInfo {
         }
     }
 
-    // TODO(DM) Message Imprint
-    // #[getter]
-    // fn message_imprint(&self) -> PyResult<PyMessageImprint> {
-    //     Ok(PyMessageImprint {
-    //         contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone(), |v| {
-    //             Ok::<_, ()>(v.borrow_dependent().message_imprint.clone())
-    //         })
-    //         .unwrap(),
-    //     })
-    // }
+    #[getter]
+    fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
+        Ok(PyMessageImprint {
+            contents: OwnedMessageImprint::try_new(
+                self.raw.borrow_owner().clone().borrow_owner().clone_ref(py),
+                |v| RawMessageImprint::parse_data(v.as_bytes(py)),
+            )
+            .unwrap(),
+        })
+    }
 
     #[getter]
     fn serial_number<'p>(&self, py: pyo3::Python<'p>) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
