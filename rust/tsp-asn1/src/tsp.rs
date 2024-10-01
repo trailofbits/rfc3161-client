@@ -190,6 +190,8 @@ pub struct RawTimeStampResp<'a> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{cms, name};
+
     use super::*;
 
     #[test]
