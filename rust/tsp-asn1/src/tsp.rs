@@ -1,21 +1,33 @@
-//    MessageImprint ::= SEQUENCE  {
-//         hashAlgorithm                AlgorithmIdentifier,
-//         hashedMessage                OCTET STRING  }
+//! [RFC 3161] definitions.
+//!
+//! [RFC 3161]: https://datatracker.ietf.org/doc/html/rfc3161
+
+/// RFC 3161 2.4.1
+///
+/// ```asn1
+/// MessageImprint ::= SEQUENCE  {
+///   hashAlgorithm AlgorithmIdentifier,
+///   hashedMessage OCTET STRING  }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct MessageImprint<'a> {
     pub hash_algorithm: cryptography_x509::common::AlgorithmIdentifier<'a>,
     pub hashed_message: &'a [u8],
 }
 
+/// RFC 3161 2.4.1
+///
+/// ```asn1
 /// TimeStampReq ::= SEQUENCE  {
-//    version                  INTEGER  { v1(1) },
-//    messageImprint           MessageImprint,
-//      --a hash algorithm OID and the hash value of the data to be
-//      --time-stamped
-//    reqPolicy                TSAPolicyId                OPTIONAL,
-//    nonce                    INTEGER                    OPTIONAL,
-//    certReq                  BOOLEAN                    DEFAULT FALSE,
-//    extensions               [0] IMPLICIT Extensions    OPTIONAL  }
+///   version                  INTEGER  { v1(1) },
+///   messageImprint           MessageImprint,
+///     --a hash algorithm OID and the hash value of the data to be
+///     --time-stamped
+///   reqPolicy                TSAPolicyId                OPTIONAL,
+///   nonce                    INTEGER                    OPTIONAL,
+///   certReq                  BOOLEAN                    DEFAULT FALSE,
+///   extensions               [0] IMPLICIT Extensions    OPTIONAL  }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct RawTimeStampReq<'a> {
     pub version: u8,
@@ -48,10 +60,14 @@ pub struct RawTimeStampReq<'a> {
 //        -- notification that a revocation has occurred  }
 // TODO(dm) = Implement me
 
-//    PKIStatusInfo ::= SEQUENCE {
-//       status        PKIStatus,
-//       statusString  PKIFreeText     OPTIONAL,
-//       failInfo      PKIFailureInfo  OPTIONAL  }
+/// RFC 3161 2.4.2
+///
+/// ```asn1
+/// PKIStatusInfo ::= SEQUENCE {
+///   status        PKIStatus,
+///   statusString  PKIFreeText     OPTIONAL,
+///   failInfo      PKIFailureInfo  OPTIONAL  }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct PKIStatusInfo<'a> {
     pub status: u8,
@@ -59,10 +75,14 @@ pub struct PKIStatusInfo<'a> {
     pub fail_info: Option<asn1::BitString<'a>>,
 }
 
-//   Accuracy ::= SEQUENCE {
-//          seconds        INTEGER              OPTIONAL,
-//          millis     [0] INTEGER  (1..999)    OPTIONAL,
-//          micros     [1] INTEGER  (1..999)    OPTIONAL  }
+/// RFC 3161 2.4.2
+///
+/// ```asn1
+/// Accuracy ::= SEQUENCE {
+///   seconds        INTEGER              OPTIONAL,
+///   millis     [0] INTEGER  (1..999)    OPTIONAL,
+///   micros     [1] INTEGER  (1..999)    OPTIONAL  }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Copy, Clone)]
 pub struct Accuracy<'a> {
     pub seconds: Option<asn1::BigUint<'a>>,
@@ -70,9 +90,13 @@ pub struct Accuracy<'a> {
     pub micros: Option<u8>,
 }
 
-//    TimeStampToken ::= ContentInfo
-//      -- contentType is id-signedData ([CMS])
-//      -- content is SignedData ([CMS])
+/// RFC 3161 2.4.2
+///
+/// ```asn1
+/// TimeStampToken ::= ContentInfo
+///   -- contentType is id-signedData ([CMS])
+///   -- content is SignedData ([CMS])
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct TimeStampToken<'a> {
     pub _content_type: asn1::DefinedByMarker<asn1::ObjectIdentifier>,
@@ -83,6 +107,9 @@ pub struct TimeStampToken<'a> {
 
 pub const PKCS7_SIGNED_DATA_OID: asn1::ObjectIdentifier = asn1::oid!(1, 2, 840, 113549, 1, 7, 2);
 
+/// RFC 3161 2.4.2
+///
+/// See RFC 5652 for the definition of `SignedData`.
 #[derive(asn1::Asn1DefinedByWrite, asn1::Asn1DefinedByRead)]
 pub enum Content<'a> {
     #[defined_by(PKCS7_SIGNED_DATA_OID)]
@@ -112,23 +139,27 @@ impl<'a> crate::cms::ContentInfo<'a> {
     }
 }
 
-// TSTInfo ::= SEQUENCE  {
-//     version                      INTEGER  { v1(1) },
-//     policy                       TSAPolicyId,
-//     messageImprint               MessageImprint,
-//       -- MUST have the same value as the similar field in
-//       -- TimeStampReq
-//     serialNumber                 INTEGER,
-//      -- Time-Stamping users MUST be ready to accommodate integers
-//      -- up to 160 bits.
-//     genTime                      GeneralizedTime,
-//     accuracy                     Accuracy                 OPTIONAL,
-//     ordering                     BOOLEAN             DEFAULT FALSE,
-//     nonce                        INTEGER                  OPTIONAL,
-//       -- MUST be present if the similar field was present
-//       -- in TimeStampReq.  In that case it MUST have the same value.
-//     tsa                          [0] GeneralName          OPTIONAL,
-//     extensions                   [1] IMPLICIT Extensions  OPTIONAL   }
+/// RFC 3161 2.4.2
+///
+/// ```asn1
+/// TSTInfo ::= SEQUENCE  {
+///   version                      INTEGER  { v1(1) },
+///   policy                       TSAPolicyId,
+///   messageImprint               MessageImprint,
+///     -- MUST have the same value as the similar field in
+///     -- TimeStampReq
+///   serialNumber                 INTEGER,
+///    -- Time-Stamping users MUST be ready to accommodate integers
+///    -- up to 160 bits.
+///   genTime                      GeneralizedTime,
+///   accuracy                     Accuracy                 OPTIONAL,
+///   ordering                     BOOLEAN             DEFAULT FALSE,
+///   nonce                        INTEGER                  OPTIONAL,
+///     -- MUST be present if the similar field was present
+///     -- in TimeStampReq.  In that case it MUST have the same value.
+///   tsa                          [0] GeneralName          OPTIONAL,
+///   extensions                   [1] IMPLICIT Extensions  OPTIONAL   }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct TSTInfo<'a> {
     pub version: u8,
@@ -144,9 +175,13 @@ pub struct TSTInfo<'a> {
     pub extensions: Option<cryptography_x509::extensions::RawExtensions<'a>>,
 }
 
-//    TimeStampResp ::= SEQUENCE  {
-//       status                  PKIStatusInfo,
-//       timeStampToken          TimeStampToken     OPTIONAL  }
+/// RFC 3161 2.4.2
+///
+/// ```asn1
+/// TimeStampResp ::= SEQUENCE  {
+///    status                  PKIStatusInfo,
+///    timeStampToken          TimeStampToken     OPTIONAL  }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write)]
 pub struct RawTimeStampResp<'a> {
     pub status: PKIStatusInfo<'a>,
@@ -214,7 +249,8 @@ mod tests {
         assert_eq!(tst_info.version, 1);
 
         let enc_general_name = hex::decode("a482010d308201093111300f060355040a13084672656520545341310c300a060355040b130354534131763074060355040d136d54686973206365727469666963617465206469676974616c6c79207369676e7320646f63756d656e747320616e642074696d65207374616d70207265717565737473206d616465207573696e672074686520667265657473612e6f7267206f6e6c696e65207365727669636573311830160603550403130f7777772e667265657473612e6f72673122302006092a864886f70d0109011613627573696c657a617340676d61696c2e636f6d3112301006035504071309577565727a62757267310b3009060355040613024445310f300d0603550408130642617965726e").unwrap();
-        let general_name = asn1::parse_single::<cryptography_x509::name::GeneralName>(&enc_general_name).unwrap();
+        let general_name =
+            asn1::parse_single::<cryptography_x509::name::GeneralName>(&enc_general_name).unwrap();
 
         let enc_seq_general_name = hex::decode("a0820111a482010d308201093111300f060355040a13084672656520545341310c300a060355040b130354534131763074060355040d136d54686973206365727469666963617465206469676974616c6c79207369676e7320646f63756d656e747320616e642074696d65207374616d70207265717565737473206d616465207573696e672074686520667265657473612e6f7267206f6e6c696e65207365727669636573311830160603550403130f7777772e667265657473612e6f72673122302006092a864886f70d0109011613627573696c657a617340676d61696c2e636f6d3112301006035504071309577565727a62757267310b3009060355040613024445310f300d0603550408130642617965726e").unwrap();
         let general_name =
