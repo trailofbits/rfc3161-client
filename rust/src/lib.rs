@@ -3,6 +3,7 @@ pub mod util;
 
 use std::sync::Arc;
 
+use asn1::SimpleAsn1Readable;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
@@ -12,7 +13,7 @@ use tsp_asn1::tsp::{
 };
 
 self_cell::self_cell!(
-    struct OwnedTimeStamReq {
+    struct OwnedTimeStampReq {
         owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawTimeStampReq,
@@ -21,7 +22,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampReq {
-    raw: Arc<OwnedTimeStamReq>,
+    raw: Arc<OwnedTimeStampReq>,
 }
 
 #[pyo3::pymethods]
@@ -56,11 +57,10 @@ impl TimeStampReq {
     }
 
     #[getter]
-    fn message_imprint(&self) -> PyResult<PyMessageImprint> {
-    // fn message_imprint<'p>(&self, py: pyo3::Python<'p>) -> PyResult<PyMessageImprint> {
+    fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
         Ok(PyMessageImprint {
-            contents: OwnedMessageImprint::try_new(Arc::clone(&self.raw), |v| {
-                Ok::<_, ()>(v.borrow_dependent().message_imprint.clone())
+            contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
+                RawMessageImprint::parse_data(v.as_bytes(py))
             })
             .unwrap(),
         })
@@ -80,8 +80,7 @@ impl TimeStampReq {
 
 self_cell::self_cell!(
     struct OwnedMessageImprint {
-        owner: Arc<OwnedTimeStamReq>,
-        // owner: pyo3::Py<pyo3::types::PyBytes>,
+        owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawMessageImprint,
     }
@@ -114,7 +113,7 @@ impl PyMessageImprint {
 }
 
 self_cell::self_cell!(
-    struct OwnedTimeStamResp {
+    struct OwnedTimeStampResp {
         owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawTimeStampResp,
@@ -123,7 +122,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampResp {
-    raw: Arc<OwnedTimeStamResp>,
+    raw: Arc<OwnedTimeStampResp>,
 }
 
 #[pyo3::pymethods]
@@ -209,7 +208,7 @@ impl TimeStampResp {
 
 self_cell::self_cell!(
     pub struct OwnedSignedData {
-        owner: Arc<OwnedTimeStamResp>,
+        owner: Arc<OwnedTimeStampResp>,
         #[covariant]
         dependent: RawSignedData,
     }
@@ -273,7 +272,7 @@ impl SignedData {
 
 self_cell::self_cell!(
     pub struct OwnedTSTInfo {
-        owner: Arc<OwnedTimeStamResp>,
+        owner: Arc<OwnedTimeStampResp>,
         #[covariant]
         dependent: RawTSTInfo,
     }
@@ -340,7 +339,7 @@ impl PyTSTInfo {
     // #[getter]
     // fn message_imprint(&self) -> PyResult<PyMessageImprint> {
     //     Ok(PyMessageImprint {
-    //         contents: OwnedMessageImprint::try_new(Arc::clone(&self.raw), |v| {
+    //         contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone(), |v| {
     //             Ok::<_, ()>(v.borrow_dependent().message_imprint.clone())
     //         })
     //         .unwrap(),
@@ -418,7 +417,7 @@ pub(crate) fn parse_timestamp_response(
     py: pyo3::Python<'_>,
     data: pyo3::Py<pyo3::types::PyBytes>,
 ) -> PyResult<TimeStampResp> {
-    let raw = OwnedTimeStamResp::try_new(data, |data| asn1::parse_single(data.as_bytes(py)))
+    let raw = OwnedTimeStampResp::try_new(data, |data| asn1::parse_single(data.as_bytes(py)))
         .map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("ASN.1 parse error: {:?}", e))
         })?;
@@ -432,7 +431,7 @@ pub(crate) fn parse_timestamp_request(
     py: pyo3::Python<'_>,
     data: pyo3::Py<pyo3::types::PyBytes>,
 ) -> PyResult<TimeStampReq> {
-    let raw = OwnedTimeStamReq::try_new(data, |data| asn1::parse_single(data.as_bytes(py)))
+    let raw = OwnedTimeStampReq::try_new(data, |data| asn1::parse_single(data.as_bytes(py)))
         .map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("ASN.1 parse error: {:?}", e))
         })?;
@@ -476,7 +475,7 @@ pub(crate) fn create_timestamp_request(
         .map_err(|e| PyValueError::new_err(format!("Serialization error: {:?}", e)));
     let py_bytes = pyo3::types::PyBytes::new_bound(py, &request_bytes.unwrap()).unbind();
 
-    let raw = OwnedTimeStamReq::try_new(py_bytes, |data| asn1::parse_single(data.as_bytes(py)))
+    let raw = OwnedTimeStampReq::try_new(py_bytes, |data| asn1::parse_single(data.as_bytes(py)))
         .map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("ASN.1 parse error: {:?}", e))
         })?;
