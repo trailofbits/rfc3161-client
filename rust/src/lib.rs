@@ -10,6 +10,7 @@ use sha2::Digest;
 use tsp_asn1::cms::SignedData as RawSignedData;
 use tsp_asn1::tsp::{
     MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp, TSTInfo as RawTSTInfo,
+    TimeStampToken,
 };
 
 self_cell::self_cell!(
@@ -122,7 +123,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampResp {
-    raw: Arc<OwnedTimeStampResp>,
+    raw: OwnedTimeStampResp,
 }
 
 #[pyo3::pymethods]
@@ -157,18 +158,22 @@ impl TimeStampResp {
 
     // TST INFO
     #[getter]
-    fn tst_info(&self) -> PyResult<PyTSTInfo> {
+    fn tst_info(&self, py: pyo3::Python<'_>) -> PyResult<PyTSTInfo> {
         let py_tstinfo = PyTSTInfo {
-            raw: OwnedTSTInfo::try_new(Arc::clone(&self.raw), |v| {
-                let timestamp_token = v.borrow_dependent().time_stamp_token.as_ref();
-                match timestamp_token {
-                    Some(content) => match &content.content {
-                        tsp_asn1::tsp::Content::SignedData(signed_data) => {
-                            let tst_info = signed_data.as_inner().content_info.tst_info().unwrap();
-                            Ok::<_, PyErr>(tst_info)
-                        }
-                    },
-                    None => Err(pyo3::exceptions::PyValueError::new_err("")),
+            raw: OwnedTSTInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
+                let resp = RawTimeStampResp::parse_data(v.as_bytes(py))
+                    .map_err(|_| PyValueError::new_err("invalid TimeStampResp"))?;
+
+                match resp.time_stamp_token {
+                    Some(TimeStampToken {
+                        _content_type,
+                        content: tsp_asn1::tsp::Content::SignedData(signed_data),
+                    }) => signed_data
+                        .as_inner()
+                        .content_info
+                        .tst_info()
+                        .map_err(|_| PyValueError::new_err("invalid TSTInfo")),
+                    None => Err(PyValueError::new_err("missing TimeStampToken")),
                 }
             })
             .unwrap(),
@@ -177,27 +182,18 @@ impl TimeStampResp {
     }
 
     // Signed Data
-    fn signed_data(&self) -> PyResult<SignedData> {
+    fn signed_data(&self, py: pyo3::Python<'_>) -> PyResult<SignedData> {
         let py_signed_data = SignedData {
-            raw: OwnedSignedData::try_new(Arc::clone(&self.raw), |v| {
-                let timestamp_token = v.borrow_dependent().time_stamp_token.as_ref();
-                match timestamp_token {
-                    Some(content) => match &content.content {
-                        tsp_asn1::tsp::Content::SignedData(signed_data) => {
-                            let s = signed_data.as_inner();
-                            Ok::<_, PyErr>(RawSignedData {
-                                version: s.version,
-                                digest_algorithms: s.digest_algorithms.clone(),
-                                content_info: s.content_info.clone(),
-                                certificates: s.certificates.clone(),
-                                crls: None,
-                                signer_infos: s.signer_infos.clone(),
-                            })
-                        }
-                    },
-                    None => Err(pyo3::exceptions::PyValueError::new_err(
-                        "Missing Timestamp Content",
-                    )),
+            raw: OwnedSignedData::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
+                let resp = RawTimeStampResp::parse_data(v.as_bytes(py))
+                    .map_err(|_| PyValueError::new_err("invalid TimeStampResp"))?;
+
+                match resp.time_stamp_token {
+                    Some(TimeStampToken {
+                        _content_type,
+                        content: tsp_asn1::tsp::Content::SignedData(signed_data),
+                    }) => Ok(*signed_data.into_inner()),
+                    None => Err(PyValueError::new_err("missing TimeStampToken")),
                 }
             })
             .unwrap(),
@@ -208,7 +204,7 @@ impl TimeStampResp {
 
 self_cell::self_cell!(
     pub struct OwnedSignedData {
-        owner: Arc<OwnedTimeStampResp>,
+        owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawSignedData,
     }
@@ -272,7 +268,7 @@ impl SignedData {
 
 self_cell::self_cell!(
     pub struct OwnedTSTInfo {
-        owner: Arc<OwnedTimeStampResp>,
+        owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawTSTInfo,
     }
@@ -338,10 +334,9 @@ impl PyTSTInfo {
     #[getter]
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
         Ok(PyMessageImprint {
-            contents: OwnedMessageImprint::try_new(
-                self.raw.borrow_owner().clone().borrow_owner().clone_ref(py),
-                |v| RawMessageImprint::parse_data(v.as_bytes(py)),
-            )
+            contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
+                RawMessageImprint::parse_data(v.as_bytes(py))
+            })
             .map_err(|_| PyValueError::new_err("invalid message imprint"))?,
         })
     }
