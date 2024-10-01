@@ -64,8 +64,8 @@ pub(crate) fn datetime_to_py_utc<'p>(
     py: pyo3::Python<'p>,
     dt: &asn1::DateTime,
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    let timezone = types::DATETIME_TIMEZONE_UTC.get(py)?;
-    types::DATETIME_DATETIME.get(py)?.call1((
+    let timezone = DATETIME_TIMEZONE_UTC.get(py)?;
+    DATETIME_DATETIME.get(py)?.call1((
         dt.year(),
         dt.month(),
         dt.day(),

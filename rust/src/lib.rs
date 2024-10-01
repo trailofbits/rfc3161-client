@@ -57,6 +57,7 @@ impl TimeStampReq {
 
     #[getter]
     fn message_imprint(&self) -> PyResult<PyMessageImprint> {
+    // fn message_imprint<'p>(&self, py: pyo3::Python<'p>) -> PyResult<PyMessageImprint> {
         Ok(PyMessageImprint {
             contents: OwnedMessageImprint::try_new(Arc::clone(&self.raw), |v| {
                 Ok::<_, ()>(v.borrow_dependent().message_imprint.clone())
@@ -80,6 +81,7 @@ impl TimeStampReq {
 self_cell::self_cell!(
     struct OwnedMessageImprint {
         owner: Arc<OwnedTimeStamReq>,
+        // owner: pyo3::Py<pyo3::types::PyBytes>,
         #[covariant]
         dependent: RawMessageImprint,
     }
