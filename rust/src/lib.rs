@@ -1,8 +1,6 @@
 pub mod oid;
 pub mod util;
 
-use std::sync::Arc;
-
 use asn1::SimpleAsn1Readable;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
@@ -23,7 +21,7 @@ self_cell::self_cell!(
 
 #[pyo3::pyclass]
 pub struct TimeStampReq {
-    raw: Arc<OwnedTimeStampReq>,
+    raw: OwnedTimeStampReq,
 }
 
 #[pyo3::pymethods]
