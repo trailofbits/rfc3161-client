@@ -5,7 +5,7 @@ use asn1::SimpleAsn1Readable;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
-use tsp_asn1::cms::SignedData as RawSignedData;
+use tsp_asn1::cms::{SignedData as RawSignedData, SignerInfo as RawSignerInfo};
 use tsp_asn1::tsp::{
     MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp, TSTInfo as RawTSTInfo,
     TimeStampToken,
@@ -19,7 +19,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass]
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
 pub struct TimeStampReq {
     raw: OwnedTimeStampReq,
 }
@@ -119,7 +119,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass]
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
 pub struct TimeStampResp {
     raw: OwnedTimeStampResp,
 }
@@ -147,9 +147,7 @@ impl TimeStampResp {
                 Ok(status_list)
             }
             None => {
-                return Err(pyo3::exceptions::PyNotImplementedError::new_err(
-                    "No status string is not yet implemented.",
-                ))
+                Ok(pyo3::types::PyList::empty_bound(py))
             }
         }
     }
@@ -159,10 +157,11 @@ impl TimeStampResp {
     fn tst_info(&self, py: pyo3::Python<'_>) -> PyResult<PyTSTInfo> {
         let py_tstinfo = PyTSTInfo {
             raw: OwnedTSTInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                let resp = RawTimeStampResp::parse_data(v.as_bytes(py))
-                    .map_err(|_| PyValueError::new_err("invalid TimeStampResp"))?;
 
-                match resp.time_stamp_token {
+                let rsp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
+                    .map_err(|e| PyValueError::new_err(format!("invalid TimeStampResp: {:?}", e))).unwrap();
+
+                match rsp.time_stamp_token {
                     Some(TimeStampToken {
                         _content_type,
                         content: tsp_asn1::tsp::Content::SignedData(signed_data),
@@ -180,6 +179,7 @@ impl TimeStampResp {
     }
 
     // Signed Data
+    #[getter]
     fn signed_data(&self, py: pyo3::Python<'_>) -> PyResult<SignedData> {
         let py_signed_data = SignedData {
             raw: OwnedSignedData::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
@@ -257,11 +257,48 @@ impl SignedData {
         Ok(py_certs)
     }
 
-    // TODO(dm) Implement me
-    // #[getter]
-    // fn signer_infos() {
+    #[getter]
+    fn signer_infos<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::PyObject> {
+        let py_set = pyo3::types::PySet::empty_bound(py)?;
 
-    // }
+        let mut i = 0;
+        for _ in self.raw.borrow_dependent().signer_infos.clone() {
+            let py_signer_info = SignerInfo {
+                raw: OwnedSignerInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
+                    let mut resp = RawSignedData::parse_data(v.as_bytes(py))
+                        .map_err(|_| PyValueError::new_err("invalid Signer Info"))?;
+                    
+                    Ok::<tsp_asn1::cms::SignerInfo<'_>, pyo3::PyErr>(resp.signer_infos.nth(i).expect("Invalid signer info index."))
+                })
+                .unwrap(),
+            };
+            py_set.add(py_signer_info.into_py(py))?;
+            i = i+1;
+        }
+
+        Ok(py_set.to_object(py))
+    }
+}
+
+self_cell::self_cell!(
+    pub struct OwnedSignerInfo {
+        owner: pyo3::Py<pyo3::types::PyBytes>,
+        #[covariant]
+        dependent: RawSignerInfo,
+    }
+);
+
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+pub struct SignerInfo {
+    pub raw: OwnedSignerInfo,
+}
+
+#[pyo3::pymethods]
+impl SignerInfo {
+    #[getter]
+    fn version(&self) -> pyo3::PyResult<u8> {
+        Ok(self.raw.borrow_dependent().version)
+    }
 }
 
 self_cell::self_cell!(
@@ -277,8 +314,8 @@ pub struct PyTSTInfo {
     pub raw: OwnedTSTInfo,
 }
 
-#[pyclass]
-struct Accuracy {
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+pub struct Accuracy {
     seconds: Option<u128>,
     millis: Option<u8>,
     micros: Option<u8>,
@@ -483,7 +520,6 @@ mod sigstore_tsp {
 
     #[pyo3::pymodule]
     mod _rust {
-
         #[pymodule_export]
         use super::parse_timestamp_response;
 
@@ -492,8 +528,44 @@ mod sigstore_tsp {
 
         #[pymodule_export]
         use super::parse_timestamp_request;
+
+        #[pymodule_export]
+        use super::{PyTSTInfo, PyMessageImprint, Accuracy, SignerInfo, SignedData, TimeStampResp, TimeStampReq};
+
+        #[pymodule_export]
+        use crate::oid::ObjectIdentifier;
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use super::OwnedTimeStampResp;
+    use tsp_asn1::tsp::RawTimeStampResp;
+    use asn1::SimpleAsn1Readable;
+
+    #[test]
+    fn test() {
+        pyo3::prepare_freethreaded_python();
+        
+        pyo3::Python::with_gil(|py| {
+            let data = hex::decode("308202ec3003020100308202e306092a864886f70d010702a08202d4308202d0020103310d300b06096086480165030402013081d9060b2a864886f70d0109100104a081c90481c63081c302010106092b0601040183bf30023051300d0609608648016503040203050004409b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec04302143e2f3211f06695a6fb447d11dadf37b2228e8ca1180f32303234313030323039323135355a3003020101a034a4323030310e300c060355040a13056c6f63616c311e301c0603550403131554657374205453412054696d657374616d70696e67a000318201dc308201d802010130483030310e300c060355040a13056c6f63616c311e301c06035504031315546573742054534120496e7465726d656469617465021461ab8956727edad25ee3c2cd663d5ddd719071a0300b0609608648016503040201a0820126301a06092a864886f70d010903310d060b2a864886f70d0109100104301c06092a864886f70d010905310f170d3234313030323039323135355a302f06092a864886f70d0109043122042089719cf333d5226a661aeab5807edcf53ba01f85323dc0415ee981f6c78d21953081b8060b2a864886f70d010910022f3181a83081a53081a230819f300d060960864801650304020305000440c04d4b48148c29c5cbab7919d432f6b1ae33995426613b4f759631108ff7d1e9c95537fac1acf43e2813754630c29abe6a0e3b804701ef3e04d3a17a4624c910304c3034a4323030310e300c060355040a13056c6f63616c311e301c06035504031315546573742054534120496e7465726d656469617465021461ab8956727edad25ee3c2cd663d5ddd719071a0300a06082a8648ce3d0403020446304402205333cdad93a03d3b22ebc3e84c560e9271fbedef0f97babf71c973a5ce4bd98e022001baf6b000e63eafac813c6e73bd46619bd2a6ebb161ca4e20b5c09a13e118c1")
+            .unwrap();
+
+            let py_bytes = pyo3::types::PyBytes::new_bound(py, &data);
+
+            // Does not work
+            // let raw = OwnedTimeStampResp::try_new(py_bytes.into(), |v| {
+            //     RawTimeStampResp::parse_data(v.as_bytes(py))
+            // }).unwrap();
+
+            // Works
+            let raw = OwnedTimeStampResp::try_new(py_bytes.into(), |v| {
+                 asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
+            }).unwrap();
+
+            assert_eq!(raw.borrow_dependent().status.status, 0);
+        });
+
+    }
+
+}

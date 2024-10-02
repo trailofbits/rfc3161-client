@@ -16,4 +16,8 @@ impl ObjectIdentifier {
     fn dotted_string(&self) -> String {
         self.oid.to_string()
     }
+
+    fn __eq__(&self, other: pyo3::PyRef<'_, ObjectIdentifier>) -> bool {
+        self.oid == other.oid
+    }
 }
