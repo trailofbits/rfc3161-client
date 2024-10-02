@@ -142,6 +142,11 @@ class TimeStampTokenInfo(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
+    def message_imprint(self) -> MessageImprint:
+        """Returns the Message Imprint."""
+
+    @property
+    @abc.abstractmethod
     def serial_number(self) -> int:
         """Returns the Serial Number."""
 
