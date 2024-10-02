@@ -1,6 +1,8 @@
 """Verification module."""
 
+from __future__ import annotations
 from dataclasses import dataclass
+from typing import Union
 
 import cryptography.x509
 
@@ -9,8 +11,8 @@ from sigstore_tsp.tsp import ObjectIdentifier, PKIStatus, TimeStampRequest, Time
 
 @dataclass
 class VerifyOpts:
-    policy_id: ObjectIdentifier | None
-    tsa_certificate: cryptography.x509.Certificate | None
+    policy_id: Union[ObjectIdentifier | None]
+    tsa_certificate: Union[cryptography.x509.Certificate | None]
     intermediates: list[cryptography.x509.Certificate]
     roots: list[cryptography.x509.Certificate]
     nonce: int
