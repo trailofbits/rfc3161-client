@@ -202,6 +202,7 @@ class SignedData(metaclass=abc.ABCMeta):
     def signer_infos(self) -> set[SignerInfo]:
         """Returns the signers infos."""
 
+
 SignedData.register(_rust.SignedData)
 
 
@@ -210,5 +211,6 @@ class SignerInfo(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def version(self) -> int:
         """Returns the version."""
+
 
 SignerInfo.register(_rust.SignerInfo)

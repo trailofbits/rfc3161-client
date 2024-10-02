@@ -1,8 +1,8 @@
 """Verification module."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Union
 
 import cryptography.x509
 
@@ -11,8 +11,8 @@ from sigstore_tsp.tsp import ObjectIdentifier, PKIStatus, TimeStampRequest, Time
 
 @dataclass
 class VerifyOpts:
-    policy_id: Union[ObjectIdentifier | None]
-    tsa_certificate: Union[cryptography.x509.Certificate | None]
+    policy_id: ObjectIdentifier | None
+    tsa_certificate: cryptography.x509.Certificate | None
     intermediates: list[cryptography.x509.Certificate]
     roots: list[cryptography.x509.Certificate]
     nonce: int
@@ -92,7 +92,10 @@ def _verify_tsr_with_chains(tsp_response: TimeStampResponse, opts: VerifyOpts) -
     if signed_data.certificates:
         verification_certificate = signed_data.certificates
     elif not signed_data.certificates and opts.tsa_certificate:
-        verification_certificate = [ opts.tsa_certificate ]
+        verification_certificate = [opts.tsa_certificate]
+
+    if not verification_certificate:
+        return False
 
     # https://github.com/digitorus/pkcs7/blob/3a137a8743524b3683ca4e11608d0dde37caee99/verify.go#L74
     if len(signed_data.signer_infos) == 0:
