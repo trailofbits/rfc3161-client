@@ -1,3 +1,6 @@
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
 #[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
 pub(crate) struct ObjectIdentifier {
     pub(crate) oid: asn1::ObjectIdentifier,
@@ -19,5 +22,11 @@ impl ObjectIdentifier {
 
     fn __eq__(&self, other: pyo3::PyRef<'_, ObjectIdentifier>) -> bool {
         self.oid == other.oid
+    }
+
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.oid.hash(&mut hasher);
+        hasher.finish()
     }
 }
