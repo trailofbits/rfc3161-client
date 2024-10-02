@@ -74,3 +74,4 @@ test tests: $(VENV)/pyvenv.cfg
 		pytest --cov=$(PY_IMPORT) $(T) $(TEST_ARGS) && \
 		python -m coverage report -m $(COV_ARGS)
 	cargo test --manifest-path rust/Cargo.toml
+	cargo test --manifest-path rust/tsp-asn1/Cargo.toml

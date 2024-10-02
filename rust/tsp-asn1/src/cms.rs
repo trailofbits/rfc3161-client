@@ -1,23 +1,35 @@
+//! [RFC 5652] ("Cryptographic Message Syntax") definitions.
+//!
+//! [RFC 5652]: https://datatracker.ietf.org/doc/html/rfc5652
+
 use crate::certificate;
 
-// IssuerAndSerialNumber ::= SEQUENCE {
-//     issuer Name,
-//     serialNumber CertificateSerialNumber }
+/// RFC 5652 10.2.4
+///
+/// ```asn1
+/// IssuerAndSerialNumber ::= SEQUENCE {
+///   issuer Name,
+///   serialNumber CertificateSerialNumber }
+///
+/// CertificateSerialNumber ::= INTEGER
+/// ```
 #[derive(asn1::Asn1Write, asn1::Asn1Read)]
 pub struct IssuerAndSerialNumber<'a> {
     pub issuer: cryptography_x509::name::Name<'a>,
     pub serial_number: asn1::BigInt<'a>,
 }
 
-// https://datatracker.ietf.org/doc/html/rfc5652#section-5.3
-// SignerInfo ::= SEQUENCE {
-//     version CMSVersion,
-//     sid SignerIdentifier,
-//     digestAlgorithm DigestAlgorithmIdentifier,
-//     signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
-//     signatureAlgorithm SignatureAlgorithmIdentifier,
-//     signature SignatureValue,
-//     unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+/// RFC 5652 5.3
+/// ```asn1
+/// SignerInfo ::= SEQUENCE {
+///   version CMSVersion,
+///   sid SignerIdentifier,
+///   digestAlgorithm DigestAlgorithmIdentifier,
+///   signedAttrs [0] IMPLICIT SignedAttributes OPTIONAL,
+///   signatureAlgorithm SignatureAlgorithmIdentifier,
+///   signature SignatureValue,
+///   unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL }
+/// ```
 #[derive(asn1::Asn1Write, asn1::Asn1Read)]
 pub struct SignerInfo<'a> {
     pub version: u8,
@@ -35,13 +47,17 @@ pub struct SignerInfo<'a> {
     pub unauthenticated_attributes: Option<cryptography_x509::csr::Attributes<'a>>,
 }
 
-//    SignedData ::= SEQUENCE {
-//      version CMSVersion,
-//      digestAlgorithms DigestAlgorithmIdentifiers,
-//      encapContentInfo EncapsulatedContentInfo,
-//      certificates [0] IMPLICIT CertificateSet OPTIONAL,
-//      crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
-//      signerInfos SignerInfos }
+/// RFC 5652 5.1
+///
+/// ```asn1
+/// SignedData ::= SEQUENCE {
+///   version CMSVersion,
+///   digestAlgorithms DigestAlgorithmIdentifiers,
+///   encapContentInfo EncapsulatedContentInfo,
+///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
+///   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
+///   signerInfos SignerInfos }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct SignedData<'a> {
     pub version: u8,
@@ -58,9 +74,13 @@ pub struct SignedData<'a> {
     pub signer_infos: asn1::SetOf<'a, SignerInfo<'a>>,
 }
 
-//    EncapsulatedContentInfo ::= SEQUENCE {
-//      eContentType ContentType,
-//      eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+/// RFC 5652 5.2
+///
+/// ```asn1
+/// EncapsulatedContentInfo ::= SEQUENCE {
+///   eContentType ContentType,
+///   eContent [0] EXPLICIT OCTET STRING OPTIONAL }
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct ContentInfo<'a> {
     pub content_type: asn1::ObjectIdentifier,

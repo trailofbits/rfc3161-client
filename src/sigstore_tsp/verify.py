@@ -1,10 +1,11 @@
 """Verification module."""
+
 from dataclasses import dataclass
-from logging import critical
 
 import cryptography.x509
 
-from sigstore_tsp.tsp import TimeStampRequest, TimeStampResponse, PKIStatus, ObjectIdentifier
+from sigstore_tsp.tsp import ObjectIdentifier, PKIStatus, TimeStampRequest, TimeStampResponse
+
 
 @dataclass
 class VerifyOpts:
@@ -64,7 +65,10 @@ def _verify_leaf_certs(tsp_response: TimeStampResponse, opts: VerifyOpts) -> boo
 
     #  verifyESSCertID
     if opts.tsa_certificate:
-        if leaf_certificate.issuer != opts.tsa_certificate.issuer or leaf_certificate.serial_number != opts.tsa_certificate.serial_number:
+        if (
+            leaf_certificate.issuer != opts.tsa_certificate.issuer
+            or leaf_certificate.serial_number != opts.tsa_certificate.serial_number
+        ):
             return False
 
     # verifySubjectCommonName
@@ -87,6 +91,7 @@ def _verify_tsr_with_chains(tsp_response: TimeStampResponse, opts: VerifyOpts) -
 
     # TODO(dm)
     return True
+
 
 def verify_timestamp_response(
     timestamp_response: TimeStampResponse, hashed_message: bytes, verify_opts: VerifyOpts
