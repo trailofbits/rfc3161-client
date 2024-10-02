@@ -183,8 +183,8 @@ impl TimeStampResp {
     fn signed_data(&self, py: pyo3::Python<'_>) -> PyResult<SignedData> {
         let py_signed_data = SignedData {
             raw: OwnedSignedData::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                let resp = RawTimeStampResp::parse_data(v.as_bytes(py))
-                    .map_err(|_| PyValueError::new_err("invalid TimeStampResp"))?;
+                let resp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
+                    .map_err(|e| PyValueError::new_err(format!("invalid TimeStampResp: {:?}", e))).unwrap();
 
                 match resp.time_stamp_token {
                     Some(TimeStampToken {
@@ -251,7 +251,9 @@ impl SignedData {
                     let raw = asn1::write_single(&cert).expect("TODO").clone();
                     py_certs.add(pyo3::types::PyBytes::new_bound(py, &raw))?;
                 }
-                _ => {}
+                _ => {
+                    return Err(PyValueError::new_err("Unknown certificate type"))
+                }
             }
         }
         Ok(py_certs)
@@ -265,10 +267,20 @@ impl SignedData {
         for _ in self.raw.borrow_dependent().signer_infos.clone() {
             let py_signer_info = SignerInfo {
                 raw: OwnedSignerInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                    let mut resp = RawSignedData::parse_data(v.as_bytes(py))
-                        .map_err(|_| PyValueError::new_err("invalid Signer Info"))?;
-                    
-                    Ok::<tsp_asn1::cms::SignerInfo<'_>, pyo3::PyErr>(resp.signer_infos.nth(i).expect("Invalid signer info index."))
+                    let resp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
+                         .map_err(|e| PyValueError::new_err(format!("invalid Signer Data: {:?}", v.as_bytes(py)))).unwrap();
+
+                    match resp.time_stamp_token {
+                        Some(TimeStampToken {
+                                _content_type,
+                                content: tsp_asn1::tsp::Content::SignedData(signed_data),
+                            }) => {
+
+                                let signer_info = signed_data.into_inner().signer_infos.nth(i).unwrap();
+                                Ok(signer_info)
+                            }
+                            None => Err(PyValueError::new_err("missing TimeStampToken")),
+                        }
                 })
                 .unwrap(),
             };
