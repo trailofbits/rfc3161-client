@@ -57,7 +57,7 @@ pub struct SignerInfo<'a> {
 ///   certificates [0] IMPLICIT CertificateSet OPTIONAL,
 ///   crls [1] IMPLICIT RevocationInfoChoices OPTIONAL,
 ///   signerInfos SignerInfos }
-/// ``````
+/// ```
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Clone)]
 pub struct SignedData<'a> {
     pub version: u8,
