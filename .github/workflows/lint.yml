@@ -22,12 +22,12 @@ jobs:
           components: rustfmt
           toolchain: 1.81.0
 
-      - name: install uv
-        run: >
-          curl --no-progress-meter --location --fail
-          --proto '=https' --tlsv1.2
-          "https://astral.sh/uv/install.sh"
-          | sh
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
 
       - name: lint
         run: make lint INSTALL_EXTRA=lint
