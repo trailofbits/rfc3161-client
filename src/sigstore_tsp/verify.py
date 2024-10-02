@@ -59,7 +59,7 @@ def _verify_leaf_certs(tsp_response: TimeStampResponse, opts: VerifyOpts) -> boo
     critical_eku = False
     for extension in leaf_certificate.extensions:
         # EKUOID is the Extended Key Usage OID, per RFC 5280
-        if extension.oid() == cryptography.x509.ObjectIdentifier(val="2.5.26.37"):
+        if extension.oid == cryptography.x509.ObjectIdentifier("2.5.26.37"):
             critical_eku = extension.critical
 
     if not critical_eku:
