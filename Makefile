@@ -55,6 +55,8 @@ lint: $(VENV)/pyvenv.cfg
 		ruff format --check && \
 		ruff check
 	cargo fmt --check --manifest-path rust/Cargo.toml
+	cargo fmt --check --manifest-path rust/tsp-asn1/Cargo.toml
+
 
 .PHONY: reformat
 reformat:
@@ -62,6 +64,7 @@ reformat:
 	    ruff format && \
 		ruff check --fix
 	cargo fmt --manifest-path rust/Cargo.toml
+	cargo fmt --manifest-path rust/tsp-asn1/Cargo.toml
 
 .PHONY: doc
 doc:
@@ -74,3 +77,4 @@ test tests: $(VENV)/pyvenv.cfg
 		pytest --cov=$(PY_IMPORT) $(T) $(TEST_ARGS) && \
 		python -m coverage report -m $(COV_ARGS)
 	cargo test --manifest-path rust/Cargo.toml
+	cargo test --manifest-path rust/tsp-asn1/Cargo.toml

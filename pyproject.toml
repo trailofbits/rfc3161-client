@@ -11,20 +11,13 @@ classifiers = [
 dynamic = ["version"]
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [
-    { name = "Trail of Bits", email = "opensource@trailofbits.com" },
-]
-dependencies = [
-    "maturin>=1.7,<2.0",
-    "cryptography"
-]
+authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
+dependencies = ["maturin>=1.7,<2.0", "cryptography"]
 
 [project.optional-dependencies]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
-lint = [
-    "ruff ~= 0.6.7"
-]
+lint = ["ruff ~= 0.6.7"]
 dev = ["sigstore-tsp[test,lint,doc]"]
 
 [project.urls]
@@ -46,10 +39,7 @@ module-name = "sigstore_tsp._rust"
 [tool.ruff]
 line-length = 100
 include = ["src/**/*.py"]
+target-version = "py39"
 
 [tool.ruff.lint]
-select = ["ALL"]
-# D203 and D213 are incompatible with D211 and D212 respectively.
-# COM812 and ISC001 can cause conflicts when using ruff as a formatter.
-# See https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules.
-ignore = ["D203", "D213", "COM812", "ISC001"]
+select = ["E", "F", "I", "W", "UP", "TCH"]

@@ -1,10 +1,13 @@
 """Verification module."""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
-from logging import critical
 
 import cryptography.x509
 
-from sigstore_tsp.tsp import TimeStampRequest, TimeStampResponse, PKIStatus, ObjectIdentifier
+from sigstore_tsp.tsp import ObjectIdentifier, PKIStatus, TimeStampRequest, TimeStampResponse
+
 
 @dataclass
 class VerifyOpts:
@@ -56,7 +59,7 @@ def _verify_leaf_certs(tsp_response: TimeStampResponse, opts: VerifyOpts) -> boo
     critical_eku = False
     for extension in leaf_certificate.extensions:
         # EKUOID is the Extended Key Usage OID, per RFC 5280
-        if extension.oid() == cryptography.x509.ObjectIdentifier(val="2.5.26.37"):
+        if extension.oid == cryptography.x509.ObjectIdentifier("2.5.26.37"):
             critical_eku = extension.critical
 
     if not critical_eku:
@@ -64,7 +67,10 @@ def _verify_leaf_certs(tsp_response: TimeStampResponse, opts: VerifyOpts) -> boo
 
     #  verifyESSCertID
     if opts.tsa_certificate:
-        if leaf_certificate.issuer != opts.tsa_certificate.issuer or leaf_certificate.serial_number != opts.tsa_certificate.serial_number:
+        if (
+            leaf_certificate.issuer != opts.tsa_certificate.issuer
+            or leaf_certificate.serial_number != opts.tsa_certificate.serial_number
+        ):
             return False
 
     # verifySubjectCommonName
@@ -81,12 +87,27 @@ def _verify_tsr_with_chains(tsp_response: TimeStampResponse, opts: VerifyOpts) -
         return False
 
     signed_data = tsp_response.signed_data
-    if not signed_data.certificates and opts.tsa_certificate:
-        # TODO(dm) I can't assign here because that's read only
-        signed_data.certificates = opts.tsa_certificate
 
-    # TODO(dm)
+    verification_certificate = []
+    if signed_data.certificates:
+        verification_certificate = signed_data.certificates
+    elif not signed_data.certificates and opts.tsa_certificate:
+        verification_certificate = [opts.tsa_certificate]
+
+    if not verification_certificate:
+        return False
+
+    # https://github.com/digitorus/pkcs7/blob/3a137a8743524b3683ca4e11608d0dde37caee99/verify.go#L74
+    if len(signed_data.signer_infos) == 0:
+        # No signer presents
+        return False
+
+    # TODO(dm): Here we would need to check the pkcs7 signer info
+    #   and verify the signature. Instead of implementing it here,
+    #   we should probably leverage some library that already does that.
+
     return True
+
 
 def verify_timestamp_response(
     timestamp_response: TimeStampResponse, hashed_message: bytes, verify_opts: VerifyOpts

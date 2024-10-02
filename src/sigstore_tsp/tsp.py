@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import abc
-import datetime
 import enum
-
-import cryptography.x509
+import typing
 
 from sigstore_tsp import _rust
+
+if typing.TYPE_CHECKING:
+    import datetime
+
+    import cryptography.x509
 
 
 class ObjectIdentifier(metaclass=abc.ABCMeta):
@@ -15,11 +18,13 @@ class ObjectIdentifier(metaclass=abc.ABCMeta):
     def dotted_string(self) -> str:
         """Returns the dotted string of the OID."""
 
+
 ObjectIdentifier.register(_rust.ObjectIdentifier)
 
 
 class MessageImprint(metaclass=abc.ABCMeta):
     """Represents a Message Imprint (per RFC 3161)."""
+
     @property
     @abc.abstractmethod
     def hash_algorithm(self) -> ObjectIdentifier:
@@ -30,7 +35,9 @@ class MessageImprint(metaclass=abc.ABCMeta):
     def message(self) -> bytes:
         """Return the hashed message."""
 
+
 MessageImprint.register(_rust.PyMessageImprint)
+
 
 class TimeStampRequest(metaclass=abc.ABCMeta):
     """Represents a Timestamp Request (per RFC 3161)."""
@@ -67,6 +74,7 @@ class TimeStampRequest(metaclass=abc.ABCMeta):
 
 TimeStampRequest.register(_rust.TimeStampReq)
 
+
 class PKIStatus(enum.IntEnum):
     GRANTED = 0
     GRANTED_WITH_MODS = 1
@@ -77,7 +85,6 @@ class PKIStatus(enum.IntEnum):
 
 
 class TimeStampResponse(metaclass=abc.ABCMeta):
-
     @property
     @abc.abstractmethod
     def status(self) -> int:
@@ -98,11 +105,11 @@ class TimeStampResponse(metaclass=abc.ABCMeta):
     def signed_data(self) -> SignedData:
         """Returns the Signed Data."""
 
+
 TimeStampResponse.register(_rust.TimeStampResp)
 
 
 class Accuracy(metaclass=abc.ABCMeta):
-
     @property
     @abc.abstractmethod
     def seconds(self) -> int:
@@ -113,11 +120,11 @@ class Accuracy(metaclass=abc.ABCMeta):
     def millis(self) -> int | None:
         """Returns the seconds."""
 
-
     @property
     @abc.abstractmethod
     def micros(self) -> int | None:
         """Returns the seconds."""
+
 
 Accuracy.register(_rust.Accuracy)
 
@@ -132,6 +139,11 @@ class TimeStampTokenInfo(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def policy(self) -> ObjectIdentifier:
         """Returns the policy OID."""
+
+    @property
+    @abc.abstractmethod
+    def message_imprint(self) -> MessageImprint:
+        """Returns the Message Imprint."""
 
     @property
     @abc.abstractmethod
@@ -168,7 +180,6 @@ TimeStampTokenInfo.register(_rust.PyTSTInfo)
 
 
 class SignedData(metaclass=abc.ABCMeta):
-
     @property
     @abc.abstractmethod
     def version(self) -> int:
@@ -186,4 +197,20 @@ class SignedData(metaclass=abc.ABCMeta):
         Warning: they are returned as a byte array and should be loaded.
         """
 
+    @property
+    @abc.abstractmethod
+    def signer_infos(self) -> set[SignerInfo]:
+        """Returns the signers infos."""
+
+
 SignedData.register(_rust.SignedData)
+
+
+class SignerInfo(metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def version(self) -> int:
+        """Returns the version."""
+
+
+SignerInfo.register(_rust.SignerInfo)
