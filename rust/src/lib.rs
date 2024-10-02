@@ -32,21 +32,24 @@ impl TimeStampReq {
     }
 
     #[getter]
-    fn nonce<'p>(&self, py: pyo3::Python<'p>) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    fn nonce<'p>(&self, py: pyo3::Python<'p>) -> PyResult<Option<PyObject>> {
         match self.raw.borrow_dependent().nonce {
             Some(nonce) => {
                 let py_nonce = crate::util::big_asn1_uint_to_py(py, nonce)?;
-                Ok(py_nonce)
+                Ok(Some(py_nonce.into_py(py)))
             }
-            None => todo!(),
+            None => Ok(None),
         }
     }
 
     #[getter]
-    fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<Option<PyObject>> {
         match &self.raw.borrow_dependent().req_policy {
-            Some(req_policy) => crate::util::oid_to_py_oid(py, &req_policy),
-            None => todo!(),
+            Some(req_policy) => {
+                let py_oid = crate::util::oid_to_py_oid(py, &req_policy)?;
+                Ok(Some(py_oid.into_py(py)))
+            },
+            None => Ok(None),
         }
     }
 
@@ -59,9 +62,14 @@ impl TimeStampReq {
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
         Ok(PyMessageImprint {
             contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                RawMessageImprint::parse_data(v.as_bytes(py))
-            })
-            .map_err(|_| PyValueError::new_err("invalid message imprint"))?,
+
+                let req = asn1::parse_single::<RawTimeStampReq>(v.as_bytes(py))
+                    .map_err(|e| PyValueError::new_err(format!("invalid message imprint: {:?}", e)));
+                match req {
+                    Ok(res) => Ok(res.message_imprint),
+                    Err(_) => Err(PyValueError::new_err("Unable to retrieve message imprint"))
+                }
+            }).map_err(|e| PyValueError::new_err(format!("invalid message imprint: {:?}", e)))?,
         })
     }
 
@@ -371,10 +379,13 @@ impl PyTSTInfo {
     }
 
     #[getter]
-    fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    fn policy<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<Option<PyObject>> {
         match &self.raw.borrow_dependent().policy {
-            Some(req_policy) => crate::util::oid_to_py_oid(py, &req_policy),
-            None => todo!(),
+            Some(req_policy) => {
+                let py_oid = crate::util::oid_to_py_oid(py, &req_policy)?;
+                Ok(Some(py_oid.into_py(py)))
+            },
+            None => Ok(None),
         }
     }
 
@@ -418,13 +429,13 @@ impl PyTSTInfo {
     }
 
     #[getter]
-    fn nonce<'p>(&self, py: Python<'p>) -> PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+    fn nonce<'p>(&self, py: Python<'p>) -> PyResult<Option<PyObject>> {
         match self.raw.borrow_dependent().nonce {
             Some(nonce) => {
                 let py_nonce = crate::util::big_asn1_uint_to_py(py, nonce)?;
-                Ok(py_nonce)
+                Ok(Some(py_nonce.into_py(py)))
             }
-            None => todo!(),
+            None => Ok(None),
         }
     }
 

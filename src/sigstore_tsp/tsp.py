@@ -197,5 +197,18 @@ class SignedData(metaclass=abc.ABCMeta):
         Warning: they are returned as a byte array and should be loaded.
         """
 
+    @property
+    @abc.abstractmethod
+    def signer_infos(self) -> set[SignerInfo]:
+        """Returns the signers infos."""
 
 SignedData.register(_rust.SignedData)
+
+
+class SignerInfo(metaclass=abc.ABCMeta):
+    @property
+    @abc.abstractmethod
+    def version(self) -> int:
+        """Returns the version."""
+
+SignerInfo.register(_rust.SignerInfo)

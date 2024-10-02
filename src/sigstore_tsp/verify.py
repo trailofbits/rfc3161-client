@@ -85,11 +85,22 @@ def _verify_tsr_with_chains(tsp_response: TimeStampResponse, opts: VerifyOpts) -
         return False
 
     signed_data = tsp_response.signed_data
-    if not signed_data.certificates and opts.tsa_certificate:
-        # TODO(dm) I can't assign here because that's read only
-        signed_data.certificates = opts.tsa_certificate
 
-    # TODO(dm)
+    verification_certificate = []
+    if signed_data.certificates:
+        verification_certificate = signed_data.certificates
+    elif not signed_data.certificates and opts.tsa_certificate:
+        verification_certificate = [ opts.tsa_certificate ]
+
+    # https://github.com/digitorus/pkcs7/blob/3a137a8743524b3683ca4e11608d0dde37caee99/verify.go#L74
+    if len(signed_data.signer_infos) == 0:
+        # No signer presents
+        return False
+
+    # TODO(dm): Here we would need to check the pkcs7 signer info
+    #   and verify the signature. Instead of implementing it here,
+    #   we should probably leverage some library that already does that.
+
     return True
 
 
