@@ -1,8 +1,10 @@
+import pytest
 from pathlib import Path
+import cryptography.hazmat
 import cryptography.x509
 
 from sigstore_tsp.base import TimestampRequestBuilder, decode_timestamp_response
-from sigstore_tsp.verify import verify_timestamp_response, VerifyOpts, create_verify_opts
+from sigstore_tsp.verify import verify_timestamp_response, create_verify_opts
 
 
 
@@ -29,6 +31,14 @@ def test_create_verify_opts():
     assert verify_opts.tsa_certificate == certificates[0]
 
 
+def test_create_request():
+
+    request = TimestampRequestBuilder().data(b"hello").build()
+
+    assert request.version == 1
+    assert request.cert_req is True
+
+
 def test_verify():
 
     request = TimestampRequestBuilder().data(b"hello").build()
@@ -48,4 +58,30 @@ def test_verify():
         timestamp_response=decode_timestamp_response(response),
         hashed_message=request.message_imprint.message,
         verify_opts=verify_opts,
+    )
+
+
+@pytest.mark.skip(reason="certificate verification fails - to be tested")
+def test_pkcs7():
+    from cryptography.hazmat.bindings._rust import test_support
+    from cryptography.hazmat.primitives.serialization import Encoding, pkcs7
+
+
+    response = (_FIXTURE / "response.tsr").read_bytes()
+
+    tsr = decode_timestamp_response(response)
+    time_stamp_token = tsr.time_stamp_token()
+
+    certificates = cryptography.x509.load_pem_x509_certificates(
+        (_FIXTURE / "ts_chain.pem").read_bytes()
+    )
+
+    options = []
+
+    test_support.pkcs7_verify(
+        encoding=Encoding.DER,
+        sig =time_stamp_token,
+        msg=b"hello",
+        certs=certificates,
+        options=options,
     )

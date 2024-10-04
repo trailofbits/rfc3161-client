@@ -206,6 +206,18 @@ impl TimeStampResp {
         };
         Ok(py_signed_data)
     }
+
+    // Timestamp Token (as_bytes)
+    fn time_stamp_token<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let result = asn1::write_single(&self.raw.borrow_dependent().time_stamp_token);
+        match result {
+            Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
+        }
+    }
 }
 
 self_cell::self_cell!(
@@ -465,6 +477,17 @@ impl PyTSTInfo {
         }
     }
     // TODO(dm) extensions: Extensions
+
+    fn as_bytes<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let result = asn1::write_single(&self.raw.borrow_dependent());
+        match result {
+            Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
+        }
+    }
 }
 
 #[pyo3::pyfunction]
@@ -523,7 +546,7 @@ pub(crate) fn create_timestamp_request(
         message_imprint: message_imprint,
         nonce: nonce_biguint,
         req_policy: None,
-        cert_req: false,
+        cert_req: true,
         extensions: None,
     };
 

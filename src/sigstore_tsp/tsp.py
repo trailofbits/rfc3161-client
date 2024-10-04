@@ -105,6 +105,10 @@ class TimeStampResponse(metaclass=abc.ABCMeta):
     def signed_data(self) -> SignedData:
         """Returns the Signed Data."""
 
+    @abc.abstractmethod
+    def time_stamp_token(self) -> bytes:
+        """Return the bytes of the TimestampToken field."""
+
 
 TimeStampResponse.register(_rust.TimeStampResp)
 
