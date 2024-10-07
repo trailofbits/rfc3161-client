@@ -12,7 +12,11 @@ dynamic = ["version"]
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
-dependencies = ["maturin>=1.7,<2.0", "cryptography"]
+dependencies = [
+    "maturin>=1.7,<2.0",
+    # TODO(dm) Change me once this is merged upstream
+    "cryptography @ git+https://github.com/trail-of-forks/cryptography.git@dc667c173ad9e43e859756c0af45c9e5296441ee"
+]
 
 [project.optional-dependencies]
 doc = []

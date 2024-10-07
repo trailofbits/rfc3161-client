@@ -49,11 +49,16 @@ pub(crate) fn big_asn1_uint_to_py<'p>(
     )?)
 }
 
+pub static OBJECT_IDENTIFIER: LazyPyImport =
+    LazyPyImport::new("cryptography.x509.oid", &["ObjectIdentifier"]);
+
 pub(crate) fn oid_to_py_oid<'p>(
     py: pyo3::Python<'p>,
     oid: &asn1::ObjectIdentifier,
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    Ok(pyo3::Bound::new(py, crate::oid::ObjectIdentifier { oid: oid.clone() })?.into_any())
+    //Ok(pyo3::Bound::new(py, crate::oid::ObjectIdentifier { oid: oid.clone() })?.into_any())
+    let oid_object = OBJECT_IDENTIFIER.get(py)?;
+    oid_object.call1((oid.to_string(),))
 }
 
 pub static DATETIME_DATETIME: LazyPyImport = LazyPyImport::new("datetime", &["datetime"]);
@@ -78,3 +83,12 @@ pub(crate) fn datetime_to_py_utc<'p>(
 }
 
 pub static OTHER_NAME: LazyPyImport = LazyPyImport::new("cryptography.x509", &["OtherName"]);
+pub static ASN1_TYPE_TO_ENUM: LazyPyImport =
+    LazyPyImport::new("cryptography.x509.name", &["_ASN1_TYPE_TO_ENUM"]);
+pub static NAME_ATTRIBUTE: LazyPyImport =
+    LazyPyImport::new("cryptography.x509", &["NameAttribute"]);
+pub static RELATIVE_DISTINGUISHED_NAME: LazyPyImport =
+    LazyPyImport::new("cryptography.x509", &["RelativeDistinguishedName"]);
+pub static NAME: LazyPyImport = LazyPyImport::new("cryptography.x509", &["Name"]);
+pub static DIRECTORY_NAME: LazyPyImport =
+    LazyPyImport::new("cryptography.x509", &["DirectoryName"]);

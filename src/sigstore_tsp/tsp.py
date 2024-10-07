@@ -10,16 +10,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     import cryptography.x509
-
-
-class ObjectIdentifier(metaclass=abc.ABCMeta):
-    @property
-    @abc.abstractmethod
-    def dotted_string(self) -> str:
-        """Returns the dotted string of the OID."""
-
-
-ObjectIdentifier.register(_rust.ObjectIdentifier)
+    import cryptography.x509.oid as c_oid
 
 
 class MessageImprint(metaclass=abc.ABCMeta):
@@ -27,7 +18,7 @@ class MessageImprint(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def hash_algorithm(self) -> ObjectIdentifier:
+    def hash_algorithm(self) -> c_oid.ObjectIdentifier:
         """Returns the Object Identifier of the Hash algorithm used."""
 
     @property
@@ -54,7 +45,7 @@ class TimeStampRequest(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def policy(self) -> ObjectIdentifier:
+    def policy(self) -> c_oid.ObjectIdentifier:
         """Returns the request policy OID."""
 
     @property
@@ -141,7 +132,7 @@ class TimeStampTokenInfo(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def policy(self) -> ObjectIdentifier:
+    def policy(self) -> c_oid.ObjectIdentifier:
         """Returns the policy OID."""
 
     @property
@@ -191,7 +182,7 @@ class SignedData(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def digest_algorithms(self) -> set[ObjectIdentifier]:
+    def digest_algorithms(self) -> set[c_oid.ObjectIdentifier]:
         """Returns the set of digest algorithms."""
 
     @property

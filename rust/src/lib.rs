@@ -1,4 +1,4 @@
-pub mod oid;
+pub mod name;
 pub mod util;
 
 use asn1::SimpleAsn1Readable;
@@ -268,7 +268,7 @@ impl SignedData {
         for cert in certs {
             match cert {
                 tsp_asn1::certificate::CertificateChoices::Certificate(cert) => {
-                    let raw = asn1::write_single(&cert).expect("TODO").clone();
+                    let raw = asn1::write_single(&cert).unwrap().clone();
                     py_certs.add(pyo3::types::PyBytes::new_bound(py, &raw))?;
                 }
                 _ => return Err(PyValueError::new_err("Unknown certificate type")),
@@ -379,7 +379,7 @@ impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
         Accuracy {
             seconds: acc
                 .seconds
-                .map(|s| u128::from_be_bytes(s.as_bytes().try_into().expect("TODO"))),
+                .map(|s| u128::from_be_bytes(s.as_bytes().try_into().unwrap())),
             millis: acc.millis,
             micros: acc.micros,
         }
@@ -428,13 +428,13 @@ impl PyTSTInfo {
     }
 
     #[getter]
-    fn accuracy(&self) -> PyResult<Accuracy> {
+    fn accuracy(&self) -> PyResult<Option<Accuracy>> {
         match self.raw.borrow_dependent().accuracy {
             Some(accuracy) => {
                 let py_acc = Accuracy::from(accuracy);
-                Ok(py_acc)
+                Ok(Some(py_acc))
             }
-            None => todo!(),
+            None => Ok(None),
         }
     }
 
@@ -468,15 +468,25 @@ impl PyTSTInfo {
                                 .call1((oid, data.value.full_data()))?
                                 .to_object(py)
                         }
-                        _ => todo!(),
+                        cryptography_x509::name::GeneralName::DirectoryName(data) => {
+                            let py_name = crate::name::parse_name(py, data.unwrap_read())?;
+                            crate::util::DIRECTORY_NAME
+                                .get(py)?
+                                .call1((py_name,))?
+                                .to_object(py)
+                        }
+                        _ => return Err(PyValueError::new_err("Unknown name format")),
                     };
                     Ok(py_gn)
                 }
             },
-            None => todo!(),
+            None => Err(pyo3::exceptions::PyValueError::new_err("No names found")),
         }
     }
-    // TODO(dm) extensions: Extensions
+
+    // Extensions
+    // The extensions are not exposed because they are not needed.
+    // If this change, or if you workflow requires them, please open an issue.
 
     fn as_bytes<'p>(
         &self,
@@ -583,9 +593,6 @@ mod sigstore_tsp {
             Accuracy, PyMessageImprint, PyTSTInfo, SignedData, SignerInfo, TimeStampReq,
             TimeStampResp,
         };
-
-        #[pymodule_export]
-        use crate::oid::ObjectIdentifier;
     }
 }
 

@@ -219,7 +219,6 @@ mod tests {
 
         match request.req_policy {
             Some(request_policy) => {
-                // TODO(dm)
                 println!("request_policy  {}", request_policy.to_string());
             }
             None => {}

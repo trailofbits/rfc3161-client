@@ -6,6 +6,9 @@ import cryptography.x509
 from sigstore_tsp.base import TimestampRequestBuilder, decode_timestamp_response
 from sigstore_tsp.verify import verify_timestamp_response, create_verify_opts
 
+from cryptography.hazmat.bindings._rust import test_support
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7Options
 
 
 _HERE = Path(__file__).parent.resolve()
@@ -61,12 +64,7 @@ def test_verify():
     )
 
 
-@pytest.mark.skip(reason="certificate verification fails - to be tested")
 def test_pkcs7():
-    from cryptography.hazmat.bindings._rust import test_support
-    from cryptography.hazmat.primitives.serialization import Encoding, pkcs7
-
-
     response = (_FIXTURE / "response.tsr").read_bytes()
 
     tsr = decode_timestamp_response(response)
@@ -76,12 +74,12 @@ def test_pkcs7():
         (_FIXTURE / "ts_chain.pem").read_bytes()
     )
 
-    options = []
+    options = [PKCS7Options.NoChain]
 
     test_support.pkcs7_verify(
         encoding=Encoding.DER,
         sig =time_stamp_token,
-        msg=b"hello",
+        msg=None,
         certs=certificates,
         options=options,
     )

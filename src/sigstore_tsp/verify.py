@@ -5,13 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import cryptography.x509
+import cryptography.x509.oid as c_oid
 
-from sigstore_tsp.tsp import ObjectIdentifier, PKIStatus, TimeStampRequest, TimeStampResponse
+from sigstore_tsp.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 
 @dataclass
 class VerifyOpts:
-    policy_id: ObjectIdentifier | None
+    policy_id: c_oid.ObjectIdentifier | None
     tsa_certificate: cryptography.x509.Certificate | None
     intermediates: list[cryptography.x509.Certificate]
     roots: list[cryptography.x509.Certificate]
