@@ -60,18 +60,21 @@ impl TimeStampReq {
 
     #[getter]
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
-        Ok(PyMessageImprint {
-            contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                let req = asn1::parse_single::<RawTimeStampReq>(v.as_bytes(py)).map_err(|e| {
-                    PyValueError::new_err(format!("invalid message imprint: {:?}", e))
-                });
-                match req {
-                    Ok(res) => Ok(res.message_imprint),
-                    Err(_) => Err(PyValueError::new_err("Unable to retrieve message imprint")),
-                }
-            })
-            .map_err(|e| PyValueError::new_err(format!("invalid message imprint: {:?}", e)))?,
-        })
+        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint).map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint"))?;
+        let full_bytes = self.raw.borrow_owner().as_bytes(py);
+
+        if let Some(offset) = full_bytes.windows(message_imprint.len()).position(|window| window == message_imprint) {
+
+            let slice = &full_bytes[offset..offset+message_imprint.len()];
+            let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
+            Ok(
+                PyMessageImprint { 
+                    contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                        asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
+            }).unwrap() })
+        } else {
+            Err(pyo3::exceptions::PyValueError::new_err("Could not find MessageImprint in the response"))
+        }
     }
 
     fn as_bytes<'p>(
@@ -162,49 +165,60 @@ impl TimeStampResp {
     // TST INFO
     #[getter]
     fn tst_info(&self, py: pyo3::Python<'_>) -> PyResult<PyTSTInfo> {
-        let py_tstinfo = PyTSTInfo {
-            raw: OwnedTSTInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                let rsp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
-                    .map_err(|e| PyValueError::new_err(format!("invalid TimeStampResp: {:?}", e)))
-                    .unwrap();
-
-                match rsp.time_stamp_token {
-                    Some(TimeStampToken {
-                        _content_type,
-                        content: tsp_asn1::tsp::Content::SignedData(signed_data),
-                    }) => signed_data
-                        .as_inner()
-                        .content_info
-                        .tst_info()
-                        .map_err(|_| PyValueError::new_err("invalid TSTInfo")),
-                    None => Err(PyValueError::new_err("missing TimeStampToken")),
-                }
-            })
-            .unwrap(),
+        let tsp = match &self.raw.borrow_dependent().time_stamp_token {
+            Some(TimeStampToken { _content_type, content: tsp_asn1::tsp::Content::SignedData(signed_data) }) => signed_data,
+            None => return Err(pyo3::exceptions::PyValueError::new_err("Missing SignedData")),
         };
-        Ok(py_tstinfo)
+
+        let tst_info = tsp.as_inner().content_info.tst_info()
+            .map_err(|_| pyo3::exceptions::PyValueError::new_err("Malformed TimestampToken"))?;
+
+        let tst_bytes = asn1::write_single(&tst_info)
+            .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize TSTInfo"))?;
+
+        let full_bytes = self.raw.borrow_owner().as_bytes(py);
+        if let Some(offset) = full_bytes.windows(tst_bytes.len()).position(|window| window == tst_bytes) {
+            let tst_slice = &full_bytes[offset..offset + tst_bytes.len()];
+            let new_owner = pyo3::types::PyBytes::new_bound(py, tst_slice);
+
+            let py_tstinfo = PyTSTInfo {
+                raw: OwnedTSTInfo::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                    asn1::parse_single::<tsp_asn1::tsp::TSTInfo>(v.as_bytes(py))
+                }).unwrap()
+            };
+            Ok(py_tstinfo)
+        } else {
+            Err(pyo3::exceptions::PyValueError::new_err("Could not find TSTInfo in the response"))
+        }
     }
 
     // Signed Data
     #[getter]
     fn signed_data(&self, py: pyo3::Python<'_>) -> PyResult<SignedData> {
-        let py_signed_data = SignedData {
-            raw: OwnedSignedData::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                let resp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
-                    .map_err(|e| PyValueError::new_err(format!("invalid TimeStampResp: {:?}", e)))
-                    .unwrap();
 
-                match resp.time_stamp_token {
-                    Some(TimeStampToken {
-                        _content_type,
-                        content: tsp_asn1::tsp::Content::SignedData(signed_data),
-                    }) => Ok(*signed_data.into_inner()),
-                    None => Err(PyValueError::new_err("missing TimeStampToken")),
+        match &self.raw.borrow_dependent().time_stamp_token {
+            Some(TimeStampToken { _content_type, content: tsp_asn1::tsp::Content::SignedData(signed_data) }) => {
+
+                let signed_data_bytes = asn1::write_single(&signed_data.as_inner())
+                    .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize SignedData"))?;
+
+                let full_bytes = self.raw.borrow_owner().as_bytes(py);
+                if let Some(offset) = full_bytes.windows(signed_data_bytes.len()).position(|window| window == signed_data_bytes) {
+                    let tst_slice = &full_bytes[offset..offset + signed_data_bytes.len()];
+                    let new_owner = pyo3::types::PyBytes::new_bound(py, tst_slice);
+        
+                    let py_signed_data = SignedData {
+                        raw: OwnedSignedData::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                            asn1::parse_single::<tsp_asn1::cms::SignedData>(v.as_bytes(py))
+                        }).unwrap()
+                    };
+                    Ok(py_signed_data)
+                } else {
+                    Err(pyo3::exceptions::PyValueError::new_err("Could not find SignedData in the response"))
                 }
-            })
-            .unwrap(),
-        };
-        Ok(py_signed_data)
+            },
+            None => return Err(pyo3::exceptions::PyValueError::new_err("Missing SignedData")),
+        }
     }
 
     // Timestamp Token (as_bytes)
@@ -281,34 +295,23 @@ impl SignedData {
     fn signer_infos<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::PyObject> {
         let py_set = pyo3::types::PySet::empty_bound(py)?;
 
-        let mut i = 0;
-        for _ in self.raw.borrow_dependent().signer_infos.clone() {
-            let py_signer_info = SignerInfo {
-                raw: OwnedSignerInfo::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                    let resp = asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
-                        .map_err(|e| {
-                            PyValueError::new_err(format!(
-                                "invalid Signer Data: {:?}",
-                                v.as_bytes(py)
-                            ))
-                        })
-                        .unwrap();
+        let full_bytes = self.raw.borrow_owner().as_bytes(py);
+        for signer in self.raw.borrow_dependent().signer_infos.clone() {
+            let signer_bytes = asn1::write_single(&signer)
+                .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize SignerInfo"))?;
 
-                    match resp.time_stamp_token {
-                        Some(TimeStampToken {
-                            _content_type,
-                            content: tsp_asn1::tsp::Content::SignedData(signed_data),
-                        }) => {
-                            let signer_info = signed_data.into_inner().signer_infos.nth(i).unwrap();
-                            Ok(signer_info)
-                        }
-                        None => Err(PyValueError::new_err("missing TimeStampToken")),
-                    }
-                })
-                .unwrap(),
-            };
-            py_set.add(py_signer_info.into_py(py))?;
-            i = i + 1;
+            if let Some(offset) = full_bytes.windows(signer_bytes.len()).position(|window| window == signer_bytes) {
+
+                let slice = &full_bytes[offset..offset + signer_bytes.len()];
+                let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
+
+                let py_signer_info = SignerInfo {
+                    raw: OwnedSignerInfo::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                        asn1::parse_single::<RawSignerInfo>(v.as_bytes(py))
+                    }).unwrap()
+                };
+                py_set.add(py_signer_info.into_py(py))?;
+            }
         }
 
         Ok(py_set.to_object(py))
@@ -334,19 +337,6 @@ impl SignerInfo {
     fn version(&self) -> pyo3::PyResult<u8> {
         Ok(self.raw.borrow_dependent().version)
     }
-}
-
-self_cell::self_cell!(
-    pub struct OwnedTSTInfo {
-        owner: pyo3::Py<pyo3::types::PyBytes>,
-        #[covariant]
-        dependent: RawTSTInfo,
-    }
-);
-
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
-pub struct PyTSTInfo {
-    pub raw: OwnedTSTInfo,
 }
 
 #[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
@@ -379,11 +369,33 @@ impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
         Accuracy {
             seconds: acc
                 .seconds
-                .map(|s| u128::from_be_bytes(s.as_bytes().try_into().unwrap())),
+                .and_then(|s| {
+                    let bytes = s.as_bytes();
+                    if bytes.len() <= 16 {
+                        let mut buffer = [0u8; 16];
+                        buffer[16 - bytes.len()..].copy_from_slice(bytes);
+                        Some(u128::from_be_bytes(buffer))
+                    } else {
+                        None
+                    }
+                }),
             millis: acc.millis,
             micros: acc.micros,
         }
     }
+}
+
+self_cell::self_cell!(
+    pub struct OwnedTSTInfo {
+        owner: pyo3::Py<pyo3::types::PyBytes>,
+        #[covariant]
+        dependent: RawTSTInfo,
+    }
+);
+
+#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+pub struct PyTSTInfo {
+    pub raw: OwnedTSTInfo,
 }
 
 #[pyo3::pymethods]
@@ -406,12 +418,21 @@ impl PyTSTInfo {
 
     #[getter]
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
-        Ok(PyMessageImprint {
-            contents: OwnedMessageImprint::try_new(self.raw.borrow_owner().clone_ref(py), |v| {
-                RawMessageImprint::parse_data(v.as_bytes(py))
-            })
-            .map_err(|_| PyValueError::new_err("invalid message imprint"))?,
-        })
+        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint).map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint"))?;
+        let full_bytes = self.raw.borrow_owner().as_bytes(py);
+
+        if let Some(offset) = full_bytes.windows(message_imprint.len()).position(|window| window == message_imprint) {
+
+            let slice = &full_bytes[offset..offset+message_imprint.len()];
+            let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
+            Ok(
+                PyMessageImprint { 
+                    contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                        asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
+            }).unwrap() })
+        } else {
+            Err(pyo3::exceptions::PyValueError::new_err("Could not find MessageImprint in the response"))
+        }
     }
 
     #[getter]
