@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 
 from sigstore_tsp import _rust, tsp
+from sigstore_tsp._rust import verify as _rust_verify
 
 
 class HashAlgorithm(enum.Enum):
@@ -23,16 +24,14 @@ class TimestampRequestBuilder:
         self,
         data: bytes | None = None,
         hash_algorithm: _AllowedHashTypes | None = None,
-        req_policy: None | int = None,
-        cert_req: bool = False,  # noqa: FBT001, FBT002
-        extensions: None = None,
+        nonce: bool = True,
+        cert_req: bool = True,
     ) -> None:
         """Init method."""
         self._data: bytes | None = data
         self._algorithm: _AllowedHashTypes | None = hash_algorithm
-        self._req_policy = req_policy
+        self._nonce: bool = nonce
         self._cert_req: bool = cert_req
-        self._extensions = extensions
 
     def data(self, data: bytes) -> TimestampRequestBuilder:
         """Set the data to be timestamped."""
@@ -42,14 +41,7 @@ class TimestampRequestBuilder:
         if self._data is not None:
             msg = "The data may only be set once."
             raise ValueError(msg)
-        return TimestampRequestBuilder(
-            data, self._algorithm, self._req_policy, self._cert_req, self._extensions
-        )
-
-    def add_extension(self, _extension: None) -> TimestampRequestBuilder:
-        """Add an extension."""
-        msg = "Adding extensions is not yet supported."
-        raise NotImplementedError(msg)
+        return TimestampRequestBuilder(data, self._algorithm, self._nonce, self._cert_req)
 
     def hash_algorithm(self, hash_algorihtm: _AllowedHashTypes) -> TimestampRequestBuilder:
         """Set the Hash algorithm used."""
@@ -57,9 +49,7 @@ class TimestampRequestBuilder:
             msg = f"{hash_algorihtm} is not a supported hash."
             raise TypeError(msg)
 
-        return TimestampRequestBuilder(
-            self._data, hash_algorihtm, self._req_policy, self._cert_req, self._extensions
-        )
+        return TimestampRequestBuilder(self._data, hash_algorihtm, self._nonce, self._cert_req)
 
     def cert_request(self, *, cert_request: bool = False) -> TimestampRequestBuilder:
         """Set the cert request field."""
@@ -67,19 +57,15 @@ class TimestampRequestBuilder:
             msg = "Cert request must be a boolean."
             raise TypeError(msg)
 
-        return TimestampRequestBuilder(
-            self._data, self._algorithm, self._req_policy, cert_request, self._extensions
-        )
+        return TimestampRequestBuilder(self._data, self._algorithm, self._nonce, cert_request)
 
-    def request_policy(self, request_policy: int) -> TimestampRequestBuilder:
+    def nonce(self, *, nonce: bool = True) -> TimestampRequestBuilder:
         """Set the request policy field."""
-        if not isinstance(request_policy, int):
-            msg = "Request policy must be an integer."
+        if not isinstance(nonce, bool):
+            msg = "Request policy must be a boolean."
             raise TypeError(msg)
 
-        return TimestampRequestBuilder(
-            self._data, self._algorithm, request_policy, self._cert_req, self._extensions
-        )
+        return TimestampRequestBuilder(self._data, self._algorithm, nonce, self._cert_req)
 
     def build(self) -> tsp.TimeStampRequest:
         """Build a TimestampRequest."""
@@ -90,9 +76,27 @@ class TimestampRequestBuilder:
         if self._algorithm is None:
             self._algorithm = HashAlgorithm.SHA512
 
-        return _rust.create_timestamp_request(self._data)
+        return _rust.create_timestamp_request(
+            data=self._data,
+            nonce=self._nonce,
+            cert=self._cert_req,
+        )
 
 
 def decode_timestamp_response(data: bytes) -> tsp.TimeStampResponse:
     """Decode a Timestamp response."""
     return _rust.parse_timestamp_response(data)
+
+
+def verify_signed_data(sig: bytes, certificates: set[bytes]) -> None:
+    """Verify signed data.
+
+    This function verify that the bytes used a signature are signed by a certificate
+    trusted in the `certificates` list.
+    The function does not return anything, but raises an exception if the verification fails.
+
+    :param sig: Bytes of a PKCS7 object. This must be in DER format and will be unserialized.
+    :param certificates: A list of trusted certificates to verify the response against.
+    :raise: ValueError if the signature verification fails.
+    """
+    return _rust_verify.pkcs7_verify(sig, list(certificates))

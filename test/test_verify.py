@@ -1,85 +1,128 @@
-import pytest
 from pathlib import Path
+
 import cryptography.hazmat
 import cryptography.x509
+import pretend
+import pytest
+from cryptography.hazmat.primitives import hashes
 
+from sigstore_tsp._rust import parse_timestamp_request
 from sigstore_tsp.base import TimestampRequestBuilder, decode_timestamp_response
-from sigstore_tsp.verify import verify_timestamp_response, create_verify_opts
-
-from cryptography.hazmat.bindings._rust import test_support
-from cryptography.hazmat.primitives.serialization import Encoding
-from cryptography.hazmat.primitives.serialization.pkcs7 import PKCS7Options
-
+from sigstore_tsp.errors import VerificationError
+from sigstore_tsp.tsp import TimeStampRequest, TimeStampResponse
+from sigstore_tsp.verify import (
+    VerifyOpts,
+    _verify_tsr_with_chains,
+    create_verify_opts,
+    verify_timestamp_response,
+)
 
 _HERE = Path(__file__).parent.resolve()
 _FIXTURE = _HERE / "fixtures"
 
-def test_create_verify_opts():
-    request = TimestampRequestBuilder().data(b"hello").build()
 
-    certificates = cryptography.x509.load_pem_x509_certificates(
-        (_FIXTURE / "ts_chain.pem").read_bytes()
-    )
+@pytest.fixture
+def certificates() -> list[cryptography.x509.Certificate]:
+    return cryptography.x509.load_pem_x509_certificates((_FIXTURE / "ts_chain.pem").read_bytes())
 
-    verify_opts = create_verify_opts(
-        request,
-        tsa_certifiate=certificates[0],
+
+@pytest.fixture
+def ts_request() -> TimeStampRequest:
+    return parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
+
+
+@pytest.fixture
+def ts_response() -> TimeStampResponse:
+    return decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
+
+
+@pytest.fixture
+def verify_opts(
+    certificates: list[cryptography.x509.Certificate], ts_request: TimeStampRequest
+) -> VerifyOpts:
+    return create_verify_opts(
+        ts_request,
+        tsa_certificate=certificates[0],
         common_name=certificates[0].subject.rfc4514_string(),
         root_certificates=[certificates[-1]],
         intermediates=certificates[1:-1],
     )
 
-    assert verify_opts.nonce == request.nonce
-    assert verify_opts.policy_id == request.policy
-    assert verify_opts.tsa_certificate == certificates[0]
+
+class TestVerifyOpts:
+    @pytest.fixture
+    def ts_request(self) -> TimeStampRequest:
+        return TimestampRequestBuilder().data(b"hello").build()
+
+    def test_create_verify_opts(
+        self, ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
+    ):
+        verify_opts = create_verify_opts(
+            ts_request,
+            tsa_certificate=certificates[0],
+            common_name=certificates[0].subject.rfc4514_string(),
+            root_certificates=[certificates[-1]],
+            intermediates=certificates[1:-1],
+        )
+
+        assert verify_opts.nonce == ts_request.nonce
+        assert verify_opts.policy_id == ts_request.policy
+        assert verify_opts.tsa_certificate == certificates[0]
+
+    def test_without_certificates(
+        self, ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
+    ):
+        verify_opts = create_verify_opts(
+            ts_request,
+            tsa_certificate=certificates[0],
+            common_name=certificates[0].subject.rfc4514_string(),
+            root_certificates=None,
+            intermediates=None,
+        )
+
+        assert verify_opts.roots == []
+        assert verify_opts.intermediates == []
 
 
-def test_create_request():
-
-    request = TimestampRequestBuilder().data(b"hello").build()
-
-    assert request.version == 1
-    assert request.cert_req is True
+def test_verify_tsr_with_chains(ts_response: TimeStampResponse, verify_opts: VerifyOpts):
+    assert _verify_tsr_with_chains(ts_response, verify_opts) is True
 
 
-def test_verify():
+def test_verify_tsr_with_chains_without_roots(
+    ts_response: TimeStampResponse, verify_opts: VerifyOpts
+):
+    verify_opts.roots = []
+    with pytest.raises(VerificationError, match="No roots"):
+        _verify_tsr_with_chains(ts_response, verify_opts)
 
-    request = TimestampRequestBuilder().data(b"hello").build()
-    response = (_FIXTURE / "response.tsr").read_bytes()
-    certificates = cryptography.x509.load_pem_x509_certificates(
-        (_FIXTURE / "ts_chain.pem").read_bytes()
-    )
 
-    verify_opts = create_verify_opts(
-        request,
-        tsa_certifiate=certificates[0],
-        common_name=certificates[0].subject.rfc4514_string(),
-        root_certificates=[certificates[-1]],
-    )
+def test_verify_tsr_with_chains_without_certs(
+    ts_response: TimeStampResponse, verify_opts: VerifyOpts
+):
+    with pytest.raises(VerificationError, match="Error while verifying"):
+        _verify_tsr_with_chains(
+            pretend.stub(
+                signed_data=ts_response.signed_data,
+                time_stamp_token=lambda: b"",
+            ),
+            verify_opts,
+        )
+
+
+def test_verify_tsr_with_chains_without_signer(verify_opts: VerifyOpts):
+    with pytest.raises(VerificationError, match="0 signer infos"):
+        _verify_tsr_with_chains(
+            pretend.stub(signed_data=pretend.stub(signer_infos=[])), verify_opts
+        )
+
+
+def test_verify(ts_response: TimeStampResponse, verify_opts: VerifyOpts):
+    digest = hashes.Hash(hashes.SHA512())
+    digest.update(b"hello")  # This is used in scripts/update_fixtures.py
+    message = digest.finalize()
 
     verify_timestamp_response(
-        timestamp_response=decode_timestamp_response(response),
-        hashed_message=request.message_imprint.message,
+        timestamp_response=ts_response,
+        hashed_message=message,
         verify_opts=verify_opts,
-    )
-
-
-def test_pkcs7():
-    response = (_FIXTURE / "response.tsr").read_bytes()
-
-    tsr = decode_timestamp_response(response)
-    time_stamp_token = tsr.time_stamp_token()
-
-    certificates = cryptography.x509.load_pem_x509_certificates(
-        (_FIXTURE / "ts_chain.pem").read_bytes()
-    )
-
-    options = [PKCS7Options.NoChain]
-
-    test_support.pkcs7_verify(
-        encoding=Encoding.DER,
-        sig =time_stamp_token,
-        msg=None,
-        certs=certificates,
-        options=options,
     )

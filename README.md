@@ -22,7 +22,7 @@ protocol described in the RFC 3161.
 
 # License
 
-TBD
+Apache 2.0
 
 # Authors
 Trail of Bits

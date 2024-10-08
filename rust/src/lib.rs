@@ -1,7 +1,6 @@
 pub mod name;
 pub mod util;
 
-use asn1::SimpleAsn1Readable;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
@@ -60,20 +59,28 @@ impl TimeStampReq {
 
     #[getter]
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
-        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint).map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint"))?;
+        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint)
+            .map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint")
+            })?;
         let full_bytes = self.raw.borrow_owner().as_bytes(py);
 
-        if let Some(offset) = full_bytes.windows(message_imprint.len()).position(|window| window == message_imprint) {
-
-            let slice = &full_bytes[offset..offset+message_imprint.len()];
+        if let Some(offset) = full_bytes
+            .windows(message_imprint.len())
+            .position(|window| window == message_imprint)
+        {
+            let slice = &full_bytes[offset..offset + message_imprint.len()];
             let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
-            Ok(
-                PyMessageImprint { 
-                    contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
-                        asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
-            }).unwrap() })
+            Ok(PyMessageImprint {
+                contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                    asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
+                })
+                .unwrap(),
+            })
         } else {
-            Err(pyo3::exceptions::PyValueError::new_err("Could not find MessageImprint in the response"))
+            Err(pyo3::exceptions::PyValueError::new_err(
+                "Could not find MessageImprint in the response",
+            ))
         }
     }
 
@@ -166,58 +173,87 @@ impl TimeStampResp {
     #[getter]
     fn tst_info(&self, py: pyo3::Python<'_>) -> PyResult<PyTSTInfo> {
         let tsp = match &self.raw.borrow_dependent().time_stamp_token {
-            Some(TimeStampToken { _content_type, content: tsp_asn1::tsp::Content::SignedData(signed_data) }) => signed_data,
-            None => return Err(pyo3::exceptions::PyValueError::new_err("Missing SignedData")),
+            Some(TimeStampToken {
+                _content_type,
+                content: tsp_asn1::tsp::Content::SignedData(signed_data),
+            }) => signed_data,
+            None => {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "Missing SignedData",
+                ))
+            }
         };
 
-        let tst_info = tsp.as_inner().content_info.tst_info()
+        let tst_info = tsp
+            .as_inner()
+            .content_info
+            .tst_info()
             .map_err(|_| pyo3::exceptions::PyValueError::new_err("Malformed TimestampToken"))?;
 
         let tst_bytes = asn1::write_single(&tst_info)
             .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize TSTInfo"))?;
 
         let full_bytes = self.raw.borrow_owner().as_bytes(py);
-        if let Some(offset) = full_bytes.windows(tst_bytes.len()).position(|window| window == tst_bytes) {
+        if let Some(offset) = full_bytes
+            .windows(tst_bytes.len())
+            .position(|window| window == tst_bytes)
+        {
             let tst_slice = &full_bytes[offset..offset + tst_bytes.len()];
             let new_owner = pyo3::types::PyBytes::new_bound(py, tst_slice);
 
             let py_tstinfo = PyTSTInfo {
                 raw: OwnedTSTInfo::try_new(new_owner.as_unbound().clone_ref(py), |v| {
                     asn1::parse_single::<tsp_asn1::tsp::TSTInfo>(v.as_bytes(py))
-                }).unwrap()
+                })
+                .unwrap(),
             };
             Ok(py_tstinfo)
         } else {
-            Err(pyo3::exceptions::PyValueError::new_err("Could not find TSTInfo in the response"))
+            Err(pyo3::exceptions::PyValueError::new_err(
+                "Could not find TSTInfo in the response",
+            ))
         }
     }
 
     // Signed Data
     #[getter]
     fn signed_data(&self, py: pyo3::Python<'_>) -> PyResult<SignedData> {
-
         match &self.raw.borrow_dependent().time_stamp_token {
-            Some(TimeStampToken { _content_type, content: tsp_asn1::tsp::Content::SignedData(signed_data) }) => {
-
-                let signed_data_bytes = asn1::write_single(&signed_data.as_inner())
-                    .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize SignedData"))?;
+            Some(TimeStampToken {
+                _content_type,
+                content: tsp_asn1::tsp::Content::SignedData(signed_data),
+            }) => {
+                let signed_data_bytes =
+                    asn1::write_single(&signed_data.as_inner()).map_err(|_| {
+                        pyo3::exceptions::PyValueError::new_err("Unable to serialize SignedData")
+                    })?;
 
                 let full_bytes = self.raw.borrow_owner().as_bytes(py);
-                if let Some(offset) = full_bytes.windows(signed_data_bytes.len()).position(|window| window == signed_data_bytes) {
+                if let Some(offset) = full_bytes
+                    .windows(signed_data_bytes.len())
+                    .position(|window| window == signed_data_bytes)
+                {
                     let tst_slice = &full_bytes[offset..offset + signed_data_bytes.len()];
                     let new_owner = pyo3::types::PyBytes::new_bound(py, tst_slice);
-        
+
                     let py_signed_data = SignedData {
                         raw: OwnedSignedData::try_new(new_owner.as_unbound().clone_ref(py), |v| {
                             asn1::parse_single::<tsp_asn1::cms::SignedData>(v.as_bytes(py))
-                        }).unwrap()
+                        })
+                        .unwrap(),
                     };
                     Ok(py_signed_data)
                 } else {
-                    Err(pyo3::exceptions::PyValueError::new_err("Could not find SignedData in the response"))
+                    Err(pyo3::exceptions::PyValueError::new_err(
+                        "Could not find SignedData in the response",
+                    ))
                 }
-            },
-            None => return Err(pyo3::exceptions::PyValueError::new_err("Missing SignedData")),
+            }
+            None => {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "Missing SignedData",
+                ))
+            }
         }
     }
 
@@ -297,18 +333,22 @@ impl SignedData {
 
         let full_bytes = self.raw.borrow_owner().as_bytes(py);
         for signer in self.raw.borrow_dependent().signer_infos.clone() {
-            let signer_bytes = asn1::write_single(&signer)
-                .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize SignerInfo"))?;
+            let signer_bytes = asn1::write_single(&signer).map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err("Unable to serialize SignerInfo")
+            })?;
 
-            if let Some(offset) = full_bytes.windows(signer_bytes.len()).position(|window| window == signer_bytes) {
-
+            if let Some(offset) = full_bytes
+                .windows(signer_bytes.len())
+                .position(|window| window == signer_bytes)
+            {
                 let slice = &full_bytes[offset..offset + signer_bytes.len()];
                 let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
 
                 let py_signer_info = SignerInfo {
                     raw: OwnedSignerInfo::try_new(new_owner.as_unbound().clone_ref(py), |v| {
                         asn1::parse_single::<RawSignerInfo>(v.as_bytes(py))
-                    }).unwrap()
+                    })
+                    .unwrap(),
                 };
                 py_set.add(py_signer_info.into_py(py))?;
             }
@@ -367,18 +407,16 @@ impl Accuracy {
 impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
     fn from(acc: tsp_asn1::tsp::Accuracy<'_>) -> Self {
         Accuracy {
-            seconds: acc
-                .seconds
-                .and_then(|s| {
-                    let bytes = s.as_bytes();
-                    if bytes.len() <= 16 {
-                        let mut buffer = [0u8; 16];
-                        buffer[16 - bytes.len()..].copy_from_slice(bytes);
-                        Some(u128::from_be_bytes(buffer))
-                    } else {
-                        None
-                    }
-                }),
+            seconds: acc.seconds.and_then(|s| {
+                let bytes = s.as_bytes();
+                if bytes.len() <= 16 {
+                    let mut buffer = [0u8; 16];
+                    buffer[16 - bytes.len()..].copy_from_slice(bytes);
+                    Some(u128::from_be_bytes(buffer))
+                } else {
+                    None
+                }
+            }),
             millis: acc.millis,
             micros: acc.micros,
         }
@@ -418,20 +456,28 @@ impl PyTSTInfo {
 
     #[getter]
     fn message_imprint(&self, py: pyo3::Python<'_>) -> PyResult<PyMessageImprint> {
-        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint).map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint"))?;
+        let message_imprint = asn1::write_single(&self.raw.borrow_dependent().message_imprint)
+            .map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err("Unable to serialize Message Imprint")
+            })?;
         let full_bytes = self.raw.borrow_owner().as_bytes(py);
 
-        if let Some(offset) = full_bytes.windows(message_imprint.len()).position(|window| window == message_imprint) {
-
-            let slice = &full_bytes[offset..offset+message_imprint.len()];
+        if let Some(offset) = full_bytes
+            .windows(message_imprint.len())
+            .position(|window| window == message_imprint)
+        {
+            let slice = &full_bytes[offset..offset + message_imprint.len()];
             let new_owner = pyo3::types::PyBytes::new_bound(py, slice);
-            Ok(
-                PyMessageImprint { 
-                    contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
-                        asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
-            }).unwrap() })
+            Ok(PyMessageImprint {
+                contents: OwnedMessageImprint::try_new(new_owner.as_unbound().clone_ref(py), |v| {
+                    asn1::parse_single::<tsp_asn1::tsp::MessageImprint>(v.as_bytes(py))
+                })
+                .unwrap(),
+            })
         } else {
-            Err(pyo3::exceptions::PyValueError::new_err("Could not find MessageImprint in the response"))
+            Err(pyo3::exceptions::PyValueError::new_err(
+                "Could not find MessageImprint in the response",
+            ))
         }
     }
 
@@ -550,10 +596,12 @@ pub(crate) fn parse_timestamp_request(
 }
 
 #[pyo3::pyfunction]
-#[pyo3(signature = (data))]
+#[pyo3(signature = (data, nonce, cert))]
 pub(crate) fn create_timestamp_request(
     py: pyo3::Python<'_>,
     data: pyo3::Py<pyo3::types::PyBytes>,
+    nonce: bool,
+    cert: bool,
 ) -> PyResult<TimeStampReq> {
     let data_bytes = data.as_bytes(py);
     let hash = sha2::Sha512::digest(data_bytes);
@@ -567,17 +615,19 @@ pub(crate) fn create_timestamp_request(
     };
 
     let mut rng = rand::thread_rng();
-    let nonce: u64 = rng.gen();
-    let nonce_bytes = nonce.to_be_bytes();
+    let nonce_random: u64 = rng.gen_range(0..u64::MAX);
+    let mut nonce_bytes = nonce_random.to_be_bytes();
+    // Force the random number to be considered as a positive one.
+    nonce_bytes[0] &= 0x7F;
 
-    let nonce_biguint = asn1::BigUint::new(&nonce_bytes);
+    let nonce_asn1 = asn1::BigUint::new(&nonce_bytes);
 
     let timestamp_request = RawTimeStampReq {
         version: 1,
         message_imprint: message_imprint,
-        nonce: nonce_biguint,
+        nonce: if nonce { nonce_asn1 } else { None },
         req_policy: None,
-        cert_req: true,
+        cert_req: cert,
         extensions: None,
     };
 
@@ -591,6 +641,75 @@ pub(crate) fn create_timestamp_request(
         })?;
 
     Ok(TimeStampReq { raw: raw.into() })
+}
+
+#[pyo3::pyfunction]
+#[pyo3(signature = (sig, certs))]
+fn pkcs7_verify(
+    py: pyo3::Python<'_>,
+    sig: &[u8],
+    certs: Vec<pyo3::Py<pyo3::types::PyBytes>>,
+) -> pyo3::PyResult<()> {
+    let p7 = openssl::pkcs7::Pkcs7::from_der(sig).map_err(|e| {
+        pyo3::exceptions::PyValueError::new_err(format!("Unable to parse sig as pkcs7: {:?}", e))
+    })?;
+
+    let flags = openssl::pkcs7::Pkcs7Flags::empty();
+
+    let store = {
+        let mut b = openssl::x509::store::X509StoreBuilder::new().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Unable to create store builder: {:?}",
+                e
+            ))
+        })?;
+
+        for cert in &certs {
+            b.add_cert(openssl::x509::X509::from_der(&cert.as_bytes(py)).unwrap())
+                .map_err(|e| {
+                    pyo3::exceptions::PyValueError::new_err(format!(
+                        "Unable to add certificate: {:?}",
+                        e
+                    ))
+                })?;
+        }
+        b.build()
+    };
+    let certs = openssl::stack::Stack::new().map_err(|e| {
+        pyo3::exceptions::PyValueError::new_err(format!("Unable to create certs stack: {:?}", e))
+    })?;
+
+    let signers = p7.signers(&certs, flags).map_err(|e| {
+        pyo3::exceptions::PyValueError::new_err(format!("Unable to create signers: {:?}", e))
+    })?;
+    if signers.len() == 0 {
+        return Err(pyo3::exceptions::PyValueError::new_err("No signers found"));
+    }
+
+    for signer in signers {
+        let mut store_ctx = openssl::x509::X509StoreContext::new().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Unable to create store context. {:?}",
+                e
+            ))
+        })?;
+        let is_valid = store_ctx
+            .init(&store, &signer, &certs, |ctx| ctx.verify_cert())
+            .map_err(|e| {
+                pyo3::exceptions::PyValueError::new_err(format!(
+                    "Unable to create verification context. {:?}",
+                    e
+                ))
+            })?;
+
+        if !is_valid {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "Unable to verify certificate",
+            ));
+        }
+    }
+
+    Ok(())
 }
 
 /// A Python module implemented in Rust.
@@ -614,13 +733,18 @@ mod sigstore_tsp {
             Accuracy, PyMessageImprint, PyTSTInfo, SignedData, SignerInfo, TimeStampReq,
             TimeStampResp,
         };
+
+        #[pyo3::pymodule]
+        mod verify {
+            #[pymodule_export]
+            use super::super::pkcs7_verify;
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::OwnedTimeStampResp;
-    use asn1::SimpleAsn1Readable;
     use tsp_asn1::tsp::RawTimeStampResp;
 
     #[test]

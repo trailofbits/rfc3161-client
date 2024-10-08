@@ -42,8 +42,13 @@ module-name = "sigstore_tsp._rust"
 
 [tool.ruff]
 line-length = 100
-include = ["src/**/*.py"]
+include = ["src/**/*.py", "test/**/*.py", "scripts/*.py"]
 target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "TCH"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]

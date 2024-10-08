@@ -43,7 +43,7 @@ all:
 
 .PHONY: dev
 dev: $(VENV)/pyvenv.cfg
-	maturin develop --uv
+	@. $(VENV_BIN)/activate && maturin develop --uv
 
 $(VENV)/pyvenv.cfg: pyproject.toml
 	uv venv $(VENV)

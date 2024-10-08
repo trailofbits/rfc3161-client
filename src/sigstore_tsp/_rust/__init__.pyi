@@ -16,6 +16,8 @@ class SignerInfo: ...
 
 def create_timestamp_request(
     data: bytes,
+    nonce: bool,
+    cert: bool,
 ) -> TimeStampRequest: ...
 
 
