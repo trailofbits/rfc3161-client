@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 tsp-asn1 = { path = "tsp-asn1" }
-pyo3 = { version = "0.22.3", features = ["abi3"] }
+pyo3 = { version = "0.22.4", features = ["abi3"] }
 asn1 = "0.17"
 self_cell = "1"
 hex = "0.4"
