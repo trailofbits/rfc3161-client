@@ -1,0 +1,188 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - target: x86_64
+          - target: x86
+          - target: aarch64
+          - target: armv7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+          manylinux: auto
+          before-script-linux: |
+            if command -v yum 2>&1 >/dev/null
+            then
+              yum update
+              yum install -y perl-core cpanminus devtoolset-10-libatomic-devel
+              # Workaround for OpenSSL not building on Centos 7 (manylinux2014)
+              # Remove once `openssl-src` builds OpenSSL > 3.3.2 by default
+              # Ref: https://github.com/openssl/openssl/pull/25367#issuecomment-2327177830
+              cpanm --verbose --notest install Sub::Util
+            fi
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-${{ matrix.platform.target }}
+          path: dist
+
+  musllinux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - target: x86_64
+          - target: x86
+          - target: aarch64
+          - target: armv7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+          manylinux: musllinux_1_2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-musllinux-${{ matrix.platform.target }}
+          path: dist
+
+  windows:
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: windows-latest
+            arch: 64
+            target: x64
+          - runner: windows-latest
+            arch: 32
+            target: x86
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+          architecture: ${{ matrix.platform.target }}
+      - name: Install OpenSSL
+        env:
+          OPENSSL_INSTALLER: "Win${{ matrix.platform.arch }}OpenSSL-3_3_2.exe"
+          OPENSSL_PATH: "C:\\OpenSSL-Win${{ matrix.platform.arch }}"
+        run: |
+          curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
+          Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
+          echo "Installed OpenSSL version:"
+          Start-Process -FilePath "${env:OPENSSL_PATH}\\bin\\openssl.exe" -ArgumentList "version" -Wait -NoNewWindow
+          echo "Folder contents:"
+          ls ${env:OPENSSL_PATH} -Recurse
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        env:
+          OPENSSL_DIR: "C:\\OpenSSL-Win${{ matrix.platform.arch }}"
+          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win${{ matrix.platform.arch }}\\lib\\VC\\${{ matrix.platform.target }}\\MD"
+          # Do not build OpenSSL on Windows, since we are installing it
+          OPENSSL_NO_VENDOR: 1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-${{ matrix.platform.target }}
+          path: dist
+
+  macos:
+    runs-on: ${{ matrix.platform.runner }}
+    environment: macos-ci-jobs
+    strategy:
+      matrix:
+        platform:
+          - runner: macos-12
+            target: x86_64
+          - runner: macos-14
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        env:
+          # Do not build OpenSSL on MacOS, since it's already installed
+          # and we don't need to cross-compile.
+          OPENSSL_NO_VENDOR: 1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.platform.target }}
+          path: dist
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [linux, musllinux, windows, macos, sdist]
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --non-interactive --skip-existing wheels-*/*
