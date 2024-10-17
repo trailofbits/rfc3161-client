@@ -121,6 +121,10 @@ jobs:
           python-version: 3.x
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          # Do not build OpenSSL on MacOS, since it's already installed
+          # and we don't need to cross-compile.
+          OPENSSL_NO_VENDOR: 1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
