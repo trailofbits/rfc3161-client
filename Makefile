@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-PY_IMPORT = sigstore_tsp
+PY_IMPORT = rfc3161_client
 
 ALL_PY_SRCS := $(shell find src -name '*.py') \
 		$(shell find test -name '*.py')

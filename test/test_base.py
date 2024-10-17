@@ -2,7 +2,7 @@ import cryptography.x509
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from sigstore_tsp.base import HashAlgorithm, TimestampRequestBuilder
+from rfc3161_client.base import HashAlgorithm, TimestampRequestBuilder
 
 SHA512_OID = cryptography.x509.ObjectIdentifier("2.16.840.1.101.3.4.2.3")
 

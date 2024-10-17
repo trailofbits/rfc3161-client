@@ -7,9 +7,9 @@ from dataclasses import dataclass
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
 
-from sigstore_tsp.base import verify_signed_data
-from sigstore_tsp.errors import VerificationError
-from sigstore_tsp.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
+from rfc3161_client.base import verify_signed_data
+from rfc3161_client.errors import VerificationError
+from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 
 @dataclass

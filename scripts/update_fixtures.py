@@ -2,6 +2,7 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "requests",
+#     "rfc3161-client",
 # ]
 # ///
 import argparse
@@ -11,7 +12,7 @@ from pathlib import Path
 
 import requests
 
-from sigstore_tsp.base import TimestampRequestBuilder, decode_timestamp_response
+from rfc3161_client.base import TimestampRequestBuilder, decode_timestamp_response
 
 _FIXTURE_DIRECTORY = Path(__file__).parent.parent / "test" / "fixtures"
 
