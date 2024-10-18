@@ -23,7 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
-lint = ["ruff ~= 0.6.9"]
+lint = ["ruff ~= 0.7.0"]
 dev = ["rfc3161-client[test,lint,doc]"]
 
 [project.urls]
