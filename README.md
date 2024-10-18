@@ -1,4 +1,4 @@
-# RFC3161 Client
+# `rfc3161-client`
 
 > [!WARNING]  
 > This project is an alpha version and should not be used in production.
@@ -9,7 +9,7 @@ described in [RFC 3161](https://www.ietf.org/rfc/rfc3161.txt).
 
 It is composed of three subprojects:
 
-- [tsp-asn1](./rust/tsp-asn1/Cargo.toml): A Rust crate using [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html)
+- [:crab: tsp-asn1](./rust/tsp-asn1/Cargo.toml): A Rust crate using [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html)
   to create the types used by the Time-Stamp protocol. This crate depends on 
   rust-asn1 and cryptography to minimize the amount of duplicated code. While 
   it is usable as a standalone crate, this is not officially supported. Drop 
