@@ -191,6 +191,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist/
+          merge-multiple: true
       - name: Publish distributions
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
