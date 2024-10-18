@@ -1,12 +1,15 @@
 [project]
-name = "sigstore-tsp"
+name = "rfc3161-client"
 requires-python = ">=3.9"
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
+    "Typing :: Typed",
 ]
 dynamic = ["version"]
 readme = "README.md"
@@ -14,20 +17,20 @@ license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
 dependencies = [
     "maturin>=1.7,<2.0",
-    "cryptography"
+    "cryptography>=43,<44",
 ]
 
 [project.optional-dependencies]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
-lint = ["ruff ~= 0.6.7"]
-dev = ["sigstore-tsp[test,lint,doc]"]
+lint = ["ruff ~= 0.6.9"]
+dev = ["rfc3161-client[test,lint,doc]"]
 
 [project.urls]
-Homepage = "https://pypi.org/project/sigstore-tsp"
-Documentation = "https://trailofbits.github.io/sigstore-tsp/"
-Issues = "https://github.com/trailofbits/sigstore-tsp/issues"
-Source = "https://github.com/trailofbits/sigstore-tsp"
+Homepage = "https://pypi.org/project/rfc3161-client"
+Documentation = "https://trailofbits.github.io/rfc3161-client/"
+Issues = "https://github.com/trailofbits/rfc3161-client/issues"
+Source = "https://github.com/trailofbits/rfc3161-client"
 
 [build-system]
 requires = ["maturin>=1.7,<2.0"]
@@ -37,7 +40,7 @@ build-backend = "maturin"
 features = ["pyo3/abi3-py39", "pyo3/extension-module"]
 python-source = "src"
 manifest-path = "rust/Cargo.toml"
-module-name = "sigstore_tsp._rust"
+module-name = "rfc3161_client._rust"
 
 [tool.ruff]
 line-length = 100

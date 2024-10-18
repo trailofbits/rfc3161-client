@@ -1,16 +1,25 @@
-# Sigstore-TSP
+# `rfc3161-client`
 
-_Warning: Draft_
+> [!WARNING]  
+> This project is an alpha version and should not be used in production.
 
-`sigstore-tsp` is a Python library implementing the Time-Stamp Protocol (TSP)
+
+`rfc3161-client` is a Python library implementing the Time-Stamp Protocol (TSP)
 described in [RFC 3161](https://www.ietf.org/rfc/rfc3161.txt).
 
-It is composed of two subprojects :
+It is composed of three subprojects:
 
-- A Rust crate using [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html)
-  to expose the various types used by the Time-Stamp protocol.
-- A Python library re-using this types to expose them in Python and 
-  providing various verifications methods.
+- [:crab: tsp-asn1](./rust/tsp-asn1/Cargo.toml): A Rust crate using [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html)
+  to create the types used by the Time-Stamp protocol. This crate depends on 
+  rust-asn1 and cryptography to minimize the amount of duplicated code. While 
+  it is usable as a standalone crate, this is not officially supported. Drop 
+  us a message if you are interested in using it.
+- [:crab: rfc3161-client](./rust/Cargo.toml): Another Rust crate that 
+  provides 
+  Python bindings to the `tsp-asn1` crate using PyO3. 
+- [:snake: rfc3161-client](./pyproject.toml) A Python library using the 
+  crate above to provide an usable API to create Timestamp Request and read 
+  Timestamp Response. 
 
 # Goals and anti-goals
 

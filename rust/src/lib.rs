@@ -18,7 +18,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct TimeStampReq {
     raw: OwnedTimeStampReq,
 }
@@ -104,7 +104,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub(crate) struct PyMessageImprint {
     pub contents: OwnedMessageImprint,
 }
@@ -138,7 +138,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct TimeStampResp {
     raw: OwnedTimeStampResp,
 }
@@ -278,7 +278,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct SignedData {
     pub raw: OwnedSignedData,
 }
@@ -366,7 +366,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct SignerInfo {
     pub raw: OwnedSignerInfo,
 }
@@ -379,7 +379,7 @@ impl SignerInfo {
     }
 }
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct Accuracy {
     seconds: Option<u128>,
     millis: Option<u8>,
@@ -431,7 +431,7 @@ self_cell::self_cell!(
     }
 );
 
-#[pyo3::pyclass(frozen, module = "sigstore_tsp._rust")]
+#[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct PyTSTInfo {
     pub raw: OwnedTSTInfo,
 }
@@ -714,7 +714,7 @@ fn pkcs7_verify(
 
 /// A Python module implemented in Rust.
 #[pyo3::pymodule]
-mod sigstore_tsp {
+mod rfc3161_client {
     use super::*;
 
     #[pyo3::pymodule]

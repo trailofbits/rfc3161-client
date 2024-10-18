@@ -4,7 +4,7 @@ import abc
 import enum
 from typing import TYPE_CHECKING
 
-from sigstore_tsp import _rust
+from rfc3161_client import _rust
 
 if TYPE_CHECKING:
     import datetime

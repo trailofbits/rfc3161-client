@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import enum
 
-from sigstore_tsp import _rust, tsp
-from sigstore_tsp._rust import verify as _rust_verify
+from rfc3161_client import _rust, tsp
+from rfc3161_client._rust import verify as _rust_verify
 
 
 class HashAlgorithm(enum.Enum):

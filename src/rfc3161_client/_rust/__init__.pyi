@@ -1,4 +1,4 @@
-from sigstore_tsp.tsp import TimeStampRequest, TimeStampResponse
+from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
 
 class PyMessageImprint: ...
 

@@ -14,6 +14,6 @@ Download the binaries or build them and run the server.
 
 ## Run the script
 ```shell
-# Warning, this requires sigstore-tsp, which is not yet available
+# Warning, this requires rfc3161-client, which is not yet available
 uv run scripts/update_fixtures.py
 ```

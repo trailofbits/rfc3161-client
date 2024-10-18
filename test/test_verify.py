@@ -6,11 +6,11 @@ import pretend
 import pytest
 from cryptography.hazmat.primitives import hashes
 
-from sigstore_tsp._rust import parse_timestamp_request
-from sigstore_tsp.base import TimestampRequestBuilder, decode_timestamp_response
-from sigstore_tsp.errors import VerificationError
-from sigstore_tsp.tsp import TimeStampRequest, TimeStampResponse
-from sigstore_tsp.verify import (
+from rfc3161_client._rust import parse_timestamp_request
+from rfc3161_client.base import TimestampRequestBuilder, decode_timestamp_response
+from rfc3161_client.errors import VerificationError
+from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
+from rfc3161_client.verify import (
     VerifyOpts,
     _verify_tsr_with_chains,
     create_verify_opts,

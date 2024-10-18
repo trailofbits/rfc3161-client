@@ -1,7 +1,7 @@
-import sigstore_tsp
+import rfc3161_client
 
 
 def test_version() -> None:
-    version = getattr(sigstore_tsp, "__version__", None)
+    version = getattr(rfc3161_client, "__version__", None)
     assert version is not None
     assert isinstance(version, str)
