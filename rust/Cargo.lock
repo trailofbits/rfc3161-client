@@ -358,7 +358,7 @@ dependencies = [
 
 [[package]]
 name = "rfc3161-client"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "asn1",
  "cryptography-x509",
