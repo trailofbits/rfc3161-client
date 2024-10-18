@@ -128,7 +128,6 @@ jobs:
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
-    environment: macos-ci-jobs
     strategy:
       matrix:
         platform:
