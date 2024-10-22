@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use pyo3::types::IntoPyDict;
 use pyo3::types::PyAnyMethods;
 
@@ -92,3 +94,35 @@ pub static RELATIVE_DISTINGUISHED_NAME: LazyPyImport =
 pub static NAME: LazyPyImport = LazyPyImport::new("cryptography.x509", &["Name"]);
 pub static DIRECTORY_NAME: LazyPyImport =
     LazyPyImport::new("cryptography.x509", &["DirectoryName"]);
+
+pub fn generate_random_bytes() -> Vec<u8> {
+    let mut rng = rand::thread_rng();
+    let nonce_random: u64 = rng.gen_range(0..u64::MAX);
+    let nonce_bytes = nonce_random.to_be_bytes();
+
+    // Remove leading 0
+    let first_non_zero = nonce_bytes
+        .iter()
+        .position(|&x| x != 0)
+        .unwrap_or(nonce_bytes.len() - 1);
+    let result = &nonce_bytes[first_non_zero..].to_vec();
+
+    // Finally, verify that the encoding is minimal
+    if result[0] & 0x80 == 0x80 {
+        [&[0], &result[..]].concat()
+    } else {
+        result.to_vec()
+    }
+}
+
+mod tests {
+    use super::generate_random_bytes;
+
+    #[test]
+    fn test_generate_random_bytes() {
+        for _ in 0..0xffff {
+            let bytes = generate_random_bytes();
+            asn1::BigUint::new(&bytes);
+        }
+    }
+}

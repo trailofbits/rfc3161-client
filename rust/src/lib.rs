@@ -2,7 +2,6 @@ pub mod name;
 pub mod util;
 
 use pyo3::{exceptions::PyValueError, prelude::*};
-use rand::Rng;
 use sha2::Digest;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -646,13 +645,8 @@ pub(crate) fn create_timestamp_request(
         hashed_message: hash.as_slice(),
     };
 
-    let mut rng = rand::thread_rng();
-    let nonce_random: u64 = rng.gen_range(0..u64::MAX);
-    let mut nonce_bytes = nonce_random.to_be_bytes();
-    // Force the random number to be considered as a positive one.
-    nonce_bytes[0] &= 0x7F;
-
-    let nonce_asn1 = asn1::BigUint::new(&nonce_bytes);
+    let random_bytes = crate::util::generate_random_bytes();
+    let nonce_asn1 = asn1::BigUint::new(&random_bytes);
 
     let timestamp_request = RawTimeStampReq {
         version: 1,
