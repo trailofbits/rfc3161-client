@@ -96,6 +96,22 @@ impl TimeStampReq {
             Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
         }
     }
+    
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        let buffer = asn1::write_single(&self.raw.borrow_dependent()).unwrap();
+        buffer.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    fn __repr__(&self, py: pyo3::Python<'_>) -> pyo3::PyResult<String> {
+        let version = self.version()?;
+        let nonce_repr = match self.nonce(py)? {
+            Some(n) => n.to_string(),
+            None => "None".to_string(),
+        };
+        Ok(format!("<TimestampRequest(version={version}, nonce={nonce_repr})>"))
+    }
 }
 
 self_cell::self_cell!(
@@ -278,7 +294,7 @@ impl TimeStampResp {
         hasher.finish()
     }
 
-    fn __repr__(&self, py: pyo3::Python<'_>) -> pyo3::PyResult<String> {
+    fn __repr__(&self) -> pyo3::PyResult<String> {
         let status = self.status()?;
         Ok(format!("<TimestampResponse(status={status}, ...)>"))
     }
