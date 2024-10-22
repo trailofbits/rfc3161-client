@@ -4,6 +4,8 @@ pub mod util;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use rand::Rng;
 use sha2::Digest;
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use tsp_asn1::cms::{SignedData as RawSignedData, SignerInfo as RawSignerInfo};
 use tsp_asn1::tsp::{
     MessageImprint as RawMessageImprint, RawTimeStampReq, RawTimeStampResp, TSTInfo as RawTSTInfo,
@@ -267,6 +269,18 @@ impl TimeStampResp {
             Ok(request_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &request_bytes)),
             Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
         }
+    }
+
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        let buffer = asn1::write_single(&self.raw.borrow_dependent()).unwrap();
+        buffer.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    fn __repr__(&self, py: pyo3::Python<'_>) -> pyo3::PyResult<String> {
+        let status = self.status()?;
+        Ok(format!("<TimestampResponse(status={status}, ...)>"))
     }
 }
 
