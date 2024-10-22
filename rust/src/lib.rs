@@ -96,7 +96,7 @@ impl TimeStampReq {
             Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
         }
     }
-    
+
     fn __hash__(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         let buffer = asn1::write_single(&self.raw.borrow_dependent()).unwrap();
@@ -110,7 +110,9 @@ impl TimeStampReq {
             Some(n) => n.to_string(),
             None => "None".to_string(),
         };
-        Ok(format!("<TimestampRequest(version={version}, nonce={nonce_repr})>"))
+        Ok(format!(
+            "<TimestampRequest(version={version}, nonce={nonce_repr})>"
+        ))
     }
 }
 
