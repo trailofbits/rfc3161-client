@@ -95,7 +95,7 @@ pub static NAME: LazyPyImport = LazyPyImport::new("cryptography.x509", &["Name"]
 pub static DIRECTORY_NAME: LazyPyImport =
     LazyPyImport::new("cryptography.x509", &["DirectoryName"]);
 
-pub fn generate_random_bytes() -> Vec<u8> {
+pub fn generate_random_bytes_for_asn1_biguint() -> Vec<u8> {
     let mut rng = rand::thread_rng();
     let nonce_random: u64 = rng.gen_range(0..u64::MAX);
     let nonce_bytes = nonce_random.to_be_bytes();
@@ -105,7 +105,7 @@ pub fn generate_random_bytes() -> Vec<u8> {
         .iter()
         .position(|&x| x != 0)
         .unwrap_or(nonce_bytes.len() - 1);
-    let result = &nonce_bytes[first_non_zero..].to_vec();
+    let result = &nonce_bytes[first_non_zero..];
 
     // Finally, verify that the encoding is minimal
     if result[0] & 0x80 == 0x80 {
@@ -116,12 +116,12 @@ pub fn generate_random_bytes() -> Vec<u8> {
 }
 
 mod tests {
-    use super::generate_random_bytes;
+    use super::generate_random_bytes_for_asn1_biguint;
 
     #[test]
-    fn test_generate_random_bytes() {
+    fn test_generate_random_bytes_for_asn1_biguint() {
         for _ in 0..0xffff {
-            let bytes = generate_random_bytes();
+            let bytes = generate_random_bytes_for_asn1_biguint();
             asn1::BigUint::new(&bytes);
         }
     }

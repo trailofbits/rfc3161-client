@@ -645,7 +645,7 @@ pub(crate) fn create_timestamp_request(
         hashed_message: hash.as_slice(),
     };
 
-    let random_bytes = crate::util::generate_random_bytes();
+    let random_bytes = crate::util::generate_random_bytes_for_asn1_biguint();
     let nonce_asn1 = asn1::BigUint::new(&random_bytes);
 
     let timestamp_request = RawTimeStampReq {
