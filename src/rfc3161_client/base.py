@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import enum
+from typing import TYPE_CHECKING
 
-from rfc3161_client import _rust, tsp
-from rfc3161_client._rust import verify as _rust_verify
+from rfc3161_client import _rust
+
+if TYPE_CHECKING:
+    from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
 
 
 class HashAlgorithm(enum.Enum):
@@ -67,7 +70,7 @@ class TimestampRequestBuilder:
 
         return TimestampRequestBuilder(self._data, self._algorithm, nonce, self._cert_req)
 
-    def build(self) -> tsp.TimeStampRequest:
+    def build(self) -> TimeStampRequest:
         """Build a TimestampRequest."""
         if self._data is None:
             msg = "Data must be for a Timestamp Request."
@@ -83,20 +86,6 @@ class TimestampRequestBuilder:
         )
 
 
-def decode_timestamp_response(data: bytes) -> tsp.TimeStampResponse:
+def decode_timestamp_response(data: bytes) -> TimeStampResponse:
     """Decode a Timestamp response."""
     return _rust.parse_timestamp_response(data)
-
-
-def verify_signed_data(sig: bytes, certificates: set[bytes]) -> None:
-    """Verify signed data.
-
-    This function verify that the bytes used a signature are signed by a certificate
-    trusted in the `certificates` list.
-    The function does not return anything, but raises an exception if the verification fails.
-
-    :param sig: Bytes of a PKCS7 object. This must be in DER format and will be unserialized.
-    :param certificates: A list of trusted certificates to verify the response against.
-    :raise: ValueError if the signature verification fails.
-    """
-    return _rust_verify.pkcs7_verify(sig, list(certificates))

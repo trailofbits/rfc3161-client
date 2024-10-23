@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
 
-from rfc3161_client.base import verify_signed_data
+from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
@@ -43,6 +43,20 @@ def create_verify_opts(
         nonce=tsp_request.nonce,
         common_name=common_name,
     )
+
+
+def verify_signed_data(sig: bytes, certificates: set[bytes]) -> None:
+    """Verify signed data.
+
+    This function verifies that the bytes used in a signature are signed by a certificate
+    trusted in the `certificates` list.
+    The function does not return anything, but raises an exception if the verification fails.
+
+    :param sig: Bytes of a PKCS7 object. This must be in DER format and will be unserialized.
+    :param certificates: A list of trusted certificates to verify the response against.
+    :raise: ValueError if the signature verification fails.
+    """
+    return _rust_verify.pkcs7_verify(sig, list(certificates))
 
 
 def _verify_leaf_certs(tsp_response: TimeStampResponse, opts: VerifyOpts) -> bool:
