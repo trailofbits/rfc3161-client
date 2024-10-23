@@ -13,7 +13,7 @@ from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
 from rfc3161_client.verify import (
     VerifyOpts,
     _verify_tsr_with_chains,
-    create_verify_opts,
+    create_verify_opts_from_request,
     verify_timestamp_response,
 )
 
@@ -40,7 +40,7 @@ def ts_response() -> TimeStampResponse:
 def verify_opts(
     certificates: list[cryptography.x509.Certificate], ts_request: TimeStampRequest
 ) -> VerifyOpts:
-    return create_verify_opts(
+    return create_verify_opts_from_request(
         ts_request,
         tsa_certificate=certificates[0],
         common_name=certificates[0].subject.rfc4514_string(),
@@ -57,7 +57,7 @@ class TestVerifyOpts:
     def test_create_verify_opts(
         self, ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
     ):
-        verify_opts = create_verify_opts(
+        verify_opts = create_verify_opts_from_request(
             ts_request,
             tsa_certificate=certificates[0],
             common_name=certificates[0].subject.rfc4514_string(),
@@ -72,7 +72,7 @@ class TestVerifyOpts:
     def test_without_certificates(
         self, ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
     ):
-        verify_opts = create_verify_opts(
+        verify_opts = create_verify_opts_from_request(
             ts_request,
             tsa_certificate=certificates[0],
             common_name=certificates[0].subject.rfc4514_string(),
