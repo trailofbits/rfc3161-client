@@ -48,7 +48,7 @@ def create_verify_opts(
 def verify_signed_data(sig: bytes, certificates: set[bytes]) -> None:
     """Verify signed data.
 
-    This function verify that the bytes used a signature are signed by a certificate
+    This function verifies that the bytes used in a signature are signed by a certificate
     trusted in the `certificates` list.
     The function does not return anything, but raises an exception if the verification fails.
 

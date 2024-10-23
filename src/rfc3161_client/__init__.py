@@ -15,16 +15,12 @@ from .tsp import (
 from .verify import VerifyOpts, create_verify_opts, verify_signed_data, verify_timestamp_response
 
 __all__ = [
-    # From base.py
     "decode_timestamp_response",
-    # From verify.py
     "verify_signed_data",
     "verify_timestamp_response",
     "create_verify_opts",
     "VerifyOpts",
-    # From errors.py
     "VerificationError",
-    # From tsp.py
     "TimeStampRequest",
     "TimeStampResponse",
     "TimeStampTokenInfo",
