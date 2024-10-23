@@ -14,7 +14,7 @@ from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 @dataclass
 class VerifyOpts:
-    policy_id: cryptography.x509.ObjectIdentifier | None =  None
+    policy_id: cryptography.x509.ObjectIdentifier | None = None
     tsa_certificate: cryptography.x509.Certificate | None = None
     intermediates: list[cryptography.x509.Certificate] = field(default_factory=list)
     roots: list[cryptography.x509.Certificate] = field(default_factory=list)
