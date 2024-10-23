@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
@@ -14,15 +14,15 @@ from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 @dataclass
 class VerifyOpts:
-    policy_id: cryptography.x509.ObjectIdentifier | None
-    tsa_certificate: cryptography.x509.Certificate | None
-    intermediates: list[cryptography.x509.Certificate]
-    roots: list[cryptography.x509.Certificate]
-    nonce: int
-    common_name: str
+    policy_id: cryptography.x509.ObjectIdentifier | None =  None
+    tsa_certificate: cryptography.x509.Certificate | None = None
+    intermediates: list[cryptography.x509.Certificate] = field(default_factory=list)
+    roots: list[cryptography.x509.Certificate] = field(default_factory=list)
+    nonce: int | None = None
+    common_name: str | None = None
 
 
-def create_verify_opts(
+def create_verify_opts_from_request(
     tsp_request: TimeStampRequest,
     tsa_certificate: cryptography.x509.Certificate | None,
     common_name: str,
