@@ -12,8 +12,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 # Maturin does not support dynamic fields
-# So we keep the version number here (and in __init__.py)
-version = "0.0.1"
+# So we keep the version number here instead of __init__
+version = "0.0.2"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
