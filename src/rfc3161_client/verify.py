@@ -305,8 +305,6 @@ class Verifier:
         return _rust_verify.pkcs7_verify(sig, list(certificates))
 
 
-
-
 def create_verifier_from_request(
     tsp_request: TimeStampRequest,
     tsa_certificate: cryptography.x509.Certificate | None,
