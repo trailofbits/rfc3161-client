@@ -30,5 +30,3 @@ __all__ = [
     "SignedData",
     "SignerInfo",
 ]
-
-__version__ = "0.0.2"
