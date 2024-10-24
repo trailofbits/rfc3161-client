@@ -5,7 +5,7 @@ from __future__ import annotations
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
 
-from rfc3161_client.base import verify_signed_data
+from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
@@ -284,12 +284,27 @@ class Verifier:
 
         p7 = tsp_response.time_stamp_token()
         try:
-            verify_signed_data(p7, verification_certificate)
+            self.verify_signed_data(p7, verification_certificate)
         except ValueError as e:
             msg = f"Error while verifying certificates: {e}"
             raise VerificationError(msg)
 
         return True
+
+    def verify_signed_data(self, sig: bytes, certificates: set[bytes]) -> None:
+        """Verify signed data.
+
+        This function verifies that the bytes used in a signature are signed by a certificate
+        trusted in the `certificates` list.
+        The function does not return anything, but raises an exception if the verification fails.
+
+        :param sig: Bytes of a PKCS7 object. This must be in DER format and will be unserialized.
+        :param certificates: A list of trusted certificates to verify the response against.
+        :raise: ValueError if the signature verification fails.
+        """
+        return _rust_verify.pkcs7_verify(sig, list(certificates))
+
+
 
 
 def create_verifier_from_request(
