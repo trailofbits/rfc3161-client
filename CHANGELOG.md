@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.0.2] - 2024-XX-XX
+
 ### Added
 
 - Magic methods (`__hash__` and `__repr__`) have been added for TimestampResponse and 
@@ -24,5 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.2...HEAD
+[0.0.2]: https://github.com/trailofbits/rfc3161-client/releases/tag/v0.0.2
 [0.0.1]: https://github.com/trailofbits/rfc3161-client/releases/tag/v0.0.1
