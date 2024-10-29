@@ -2,6 +2,8 @@
 //!
 //! [RFC 3161]: https://datatracker.ietf.org/doc/html/rfc3161
 
+use asn1::{SimpleAsn1Readable, SimpleAsn1Writable};
+
 /// RFC 3161 2.4.1
 ///
 /// ```asn1
@@ -75,6 +77,18 @@ pub struct PKIStatusInfo<'a> {
     pub fail_info: Option<asn1::BitString<'a>>,
 }
 
+/// Inner type for [`Accuracy`]. This represents the basic structure,
+/// but does not enforce the value range invariants on the `millis`
+/// or `micros` fields.
+#[derive(asn1::Asn1Read, asn1::Asn1Write, Copy, Clone)]
+struct AccuracyInner<'a> {
+    pub seconds: Option<asn1::BigUint<'a>>,
+    #[implicit(0)]
+    pub millis: Option<u16>,
+    #[implicit(1)]
+    pub micros: Option<u16>,
+}
+
 /// RFC 3161 2.4.2
 ///
 /// ```asn1
@@ -83,13 +97,54 @@ pub struct PKIStatusInfo<'a> {
 ///   millis     [0] INTEGER  (1..999)    OPTIONAL,
 ///   micros     [1] INTEGER  (1..999)    OPTIONAL  }
 /// ```
-#[derive(asn1::Asn1Read, asn1::Asn1Write, Copy, Clone)]
-pub struct Accuracy<'a> {
-    pub seconds: Option<asn1::BigUint<'a>>,
-    #[implicit(0)]
-    pub millis: Option<u16>,
-    #[implicit(1)]
-    pub micros: Option<u16>,
+#[derive(Copy, Clone)]
+pub struct Accuracy<'a>(AccuracyInner<'a>);
+
+impl<'a> Accuracy<'a> {
+    pub fn seconds(&self) -> Option<asn1::BigUint<'a>> {
+        self.0.seconds
+    }
+
+    pub fn millis(&self) -> Option<u16> {
+        self.0.millis
+    }
+
+    pub fn micros(&self) -> Option<u16> {
+        self.0.micros
+    }
+}
+
+impl<'a> SimpleAsn1Readable<'a> for Accuracy<'a> {
+    const TAG: asn1::Tag = <AccuracyInner as SimpleAsn1Readable<'a>>::TAG;
+
+    fn parse_data(data: &'a [u8]) -> asn1::ParseResult<Self> {
+        let inner = AccuracyInner::parse_data(data)?;
+
+        let valid_range = 1..=999;
+        if !inner
+            .millis
+            .map_or(true, |millis| valid_range.contains(&millis))
+        {
+            return Err(asn1::ParseError::new(asn1::ParseErrorKind::InvalidValue));
+        }
+
+        if !inner
+            .micros
+            .map_or(true, |micros| valid_range.contains(&micros))
+        {
+            return Err(asn1::ParseError::new(asn1::ParseErrorKind::InvalidValue));
+        }
+
+        Ok(Self(inner))
+    }
+}
+
+impl<'a> SimpleAsn1Writable for Accuracy<'a> {
+    const TAG: asn1::Tag = <AccuracyInner as SimpleAsn1Writable>::TAG;
+
+    fn write_data(&self, dest: &mut asn1::WriteBuf) -> asn1::WriteResult {
+        self.0.write_data(dest)
+    }
 }
 
 /// RFC 3161 2.4.2
@@ -192,8 +247,6 @@ pub struct RawTimeStampResp<'a> {
 
 #[cfg(test)]
 mod tests {
-    use asn1::BigUint;
-
     use crate::{cms, name};
 
     use super::*;
@@ -289,8 +342,9 @@ mod tests {
 
     #[test]
     fn test_parse_accuracy() {
-        let accuracy = Accuracy {
+        let accuracy = AccuracyInner {
             seconds: None,
+            // NOTE: `AccuracyInner` does not enforce range invariant.
             millis: Some(9999),
             micros: None,
         };
@@ -300,6 +354,26 @@ mod tests {
 
         let enc = hex::decode("3004800201F4").unwrap();
         let response = asn1::parse_single::<Accuracy>(&enc).unwrap();
-        assert_eq!(response.millis.unwrap(), 500);
+        assert_eq!(response.millis().unwrap(), 500);
+    }
+
+    #[test]
+    fn test_parse_accuracy_bad_ranges() {
+        for (millis, micros) in &[
+            (Some(9999), None),
+            (None, Some(9999)),
+            (Some(0), Some(0)),
+            (Some(1000), Some(0)),
+        ] {
+            let accuracy = AccuracyInner {
+                seconds: None,
+                millis: *millis,
+                micros: *micros,
+            };
+
+            let enc = asn1::write_single(&accuracy).unwrap();
+
+            assert!(asn1::parse_single::<Accuracy>(&enc).is_err());
+        }
     }
 }

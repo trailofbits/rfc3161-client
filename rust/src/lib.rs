@@ -436,7 +436,7 @@ impl Accuracy {
 impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
     fn from(acc: tsp_asn1::tsp::Accuracy<'_>) -> Self {
         Accuracy {
-            seconds: acc.seconds.and_then(|s| {
+            seconds: acc.seconds().and_then(|s| {
                 let bytes = s.as_bytes();
                 if bytes.len() <= 16 {
                     let mut buffer = [0u8; 16];
@@ -446,8 +446,8 @@ impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
                     None
                 }
             }),
-            millis: acc.millis,
-            micros: acc.micros,
+            millis: acc.millis(),
+            micros: acc.micros(),
         }
     }
 }
