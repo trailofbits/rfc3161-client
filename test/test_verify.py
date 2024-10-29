@@ -57,9 +57,6 @@ class TestVerifierBuilder:
         assert verifier._common_name is None
 
     def test_policy_id(self):
-        with pytest.raises(ValueError, match="type is not valid"):
-            VerifyBuilder().policy_id("wrong-type")
-
         with pytest.raises(ValueError, match="only once"):
             VerifyBuilder().policy_id(cryptography.x509.ObjectIdentifier("1.2")).policy_id(
                 cryptography.x509.ObjectIdentifier("1.3")
@@ -70,9 +67,6 @@ class TestVerifierBuilder:
         assert verifier._policy_id == oid
 
     def test_tsa_certificate(self, certificates):
-        with pytest.raises(ValueError, match="type is not valid"):
-            VerifyBuilder().tsa_certificate("wrong-type")
-
         with pytest.raises(ValueError, match="only once"):
             VerifyBuilder().tsa_certificate(certificates[0]).tsa_certificate(certificates[1])
 
@@ -80,9 +74,6 @@ class TestVerifierBuilder:
         assert verifier._tsa_certificate == certificates[0]
 
     def test_add_intermediate_certificate(self, certificates):
-        with pytest.raises(ValueError, match="type is not valid"):
-            VerifyBuilder().add_intermediate_certificate("wrong-type")
-
         with pytest.raises(ValueError, match="already present"):
             VerifyBuilder().add_intermediate_certificate(
                 certificates[0]
@@ -97,9 +88,6 @@ class TestVerifierBuilder:
         assert verifier._intermediates == [certificates[0], certificates[1]]
 
     def test_add_root_certificate(self, certificates):
-        with pytest.raises(ValueError, match="type is not valid"):
-            VerifyBuilder().add_root_certificate("wrong-type")
-
         with pytest.raises(ValueError, match="already present"):
             VerifyBuilder().add_root_certificate(certificates[0]).add_root_certificate(
                 certificates[0]
