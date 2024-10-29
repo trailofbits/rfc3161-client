@@ -10,7 +10,7 @@ from rfc3161_client._rust import parse_timestamp_request
 from rfc3161_client.base import decode_timestamp_response
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
-from rfc3161_client.verify import Verifier, VerifyBuilder, create_verifier_from_request
+from rfc3161_client.verify import Verifier, VerifyBuilder
 
 _HERE = Path(__file__).parent.resolve()
 _FIXTURE = _HERE / "fixtures"
@@ -35,13 +35,15 @@ def ts_response() -> TimeStampResponse:
 def verifier(
     ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
 ) -> Verifier:
-    return create_verifier_from_request(
-        ts_request,
-        tsa_certificate=certificates[0],
-        common_name=certificates[0].subject.rfc4514_string(),
-        root_certificates=[certificates[-1]],
-        intermediates=certificates[1:-1],
+    builder = VerifyBuilder.from_request(ts_request)
+    builder = (
+        builder.tsa_certificate(certificates[0])
+        .common_name(certificates[0].subject.rfc4514_string())
+        .add_root_certificate(certificates[-1])
     )
+    for intermediate in certificates[1:-1]:
+        builder = builder.add_intermediate_certificate(intermediate)
+    return builder.build()
 
 
 class TestVerifierBuilder:
@@ -127,20 +129,6 @@ class TestVerifierBuilder:
 
         verifier = VerifyBuilder().common_name("foo").build()
         assert verifier._common_name == "foo"
-
-
-def test_create_verifier_from_request(ts_request, certificates):
-    verifier = create_verifier_from_request(
-        ts_request,
-        tsa_certificate=certificates[0],
-        common_name=certificates[0].subject.rfc4514_string(),
-        root_certificates=[certificates[-1]],
-        intermediates=certificates[1:-1],
-    )
-
-    assert verifier._nonce == ts_request.nonce
-    assert verifier._policy_id == ts_request.policy
-    assert verifier._tsa_certificate == certificates[0]
 
 
 class TestVerifier:

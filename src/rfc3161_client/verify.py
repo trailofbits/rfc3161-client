@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import abc
+from copy import copy
+
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
 
@@ -36,14 +39,9 @@ class VerifyBuilder:
         if self._policy_id is not None:
             msg = "The policy id can be set only once"
             raise ValueError(msg)
-        return VerifyBuilder(
-            policy_id=policy_oid,
-            tsa_certificate=self._tsa_certificate,
-            intermediates=self._intermediates,
-            roots=self._roots,
-            nonce=self._nonce,
-            common_name=self._common_name,
-        )
+        builder = copy(self)
+        builder._policy_id = policy_oid
+        return builder
 
     def tsa_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
         """Set the TSA certificate."""
@@ -53,14 +51,9 @@ class VerifyBuilder:
         if self._tsa_certificate is not None:
             msg = "The TSA certificate can be set only once"
             raise ValueError(msg)
-        return VerifyBuilder(
-            policy_id=self._policy_id,
-            tsa_certificate=certificate,
-            intermediates=self._intermediates,
-            roots=self._roots,
-            nonce=self._nonce,
-            common_name=self._common_name,
-        )
+        builder = copy(self)
+        builder._tsa_certificate = certificate
+        return builder
 
     def add_intermediate_certificate(
         self, certificate: cryptography.x509.Certificate
@@ -74,17 +67,11 @@ class VerifyBuilder:
         if certificate in intermediates:
             msg = "The certificate is already present"
             raise ValueError(msg)
-
         intermediates.append(certificate)
 
-        return VerifyBuilder(
-            policy_id=self._policy_id,
-            tsa_certificate=self._tsa_certificate,
-            intermediates=intermediates,
-            roots=self._roots,
-            nonce=self._nonce,
-            common_name=self._common_name,
-        )
+        builder = copy(self)
+        builder._intermediates = intermediates
+        return builder
 
     def add_root_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
         """Add a root certificate."""
@@ -96,17 +83,11 @@ class VerifyBuilder:
         if certificate in roots:
             msg = "The certificate is already present"
             raise ValueError(msg)
-
         roots.append(certificate)
 
-        return VerifyBuilder(
-            policy_id=self._policy_id,
-            tsa_certificate=self._tsa_certificate,
-            intermediates=self._intermediates,
-            roots=roots,
-            nonce=self._nonce,
-            common_name=self._common_name,
-        )
+        builder = copy(self)
+        builder._roots = roots
+        return builder
 
     def nonce(self, nonce: int) -> VerifyBuilder:
         """Set the nonce."""
@@ -116,32 +97,22 @@ class VerifyBuilder:
         if self._nonce is not None:
             msg = "The nonce can be set only once"
             raise ValueError(msg)
-        return VerifyBuilder(
-            policy_id=self._policy_id,
-            tsa_certificate=self._tsa_certificate,
-            intermediates=self._intermediates,
-            roots=self._roots,
-            nonce=nonce,
-            common_name=self._common_name,
-        )
+        builder = copy(self)
+        builder._nonce = nonce
+        return builder
 
     def common_name(self, name: str) -> VerifyBuilder:
         """Set the common name."""
         if self._common_name is not None:
             msg = "The name can be set only once"
             raise ValueError(msg)
-        return VerifyBuilder(
-            policy_id=self._policy_id,
-            tsa_certificate=self._tsa_certificate,
-            intermediates=self._intermediates,
-            roots=self._roots,
-            nonce=self._nonce,
-            common_name=name,
-        )
+        builder = copy(self)
+        builder._common_name = name
+        return builder
 
-    def build(self) -> Verifier:
-        """Build the VerifyOpts"""
-        return Verifier(
+    def build(self) -> _Verifier:
+        """Build the Verifier."""
+        return _Verifier(
             policy_id=self._policy_id,
             tsa_certificate=self._tsa_certificate,
             intermediates=self._intermediates,
@@ -150,8 +121,21 @@ class VerifyBuilder:
             common_name=self._common_name,
         )
 
+    @classmethod
+    def from_request(cls, tsp_request: TimeStampRequest) -> VerifyBuilder:
+        """Create a verifier from a Timestamp Request."""
+        return cls(
+            policy_id=tsp_request.policy,
+            nonce=tsp_request.nonce,
+        )
 
-class Verifier:
+
+class Verifier(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool: ...
+
+
+class _Verifier(Verifier):
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None,
@@ -284,14 +268,14 @@ class Verifier:
 
         p7 = tsp_response.time_stamp_token()
         try:
-            self.verify_signed_data(p7, verification_certificate)
+            self._verify_signed_data(p7, verification_certificate)
         except ValueError as e:
             msg = f"Error while verifying certificates: {e}"
             raise VerificationError(msg)
 
         return True
 
-    def verify_signed_data(self, sig: bytes, certificates: set[bytes]) -> None:
+    def _verify_signed_data(self, sig: bytes, certificates: set[bytes]) -> None:
         """Verify signed data.
 
         This function verifies that the bytes used in a signature are signed by a certificate
@@ -303,35 +287,3 @@ class Verifier:
         :raise: ValueError if the signature verification fails.
         """
         return _rust_verify.pkcs7_verify(sig, list(certificates))
-
-
-def create_verifier_from_request(
-    tsp_request: TimeStampRequest,
-    tsa_certificate: cryptography.x509.Certificate | None,
-    common_name: str | None,
-    root_certificates: list[cryptography.x509.Certificate] | None = None,
-    intermediates: list[cryptography.x509.Certificate] | None = None,
-) -> Verifier:
-    if intermediates is None:
-        intermediates = []
-
-    if root_certificates is None:
-        root_certificates = []
-
-    builder = VerifyBuilder()
-    if tsp_request.policy:
-        builder = builder.policy_id(tsp_request.policy)
-    if tsp_request.nonce:
-        builder = builder.nonce(tsp_request.nonce)
-    if common_name:
-        builder = builder.common_name(common_name)
-    if tsa_certificate:
-        builder = builder.tsa_certificate(tsa_certificate)
-
-    for intermediate in intermediates:
-        builder = builder.add_intermediate_certificate(intermediate)
-
-    for root in root_certificates:
-        builder = builder.add_root_certificate(root)
-
-    return builder.build()
