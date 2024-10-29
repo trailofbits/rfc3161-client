@@ -12,14 +12,12 @@ from .tsp import (
     TimeStampResponse,
     TimeStampTokenInfo,
 )
-from .verify import VerifyOpts, create_verify_opts, verify_signed_data, verify_timestamp_response
+from .verify import Verifier, VerifierBuilder
 
 __all__ = [
     "decode_timestamp_response",
-    "verify_signed_data",
-    "verify_timestamp_response",
-    "create_verify_opts",
-    "VerifyOpts",
+    "Verifier",
+    "VerifierBuilder",
     "VerificationError",
     "TimeStampRequest",
     "TimeStampResponse",
