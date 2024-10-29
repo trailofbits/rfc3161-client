@@ -98,6 +98,10 @@ class VerifierBuilder:
 
     def build(self) -> _Verifier:
         """Build the Verifier."""
+        if not self._roots:
+            msg = "A Verifier must have at least one root certificate set."
+            raise ValueError(msg)
+
         return _Verifier(
             policy_id=self._policy_id,
             tsa_certificate=self._tsa_certificate,
