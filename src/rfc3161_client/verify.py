@@ -34,7 +34,7 @@ class VerifierBuilder:
     def policy_id(self, policy_oid: cryptography.x509.ObjectIdentifier) -> VerifierBuilder:
         """Set the policy ID."""
         if self._policy_id is not None:
-            msg = "The policy id can be set only once"
+            msg = "policy id can be set only once"
             raise ValueError(msg)
         builder = copy(self)
         builder._policy_id = policy_oid
@@ -43,7 +43,7 @@ class VerifierBuilder:
     def tsa_certificate(self, certificate: cryptography.x509.Certificate) -> VerifierBuilder:
         """Set the TSA certificate."""
         if self._tsa_certificate is not None:
-            msg = "The TSA certificate can be set only once"
+            msg = "TSA certificate can be set only once"
             raise ValueError(msg)
         builder = copy(self)
         builder._tsa_certificate = certificate
@@ -55,7 +55,7 @@ class VerifierBuilder:
         """Add an intermediate certificate."""
         intermediates = self._intermediates
         if certificate in intermediates:
-            msg = "The certificate is already present"
+            msg = "intermediate certificate is already present"
             raise ValueError(msg)
         intermediates.append(certificate)
 
@@ -67,7 +67,7 @@ class VerifierBuilder:
         """Add a root certificate."""
         roots = self._roots
         if certificate in roots:
-            msg = "The certificate is already present"
+            msg = "root certificate is already present"
             raise ValueError(msg)
         roots.append(certificate)
 
@@ -78,10 +78,10 @@ class VerifierBuilder:
     def nonce(self, nonce: int) -> VerifierBuilder:
         """Set the nonce."""
         if nonce < 0:
-            msg = "The nonce must not be negative"
+            msg = "nonce must not be negative"
             raise ValueError(msg)
         if self._nonce is not None:
-            msg = "The nonce can be set only once"
+            msg = "nonce can be set only once"
             raise ValueError(msg)
         builder = copy(self)
         builder._nonce = nonce
@@ -90,7 +90,7 @@ class VerifierBuilder:
     def common_name(self, name: str) -> VerifierBuilder:
         """Set the common name."""
         if self._common_name is not None:
-            msg = "The name can be set only once"
+            msg = "name can be set only once"
             raise ValueError(msg)
         builder = copy(self)
         builder._common_name = name
@@ -99,7 +99,7 @@ class VerifierBuilder:
     def build(self) -> _Verifier:
         """Build the Verifier."""
         if not self._roots:
-            msg = "A Verifier must have at least one root certificate set."
+            msg = "Verifier must have at least one root certificate set"
             raise ValueError(msg)
 
         return _Verifier(
