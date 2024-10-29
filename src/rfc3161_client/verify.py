@@ -33,9 +33,6 @@ class VerifyBuilder:
 
     def policy_id(self, policy_oid: cryptography.x509.ObjectIdentifier) -> VerifyBuilder:
         """Set the policy ID."""
-        if not isinstance(policy_oid, cryptography.x509.ObjectIdentifier):
-            msg = "The policy oid type is not valid"
-            raise ValueError(msg)
         if self._policy_id is not None:
             msg = "The policy id can be set only once"
             raise ValueError(msg)
@@ -45,9 +42,6 @@ class VerifyBuilder:
 
     def tsa_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
         """Set the TSA certificate."""
-        if not isinstance(certificate, cryptography.x509.Certificate):
-            msg = "The certificate type is not valid"
-            raise ValueError(msg)
         if self._tsa_certificate is not None:
             msg = "The TSA certificate can be set only once"
             raise ValueError(msg)
@@ -59,10 +53,6 @@ class VerifyBuilder:
         self, certificate: cryptography.x509.Certificate
     ) -> VerifyBuilder:
         """Add an intermediate certificate."""
-        if not isinstance(certificate, cryptography.x509.Certificate):
-            msg = "The certificate type is not valid"
-            raise ValueError(msg)
-
         intermediates = self._intermediates
         if certificate in intermediates:
             msg = "The certificate is already present"
@@ -75,10 +65,6 @@ class VerifyBuilder:
 
     def add_root_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
         """Add a root certificate."""
-        if not isinstance(certificate, cryptography.x509.Certificate):
-            msg = "The certificate type is not valid"
-            raise ValueError(msg)
-
         roots = self._roots
         if certificate in roots:
             msg = "The certificate is already present"
