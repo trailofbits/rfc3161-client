@@ -10,7 +10,7 @@ from rfc3161_client._rust import parse_timestamp_request
 from rfc3161_client.base import decode_timestamp_response
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
-from rfc3161_client.verify import Verifier, VerifyBuilder
+from rfc3161_client.verify import Verifier, VerifierBuilder
 
 _HERE = Path(__file__).parent.resolve()
 _FIXTURE = _HERE / "fixtures"
@@ -35,7 +35,7 @@ def ts_response() -> TimeStampResponse:
 def verifier(
     ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
 ) -> Verifier:
-    builder = VerifyBuilder.from_request(ts_request)
+    builder = VerifierBuilder.from_request(ts_request)
     builder = (
         builder.tsa_certificate(certificates[0])
         .common_name(certificates[0].subject.rfc4514_string())
@@ -48,7 +48,7 @@ def verifier(
 
 class TestVerifierBuilder:
     def test_succeeds(self):
-        verifier = VerifyBuilder().build()
+        verifier = VerifierBuilder().build()
         assert verifier._policy_id is None
         assert verifier._tsa_certificate is None
         assert verifier._intermediates == []
@@ -58,29 +58,29 @@ class TestVerifierBuilder:
 
     def test_policy_id(self):
         with pytest.raises(ValueError, match="only once"):
-            VerifyBuilder().policy_id(cryptography.x509.ObjectIdentifier("1.2")).policy_id(
+            VerifierBuilder().policy_id(cryptography.x509.ObjectIdentifier("1.2")).policy_id(
                 cryptography.x509.ObjectIdentifier("1.3")
             )
 
         oid = cryptography.x509.ObjectIdentifier("1.2")
-        verifier = VerifyBuilder().policy_id(oid).build()
+        verifier = VerifierBuilder().policy_id(oid).build()
         assert verifier._policy_id == oid
 
     def test_tsa_certificate(self, certificates):
         with pytest.raises(ValueError, match="only once"):
-            VerifyBuilder().tsa_certificate(certificates[0]).tsa_certificate(certificates[1])
+            VerifierBuilder().tsa_certificate(certificates[0]).tsa_certificate(certificates[1])
 
-        verifier = VerifyBuilder().tsa_certificate(certificates[0]).build()
+        verifier = VerifierBuilder().tsa_certificate(certificates[0]).build()
         assert verifier._tsa_certificate == certificates[0]
 
     def test_add_intermediate_certificate(self, certificates):
         with pytest.raises(ValueError, match="already present"):
-            VerifyBuilder().add_intermediate_certificate(
+            VerifierBuilder().add_intermediate_certificate(
                 certificates[0]
             ).add_intermediate_certificate(certificates[0])
 
         verifier = (
-            VerifyBuilder()
+            VerifierBuilder()
             .add_intermediate_certificate(certificates[0])
             .add_intermediate_certificate(certificates[1])
             .build()
@@ -89,12 +89,12 @@ class TestVerifierBuilder:
 
     def test_add_root_certificate(self, certificates):
         with pytest.raises(ValueError, match="already present"):
-            VerifyBuilder().add_root_certificate(certificates[0]).add_root_certificate(
+            VerifierBuilder().add_root_certificate(certificates[0]).add_root_certificate(
                 certificates[0]
             )
 
         verifier = (
-            VerifyBuilder()
+            VerifierBuilder()
             .add_root_certificate(certificates[0])
             .add_root_certificate(certificates[1])
             .build()
@@ -103,19 +103,19 @@ class TestVerifierBuilder:
 
     def test_nonce(self):
         with pytest.raises(ValueError, match="negative"):
-            VerifyBuilder().nonce(-2)
+            VerifierBuilder().nonce(-2)
 
         with pytest.raises(ValueError, match="only once"):
-            VerifyBuilder().nonce(0xABCD).nonce(0xCAFE)
+            VerifierBuilder().nonce(0xABCD).nonce(0xCAFE)
 
-        verifier = VerifyBuilder().nonce(0xABCD).build()
+        verifier = VerifierBuilder().nonce(0xABCD).build()
         assert verifier._nonce == 0xABCD
 
     def test_common_name(self):
         with pytest.raises(ValueError, match="only once"):
-            VerifyBuilder().common_name("foo").common_name("bar")
+            VerifierBuilder().common_name("foo").common_name("bar")
 
-        verifier = VerifyBuilder().common_name("foo").build()
+        verifier = VerifierBuilder().common_name("foo").build()
         assert verifier._common_name == "foo"
 
 

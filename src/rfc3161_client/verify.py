@@ -13,7 +13,7 @@ from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 
-class VerifyBuilder:
+class VerifierBuilder:
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None = None,
@@ -31,7 +31,7 @@ class VerifyBuilder:
         self._nonce: int | None = nonce
         self._common_name: str | None = common_name
 
-    def policy_id(self, policy_oid: cryptography.x509.ObjectIdentifier) -> VerifyBuilder:
+    def policy_id(self, policy_oid: cryptography.x509.ObjectIdentifier) -> VerifierBuilder:
         """Set the policy ID."""
         if self._policy_id is not None:
             msg = "The policy id can be set only once"
@@ -40,7 +40,7 @@ class VerifyBuilder:
         builder._policy_id = policy_oid
         return builder
 
-    def tsa_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
+    def tsa_certificate(self, certificate: cryptography.x509.Certificate) -> VerifierBuilder:
         """Set the TSA certificate."""
         if self._tsa_certificate is not None:
             msg = "The TSA certificate can be set only once"
@@ -51,7 +51,7 @@ class VerifyBuilder:
 
     def add_intermediate_certificate(
         self, certificate: cryptography.x509.Certificate
-    ) -> VerifyBuilder:
+    ) -> VerifierBuilder:
         """Add an intermediate certificate."""
         intermediates = self._intermediates
         if certificate in intermediates:
@@ -63,7 +63,7 @@ class VerifyBuilder:
         builder._intermediates = intermediates
         return builder
 
-    def add_root_certificate(self, certificate: cryptography.x509.Certificate) -> VerifyBuilder:
+    def add_root_certificate(self, certificate: cryptography.x509.Certificate) -> VerifierBuilder:
         """Add a root certificate."""
         roots = self._roots
         if certificate in roots:
@@ -75,7 +75,7 @@ class VerifyBuilder:
         builder._roots = roots
         return builder
 
-    def nonce(self, nonce: int) -> VerifyBuilder:
+    def nonce(self, nonce: int) -> VerifierBuilder:
         """Set the nonce."""
         if nonce < 0:
             msg = "The nonce must not be negative"
@@ -87,7 +87,7 @@ class VerifyBuilder:
         builder._nonce = nonce
         return builder
 
-    def common_name(self, name: str) -> VerifyBuilder:
+    def common_name(self, name: str) -> VerifierBuilder:
         """Set the common name."""
         if self._common_name is not None:
             msg = "The name can be set only once"
@@ -108,7 +108,7 @@ class VerifyBuilder:
         )
 
     @classmethod
-    def from_request(cls, tsp_request: TimeStampRequest) -> VerifyBuilder:
+    def from_request(cls, tsp_request: TimeStampRequest) -> VerifierBuilder:
         """Create a verifier from a Timestamp Request."""
         return cls(
             policy_id=tsp_request.policy,
