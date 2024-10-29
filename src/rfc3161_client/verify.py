@@ -29,7 +29,7 @@ class VerifyBuilder:
         self._common_name: str | None = common_name
 
     def policy_id(self, policy_oid: cryptography.x509.ObjectIdentifier) -> VerifyBuilder:
-        """Set the nonce."""
+        """Set the policy ID."""
         if not isinstance(policy_oid, cryptography.x509.ObjectIdentifier):
             msg = "The policy oid type is not valid"
             raise ValueError(msg)
