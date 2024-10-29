@@ -86,8 +86,10 @@ pub struct PKIStatusInfo<'a> {
 #[derive(asn1::Asn1Read, asn1::Asn1Write, Copy, Clone)]
 pub struct Accuracy<'a> {
     pub seconds: Option<asn1::BigUint<'a>>,
-    pub millis: Option<u8>,
-    pub micros: Option<u8>,
+    #[implicit(0)]
+    pub millis: Option<u16>,
+    #[implicit(1)]
+    pub micros: Option<u16>,
 }
 
 /// RFC 3161 2.4.2
@@ -190,6 +192,8 @@ pub struct RawTimeStampResp<'a> {
 
 #[cfg(test)]
 mod tests {
+    use asn1::BigUint;
+
     use crate::{cms, name};
 
     use super::*;
@@ -281,5 +285,21 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn test_parse_accuracy() {
+        let accuracy = Accuracy {
+            seconds: None,
+            millis: Some(9999),
+            micros: None,
+        };
+
+        let bytes = asn1::write_single(&accuracy).unwrap();
+        assert_eq!(bytes, b"0\x04\x80\x02'\x0f");
+
+        let enc = hex::decode("3004800201F4").unwrap();
+        let response = asn1::parse_single::<Accuracy>(&enc).unwrap();
+        assert_eq!(response.millis.unwrap(), 500);
     }
 }
