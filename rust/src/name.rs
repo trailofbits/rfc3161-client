@@ -65,3 +65,27 @@ pub(crate) fn parse_name<'p>(
     }
     Ok(crate::util::NAME.get(py)?.call1((py_rdns,))?)
 }
+
+pub(crate) fn parse_general_name(
+    py: pyo3::Python<'_>,
+    gn: &cryptography_x509::name::GeneralName<'_>,
+) -> pyo3::PyResult<pyo3::PyObject> {
+    let py_gn = match gn {
+        cryptography_x509::name::GeneralName::OtherName(data) => {
+            let oid = crate::util::oid_to_py_oid(py, &data.type_id)?;
+            crate::util::OTHER_NAME
+                .get(py)?
+                .call1((oid, data.value.full_data()))?
+                .to_object(py)
+        }
+        cryptography_x509::name::GeneralName::DirectoryName(data) => {
+            let py_name = parse_name(py, data.unwrap_read())?;
+            crate::util::DIRECTORY_NAME
+                .get(py)?
+                .call1((py_name,))?
+                .to_object(py)
+        }
+        _ => return Err(pyo3::exceptions::PyValueError::new_err("Unknown name form")),
+    };
+    Ok(py_gn)
+}
