@@ -7,17 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [0.0.2] - 2024-XX-XX
+## [0.0.2] - 2024-10-30
 
 ### Added
 
 - Magic methods (`__hash__` and `__repr__`) have been added for TimestampResponse and 
   TimestampRequest ([#32](https://github.com/trailofbits/rfc3161-client/pull/32))
+- `VerifierBuilder` is now the only way to create a `Verifier` ([#35](https://github.com/trailofbits/rfc3161-client/pull/35))
 
 ### Fixed
 
 - The version is now correctly sourced from `pyproject.toml` ([#30](https://github.com/trailofbits/rfc3161-client/pull/30))
 - The nonce generation no longer fails sporadically ([#33](https://github.com/trailofbits/rfc3161-client/pull/33))
+- `Accuracy` now correctly accepts valid inputs and enforce range invariants ([#43](https://github.com/trailofbits/rfc3161-client/pull/43))
 
 ### Changed
 
