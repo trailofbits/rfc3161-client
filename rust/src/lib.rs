@@ -203,11 +203,9 @@ impl TimeStampResp {
             }
         };
 
-        let tst_info = tsp
-            .as_inner()
-            .content_info
-            .tst_info()
-            .map_err(|_| pyo3::exceptions::PyValueError::new_err("Malformed TimestampToken"))?;
+        let tst_info = tsp.as_inner().content_info.tst_info().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Malformed TimestampToken: {}", e))
+        })?;
 
         let tst_bytes = asn1::write_single(&tst_info)
             .map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to serialize TSTInfo"))?;
@@ -413,8 +411,8 @@ impl SignerInfo {
 #[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
 pub struct Accuracy {
     seconds: Option<u128>,
-    millis: Option<u8>,
-    micros: Option<u8>,
+    millis: Option<u16>,
+    micros: Option<u16>,
 }
 
 #[pymethods]
@@ -425,12 +423,12 @@ impl Accuracy {
     }
 
     #[getter]
-    fn millis(&self) -> Option<u8> {
+    fn millis(&self) -> Option<u16> {
         self.millis
     }
 
     #[getter]
-    fn micros(&self) -> Option<u8> {
+    fn micros(&self) -> Option<u16> {
         self.micros
     }
 }
@@ -438,7 +436,7 @@ impl Accuracy {
 impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
     fn from(acc: tsp_asn1::tsp::Accuracy<'_>) -> Self {
         Accuracy {
-            seconds: acc.seconds.and_then(|s| {
+            seconds: acc.seconds().and_then(|s| {
                 let bytes = s.as_bytes();
                 if bytes.len() <= 16 {
                     let mut buffer = [0u8; 16];
@@ -448,8 +446,8 @@ impl From<tsp_asn1::tsp::Accuracy<'_>> for Accuracy {
                     None
                 }
             }),
-            millis: acc.millis,
-            micros: acc.micros,
+            millis: acc.millis(),
+            micros: acc.micros(),
         }
     }
 }
