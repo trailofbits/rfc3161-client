@@ -1,6 +1,6 @@
 """rfc3161-client"""
 
-from .base import decode_timestamp_response
+from .base import TimestampRequestBuilder, decode_timestamp_response
 from .errors import VerificationError
 from .tsp import (
     Accuracy,
@@ -16,6 +16,7 @@ from .verify import Verifier, VerifierBuilder
 
 __all__ = [
     "decode_timestamp_response",
+    "TimestampRequestBuilder",
     "Verifier",
     "VerifierBuilder",
     "VerificationError",
@@ -28,5 +29,3 @@ __all__ = [
     "SignedData",
     "SignerInfo",
 ]
-
-__version__ = "0.0.1"
