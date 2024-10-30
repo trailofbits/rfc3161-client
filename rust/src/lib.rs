@@ -554,29 +554,8 @@ impl PyTSTInfo {
     fn name<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::PyObject> {
         let gn = &self.raw.borrow_dependent().tsa;
         match gn {
-            Some(name) => match name {
-                tsp_asn1::name::GeneralNameWrapper::General(gn_name) => {
-                    let py_gn = match &gn_name.name {
-                        cryptography_x509::name::GeneralName::OtherName(data) => {
-                            let oid = crate::util::oid_to_py_oid(py, &data.type_id)?;
-                            crate::util::OTHER_NAME
-                                .get(py)?
-                                .call1((oid, data.value.full_data()))?
-                                .to_object(py)
-                        }
-                        cryptography_x509::name::GeneralName::DirectoryName(data) => {
-                            let py_name = crate::name::parse_name(py, data.unwrap_read())?;
-                            crate::util::DIRECTORY_NAME
-                                .get(py)?
-                                .call1((py_name,))?
-                                .to_object(py)
-                        }
-                        _ => return Err(PyValueError::new_err("Unknown name format")),
-                    };
-                    Ok(py_gn)
-                }
-            },
-            None => Err(pyo3::exceptions::PyValueError::new_err("No names found")),
+            Some(name) => crate::name::parse_general_name(py, name),
+            None => Ok(py.None()),
         }
     }
 
