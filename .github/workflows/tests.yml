@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-ubuntu:
     strategy:
       matrix:
         python:
@@ -16,6 +16,7 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,3 +39,51 @@ jobs:
 
       - name: test
         run: make test INSTALL_EXTRA=test
+
+  test-windows:
+    strategy:
+      matrix:
+        python:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Install Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
+      - name: Install OpenSSL}
+        env:
+          OPENSSL_INSTALLER: "Win64OpenSSL-3_3_2.exe"
+          OPENSSL_PATH: "C:\\OpenSSL-Win64"
+        run: |
+          curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
+          Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
+          echo "Installed OpenSSL version:"
+          Start-Process -FilePath "${env:OPENSSL_PATH}\\bin\\openssl.exe" -ArgumentList "version" -Wait -NoNewWindow
+
+      - name: Setup rust
+        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+        with:
+          components: rustfmt
+          toolchain: 1.81.0
+
+      - name: test
+        run: make test INSTALL_EXTRA=test
+        shell: bash
+        env:
+          OPENSSL_DIR: "C:\\OpenSSL-Win64"
+          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
+          OPENSSL_NO_VENDOR: 1
