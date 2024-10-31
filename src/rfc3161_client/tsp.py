@@ -39,12 +39,12 @@ class TimeStampRequest(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def nonce(self) -> int:
+    def nonce(self) -> int | None:
         """Returns the nonce generated for this request."""
 
     @property
     @abc.abstractmethod
-    def policy(self) -> cryptography.x509.ObjectIdentifier:
+    def policy(self) -> cryptography.x509.ObjectIdentifier | None:
         """Returns the request policy OID."""
 
     @property
