@@ -87,4 +87,4 @@ jobs:
           OPENSSL_DIR: "C:\\OpenSSL-Win64"
           OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
           OPENSSL_NO_VENDOR: 1
-          PYO3_PYTHON: "$(uv python dir)\\python.exe"
+          # PYO3_PYTHON: "$(uv python dir)\\python.exe"
