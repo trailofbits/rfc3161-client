@@ -44,10 +44,10 @@ jobs:
     strategy:
       matrix:
         python:
-#          - "3.9"
-#          - "3.10"
-#          - "3.11"
-#          - "3.12"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
           - "3.13"
 
     runs-on: windows-latest
@@ -71,8 +71,6 @@ jobs:
         run: |
           curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
           Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
-          echo "Installed OpenSSL version:"
-          Start-Process -FilePath "${env:OPENSSL_PATH}\\bin\\openssl.exe" -ArgumentList "version" -Wait -NoNewWindow
 
       - name: Setup rust
         uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
