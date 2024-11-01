@@ -11,7 +11,7 @@ publish = false
 name = "tsp_asn1"
 
 [dependencies]
-asn1 = "0.17"
+asn1 = "0.18"
 cryptography-x509 = { git = "https://github.com/pyca/cryptography.git"}
 
 [dev-dependencies]
