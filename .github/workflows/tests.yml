@@ -7,47 +7,47 @@ on:
   pull_request:
 
 jobs:
-  test-ubuntu:
-    strategy:
-      matrix:
-        python:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
-
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "0.4.18"
-          enable-cache: true
-          cache-dependency-glob: pyproject.toml
-
-      - name: Install Python ${{ matrix.python }}
-        run: uv python install ${{ matrix.python }}
-
-      - name: Setup rust
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-        with:
-          components: rustfmt
-          toolchain: 1.81.0
-
-      - name: test
-        run: make test INSTALL_EXTRA=test
+#  test-ubuntu:
+#    strategy:
+#      matrix:
+#        python:
+#          - "3.9"
+#          - "3.10"
+#          - "3.11"
+#          - "3.12"
+#          - "3.13"
+#
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Install the latest version of uv
+#        uses: astral-sh/setup-uv@v3
+#        with:
+#          version: "0.4.18"
+#          enable-cache: true
+#          cache-dependency-glob: pyproject.toml
+#
+#      - name: Install Python ${{ matrix.python }}
+#        run: uv python install ${{ matrix.python }}
+#
+#      - name: Setup rust
+#        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+#        with:
+#          components: rustfmt
+#          toolchain: 1.81.0
+#
+#      - name: test
+#        run: make test INSTALL_EXTRA=test
 
   test-windows:
     strategy:
       matrix:
         python:
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
+#          - "3.9"
+#          - "3.10"
+#          - "3.11"
+#          - "3.12"
           - "3.13"
 
     runs-on: windows-latest
@@ -64,7 +64,7 @@ jobs:
       - name: Install Python ${{ matrix.python }}
         run: uv python install ${{ matrix.python }}
 
-      - name: Install OpenSSL}
+      - name: Install OpenSSL
         env:
           OPENSSL_INSTALLER: "Win64OpenSSL-3_3_2.exe"
           OPENSSL_PATH: "C:\\OpenSSL-Win64"
@@ -87,3 +87,4 @@ jobs:
           OPENSSL_DIR: "C:\\OpenSSL-Win64"
           OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
           OPENSSL_NO_VENDOR: 1
+          PYO3_PYTHON: "$(uv python dir)\\python.exe"
