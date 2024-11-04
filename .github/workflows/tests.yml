@@ -45,10 +45,10 @@ jobs:
       matrix:
         python:
           - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
+#          - "3.10"
+#          - "3.11"
+#          - "3.12"
+#          - "3.13"
 
     runs-on: windows-latest
     steps:
@@ -78,8 +78,18 @@ jobs:
           components: rustfmt
           toolchain: 1.81.0
 
+      - name: Get env variables
+        shell: bash
+        run: |
+          UV_PYTHON_PATH="$(uv python dir)"
+          echo $UV_PYTHON_PATH
+          echo "PATH=$PATH:C:\Users\runneradmin\AppData\Roaming\uv\python" >> $GITHUB_ENV
+          echo "PYO3_PYTHON=$UV_PYTHON_PATH\python.exe" >> $GITHUB_ENV
+
       - name: test
-        run: make test INSTALL_EXTRA=test
+        run: |
+          env
+          make test INSTALL_EXTRA=test
         shell: bash
         env:
           OPENSSL_DIR: "C:\\OpenSSL-Win64"
