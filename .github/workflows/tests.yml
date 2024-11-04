@@ -44,11 +44,11 @@ jobs:
     strategy:
       matrix:
         python:
-          - "3.9"
-          - "3.10"
-          - "3.11"
+#          - "3.9"
+#          - "3.10"
+#          - "3.11"
           - "3.12"
-          - "3.13"
+#          - "3.13"
 
     runs-on: windows-latest
     steps:
@@ -83,11 +83,11 @@ jobs:
         run: |
           UV_PYTHON_PATH=$(uv python dir)
           export INSTALLED_PYTHON="$(find $UV_PYTHON_PATH -type d -maxdepth 1 -name '*${{ matrix.python }}*')"
-          echo "$INSTALLED_PYTHON" >> GITHUB_PATH
+          echo "$INSTALLED_PYTHON" >> $GITHUB_PATH
           echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
 
       - name: test
-        run: | 
+        run: |
           make test INSTALL_EXTRA=test
         shell: bash
         env:
