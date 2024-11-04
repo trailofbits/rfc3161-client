@@ -78,21 +78,24 @@ jobs:
           components: rustfmt
           toolchain: 1.81.0
 
-#      - name: Setup env variables
-#        shell: bash
-#        run: |
-#          UV_PYTHON_PATH=$(uv python dir)
-#          export INSTALLED_PYTHON="$(find $UV_PYTHON_PATH -type d -maxdepth 1 -name '*${{ matrix.python }}*')"
-#          echo "$INSTALLED_PYTHON" >> $GITHUB_PATH
-#          echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
+      - name: Setup env variables
+        shell: bash
+        run: |
+          UV_PYTHON_PATH=$(uv python dir)
+          export INSTALLED_PYTHON="$(find $UV_PYTHON_PATH -type d -maxdepth 1 -name '*${{ matrix.python }}*')"
+          # echo "$INSTALLED_PYTHON" >> $GITHUB_PATH
+          echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
 
       - name: test
         run: |
-          uv venv
-          . .venv/Scripts/activate && uv pip install -n -e '.[test]' && pytest --cov=rfc3161_client
+          $PYO3_PYTHON -m venv env-local
+          . env-local/Scripts/activate
+          pip install -e '.[test]'
+          pytest --cov=rfc3161_client
           # make test INSTALL_EXTRA=test
         shell: bash
         env:
           OPENSSL_DIR: "C:\\OpenSSL-Win64"
           OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
           OPENSSL_NO_VENDOR: 1
+          UV_NO_CACHE: true
