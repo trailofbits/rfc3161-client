@@ -89,7 +89,7 @@ jobs:
       - name: test
         run: |
           uv venv
-          . .venv/Scripts/activate && uv pip install -e . && python -c "import rfc3161_client"
+          . .venv/Scripts/activate && uv pip install -n -e '.[test]' && pytest --cov=rfc3161_client
           # make test INSTALL_EXTRA=test
         shell: bash
         env:

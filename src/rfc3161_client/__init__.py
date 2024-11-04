@@ -5,11 +5,18 @@ import sys
 from pathlib import Path
 
 def add_missing_dlls():
-    print(f'ADD MISSING DIR {platform.system()}')
+    """Add required DLL search directories for Windows platform.
+
+    This function ensures DLLs can be found by:
+    1. Adding OpenSSL directory from OPENSSL_DIR environment variable (if set)
+    2. Adding Python installation directory
+
+    These directories are only added on Windows platforms. On other platforms,
+    the function returns without making any changes.
+    """
     if platform.system() != "Windows":
         return
 
-    print(f"Adding directories to DLL directory")
     if openssl_dir := os.environ.get("OPENSSL_DIR"):
         os.add_dll_directory(openssl_dir)
 
