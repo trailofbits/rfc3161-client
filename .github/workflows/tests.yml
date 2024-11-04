@@ -87,10 +87,8 @@ jobs:
           echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
 
       - name: test
-        run: |
-          env
-          cargo test --manifest-path rust/Cargo.toml 
-          # `make test INSTALL_EXTRA=test
+        run: | 
+          make test INSTALL_EXTRA=test
         shell: bash
         env:
           OPENSSL_DIR: "C:\\OpenSSL-Win64"
