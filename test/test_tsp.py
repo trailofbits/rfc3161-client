@@ -49,7 +49,7 @@ class TestTimestampRequest:
         assert timestamp_request.message_imprint.message.hex().startswith("9b71d224bd62f3785d96d")
 
     def test_equality(self):
-        timestamp_response = parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
-        other_response = parse_timestamp_request((_FIXTURE / "other_request.der").read_bytes())
+        timestamp_request = parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
+        other_request = parse_timestamp_request((_FIXTURE / "other_request.der").read_bytes())
 
-        assert timestamp_response != other_response
+        assert timestamp_request != other_request
