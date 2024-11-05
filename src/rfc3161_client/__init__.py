@@ -26,7 +26,7 @@ def add_missing_dlls():
         print(f"Dlls ({python_dir}) : {list(Path(python_dir).glob('*.dll'))}")
         os.add_dll_directory(python_dir.as_posix())
 
-add_missing_dlls()
+# add_missing_dlls()
 
 from .base import TimestampRequestBuilder, decode_timestamp_response
 from .errors import VerificationError

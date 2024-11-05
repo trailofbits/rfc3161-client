@@ -53,6 +53,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v3
@@ -72,11 +74,11 @@ jobs:
           curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
           Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
 
-      - name: Setup rust
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-        with:
-          components: rustfmt
-          toolchain: 1.81.0
+#      - name: Setup rust
+#        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+#        with:
+#          components: rustfmt
+#          toolchain: 1.81.0
 
       - name: Setup env variables
         shell: bash
@@ -86,16 +88,19 @@ jobs:
           # echo "$INSTALLED_PYTHON" >> $GITHUB_PATH
           echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
 
-      - name: test
-        run: |
-          $PYO3_PYTHON -m venv env-local
-          . env-local/Scripts/activate
-          pip install -e '.[test]'
-          pytest --cov=rfc3161_client
-          # make test INSTALL_EXTRA=test
-        shell: bash
-        env:
-          OPENSSL_DIR: "C:\\OpenSSL-Win64"
-          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
-          OPENSSL_NO_VENDOR: 1
-          UV_NO_CACHE: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+
+#      - name: test
+#        run: |
+#          uv venv env-local
+#          . env-local/Scripts/activate
+#          uv pip install dlltracer
+#          uv pip install -e '.[test]'
+#          python main.py
+#          # make test INSTALL_EXTRA=test
+#        shell: bash
+#        env:
+#          OPENSSL_DIR: "C:\\OpenSSL-Win64"
+#          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
+#          OPENSSL_NO_VENDOR: 1
