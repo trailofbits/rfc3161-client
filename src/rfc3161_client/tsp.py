@@ -166,7 +166,7 @@ class TimeStampTokenInfo(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def name(self) -> cryptography.x509.Name:
+    def name(self) -> cryptography.x509.GeneralName:
         """Returns the name."""
 
 
