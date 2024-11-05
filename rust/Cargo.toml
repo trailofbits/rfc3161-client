@@ -21,7 +21,7 @@ hex = "0.4"
 sha2 = "0.10.8"
 rand = "0.8.5"
 cryptography-x509 = { git = "https://github.com/pyca/cryptography.git"}
-openssl = { version = "0.10.68", features = ["vendored"] }
+openssl = "0.10.68"
 
 [features]
 extension-module = ["pyo3/extension-module"]
