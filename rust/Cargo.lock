@@ -4,31 +4,11 @@ version = 3
 
 [[package]]
 name = "asn1"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "147a10032de7d9e6f21c3f1cb1c9c0f94cf30ef67f38310588fe6cfa53e0d3f0"
-dependencies = [
- "asn1_derive 0.17.0",
-]
-
-[[package]]
-name = "asn1"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3522623dbb7db59b34439c022ab0445a0257a62ad20d499da3a3507394708559"
 dependencies = [
- "asn1_derive 0.18.0",
-]
-
-[[package]]
-name = "asn1_derive"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3df30ecdcaf8338675a1413460a1b11df89789e1fcc6a10dc52f6e38b6982aa2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "asn1_derive",
 ]
 
 [[package]]
@@ -106,9 +86,9 @@ dependencies = [
 [[package]]
 name = "cryptography-x509"
 version = "0.1.0"
-source = "git+https://github.com/pyca/cryptography.git#b6bf3295661eaf4106d5c4b7c0b2ce7472ac947c"
+source = "git+https://github.com/pyca/cryptography.git?rev=a63ca251a7aa8a5aac6153e0b69083cb05e1a6d0#a63ca251a7aa8a5aac6153e0b69083cb05e1a6d0"
 dependencies = [
- "asn1 0.18.0",
+ "asn1",
 ]
 
 [[package]]
@@ -380,7 +360,7 @@ dependencies = [
 name = "rfc3161-client"
 version = "0.1.0"
 dependencies = [
- "asn1 0.18.0",
+ "asn1",
  "cryptography-x509",
  "hex",
  "openssl",
@@ -435,7 +415,7 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 name = "tsp-asn1"
 version = "0.0.1"
 dependencies = [
- "asn1 0.17.0",
+ "asn1",
  "cryptography-x509",
 ]
 
