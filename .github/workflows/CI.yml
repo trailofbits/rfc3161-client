@@ -42,7 +42,7 @@ jobs:
             if command -v yum 2>&1 >/dev/null
             then
               yum update
-              yum install -y perl-core cpanminus devtoolset-10-libatomic-devel
+              yum install -y perl-core cpanminus devtoolset-10-libatomic-devel openssl-devel
               # Workaround for OpenSSL not building on Centos 7 (manylinux2014)
               # Remove once `openssl-src` builds OpenSSL > 3.3.2 by default
               # Ref: https://github.com/openssl/openssl/pull/25367#issuecomment-2327177830
