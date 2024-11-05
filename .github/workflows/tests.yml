@@ -43,6 +43,8 @@ jobs:
   test-windows:
     strategy:
       matrix:
+        windows:
+          - 'win64'
         python:
 #          - "3.9"
 #          - "3.10"
@@ -66,13 +68,15 @@ jobs:
       - name: Install Python ${{ matrix.python }}
         run: uv python install ${{ matrix.python }}
 
-      - name: Install OpenSSL
-        env:
-          OPENSSL_INSTALLER: "Win64OpenSSL-3_3_2.exe"
-          OPENSSL_PATH: "C:\\OpenSSL-Win64"
-        run: |
-          curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
-          Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
+      - uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
+        with:
+          repo: pyca/infra
+          workflow: build-windows-openssl.yml
+          branch: main
+          workflow_conclusion: success
+          name: "openssl-${{ matrix.windows }}"
+          path: "C:/openssl-${{ matrix.windows }}/"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
 #      - name: Setup rust
 #        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
@@ -80,27 +84,17 @@ jobs:
 #          components: rustfmt
 #          toolchain: 1.81.0
 
-      - name: Setup env variables
+      - name: Configure
         shell: bash
         run: |
-          UV_PYTHON_PATH=$(uv python dir)
-          export INSTALLED_PYTHON="$(find $UV_PYTHON_PATH -type d -maxdepth 1 -name '*${{ matrix.python }}*')"
-          # echo "$INSTALLED_PYTHON" >> $GITHUB_PATH
-          echo "PYO3_PYTHON=$INSTALLED_PYTHON\python.exe" >> $GITHUB_ENV
+          echo "OPENSSL_DIR=C:/openssl-${{ matrix.windows }}" >> $GITHUB_ENV
+          echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
+
+      - name: test
+        run: |
+          make test INSTALL_EXTRA=test
+        shell: bash
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-
-#      - name: test
-#        run: |
-#          uv venv env-local
-#          . env-local/Scripts/activate
-#          uv pip install dlltracer
-#          uv pip install -e '.[test]'
-#          python main.py
-#          # make test INSTALL_EXTRA=test
-#        shell: bash
-#        env:
-#          OPENSSL_DIR: "C:\\OpenSSL-Win64"
-#          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win64\\lib\\VC\\x64\\MD"
-#          OPENSSL_NO_VENDOR: 1
+        if: ${{ failure() }}
