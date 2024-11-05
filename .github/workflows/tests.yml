@@ -46,11 +46,11 @@ jobs:
         windows:
           - 'win64'
         python:
-#          - "3.9"
-#          - "3.10"
-#          - "3.11"
+          - "3.9"
+          - "3.10"
+          - "3.11"
           - "3.12"
-#          - "3.13"
+          - "3.13"
 
     runs-on: windows-latest
     steps:
@@ -77,12 +77,6 @@ jobs:
           name: "openssl-${{ matrix.windows }}"
           path: "C:/openssl-${{ matrix.windows }}/"
           github_token: ${{ secrets.GITHUB_TOKEN }}
-
-#      - name: Setup rust
-#        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-#        with:
-#          components: rustfmt
-#          toolchain: 1.81.0
 
       - name: Configure
         shell: bash
