@@ -1,32 +1,4 @@
 """rfc3161-client"""
-import os
-import platform
-import sys
-from pathlib import Path
-
-def add_missing_dlls():
-    """Add required DLL search directories for Windows platform.
-
-    This function ensures DLLs can be found by:
-    1. Adding OpenSSL directory from OPENSSL_DIR environment variable (if set)
-    2. Adding Python installation directory
-
-    These directories are only added on Windows platforms. On other platforms,
-    the function returns without making any changes.
-    """
-    if platform.system() != "Windows":
-        return
-
-    if openssl_dir := os.environ.get("OPENSSL_DIR"):
-        os.add_dll_directory(openssl_dir)
-        print(f"Dlls : {list(Path(openssl_dir).glob('*.dll'))}")
-
-    if pyo3_python := os.environ.get("PYO3_PYTHON"):
-        python_dir = Path(pyo3_python).parent
-        print(f"Dlls ({python_dir}) : {list(Path(python_dir).glob('*.dll'))}")
-        os.add_dll_directory(python_dir.as_posix())
-
-# add_missing_dlls()
 
 from .base import TimestampRequestBuilder, decode_timestamp_response
 from .errors import VerificationError

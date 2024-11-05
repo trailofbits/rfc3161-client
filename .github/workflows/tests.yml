@@ -7,38 +7,37 @@ on:
   pull_request:
 
 jobs:
-#  test-ubuntu:
-#    strategy:
-#      matrix:
-#        python:
-#          - "3.9"
-#          - "3.10"
-#          - "3.11"
-#          - "3.12"
-#          - "3.13"
-#
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Install the latest version of uv
-#        uses: astral-sh/setup-uv@v3
-#        with:
-#          version: "0.4.18"
-#          enable-cache: true
-#          cache-dependency-glob: pyproject.toml
-#
-#      - name: Install Python ${{ matrix.python }}
-#        run: uv python install ${{ matrix.python }}
-#
-#      - name: Setup rust
-#        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-#        with:
-#          components: rustfmt
-#          toolchain: 1.81.0
-#
-#      - name: test
-#        run: make test INSTALL_EXTRA=test
+  test-ubuntu-macos:
+    strategy:
+      matrix:
+        platform:
+          - macos-latest
+          - ubuntu-latest
+        python:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Install Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
+      - name: test
+        run: make test INSTALL_EXTRA=test
 
   test-windows:
     strategy:
@@ -88,7 +87,3 @@ jobs:
         run: |
           make test INSTALL_EXTRA=test
         shell: bash
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() }}
