@@ -20,7 +20,9 @@ updates:
       interval: daily
 
   - package-ecosystem: cargo
-    directory: "/rust"
+    directories:
+      - "/rust"
+      - "/rust/tsp-asn1"
     groups:
       actions:
         patterns:
