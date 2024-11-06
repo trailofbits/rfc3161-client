@@ -170,6 +170,9 @@ jobs:
         with:
           name: wheels-windows-${{ matrix.WINDOWS.ARCH }}
           path: dist
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() }}
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
