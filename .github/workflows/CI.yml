@@ -148,6 +148,7 @@ jobs:
         run: |
             echo "OPENSSL_DIR=C:/openssl-${{ matrix.WINDOWS.WINDOWS }}" >> $GITHUB_ENV
             echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+            echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
         shell: bash
       - run: mkdir wheelhouse
       - name: Build wheel
@@ -162,17 +163,17 @@ jobs:
         run: |
           uv venv
           source ./.venv/Scripts/activate
-          uv pip install --no-index -f wheelhouse/ rfc3161_client
+          uv pip install wheelhouse/rfc3161_client*.whl
           python -c "import rfc3161_client"
         shell: bash
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-windows-${{ matrix.WINDOWS.ARCH }}
-          path: dist
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: ${{ failure() }}
+          name: "rfc3161-${{ matrix.WINDOWS.WINDOWS }}-${{ matrix.PYTHON.VERSION }}-${{ matrix.PYTHON.ABI_VERSION }}"
+          path: wheelhouse
+#      - name: Setup tmate session
+#        uses: mxschmitt/action-tmate@v3
+#        if: ${{ failure() }}
 
   macos:
     runs-on: ${{ matrix.platform.runner }}
