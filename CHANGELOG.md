@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Magic method (`__eq__` and `__repr__`) has been added for TimestampResponse 
+  and TimestampRequest ([#48](https://github.com/trailofbits/rfc3161-client/pull/48))
 
 ## [0.0.2] - 2024-10-30
 
