@@ -7,18 +7,24 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-ubuntu-macos:
     strategy:
       matrix:
+        platform:
+          - macos-latest
+          - ubuntu-latest
         python:
           - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
           - "3.13"
-    runs-on: ubuntu-latest
+
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@v3
@@ -30,11 +36,54 @@ jobs:
       - name: Install Python ${{ matrix.python }}
         run: uv python install ${{ matrix.python }}
 
-      - name: Setup rust
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
-        with:
-          components: rustfmt
-          toolchain: 1.81.0
-
       - name: test
         run: make test INSTALL_EXTRA=test
+
+  test-windows:
+    strategy:
+      matrix:
+        windows:
+          - 'win64'
+        python:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Install Python ${{ matrix.python }}
+        run: uv python install ${{ matrix.python }}
+
+      - uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
+        with:
+          repo: pyca/infra
+          workflow: build-windows-openssl.yml
+          branch: main
+          workflow_conclusion: success
+          name: "openssl-${{ matrix.windows }}"
+          path: "C:/openssl-${{ matrix.windows }}/"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure
+        shell: bash
+        run: |
+          echo "OPENSSL_DIR=C:/openssl-${{ matrix.windows }}" >> $GITHUB_ENV
+          echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
+
+      - name: test
+        run: |
+          make test INSTALL_EXTRA=test
+        shell: bash
