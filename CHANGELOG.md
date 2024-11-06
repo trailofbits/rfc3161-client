@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The CI now correctly build wheels for Windows 
+- The CI now correctly builds wheels for Windows 
   ([49](https://github.com/trailofbits/rfc3161-client/pull/49))
 
 
