@@ -6,10 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2024-11-06
+
 ### Added
 
 - Magic method (`__eq__` and `__repr__`) has been added for TimestampResponse 
   and TimestampRequest ([#48](https://github.com/trailofbits/rfc3161-client/pull/48))
+
+### Fixed
+
+- The CI now correctly builds wheels for Windows 
+  ([49](https://github.com/trailofbits/rfc3161-client/pull/49))
+
 
 ## [0.0.2] - 2024-10-30
 
@@ -34,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/trailofbits/rfc3161-client/releases/tag/v0.0.1
