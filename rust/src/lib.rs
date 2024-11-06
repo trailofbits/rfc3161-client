@@ -103,6 +103,12 @@ impl TimeStampReq {
         hasher.finish()
     }
 
+    fn __eq__(&self, py: pyo3::Python<'_>, other: pyo3::PyRef<'_, Self>) -> pyo3::PyResult<bool> {
+        let other_bytes = other.as_bytes(py)?;
+        let self_bytes = self.as_bytes(py)?;
+        Ok(other_bytes.eq(&self_bytes.as_bytes()))
+    }
+
     fn __repr__(&self, py: pyo3::Python<'_>) -> pyo3::PyResult<String> {
         let version = self.version()?;
         let nonce_repr = match self.nonce(py)? {
@@ -291,6 +297,12 @@ impl TimeStampResp {
         let buffer = asn1::write_single(&self.raw.borrow_dependent()).unwrap();
         buffer.hash(&mut hasher);
         hasher.finish()
+    }
+
+    fn __eq__(&self, other: pyo3::PyRef<'_, Self>) -> pyo3::PyResult<bool> {
+        let other_bytes = asn1::write_single(&other.raw.borrow_dependent()).unwrap();
+        let self_bytes = asn1::write_single(&self.raw.borrow_dependent()).unwrap();
+        Ok(other_bytes.eq(&self_bytes))
     }
 
     fn __repr__(&self) -> pyo3::PyResult<String> {
