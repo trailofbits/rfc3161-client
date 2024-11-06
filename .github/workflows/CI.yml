@@ -17,6 +17,27 @@ permissions:
   contents: read
 
 jobs:
+  sdist:
+    runs-on: ubuntu-latest
+    name: sdists
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - name: Make sdist (rfc3161_client)
+        run: uv build --sdist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: rfc3161-sdist
+          path: dist/rfc3161_client*
+
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -42,7 +63,7 @@ jobs:
             if command -v yum 2>&1 >/dev/null
             then
               yum update
-              yum install -y perl-core cpanminus devtoolset-10-libatomic-devel openssl-devel
+              yum install -y perl-core cpanminus devtoolset-10-libatomic-devel
               # Workaround for OpenSSL not building on Centos 7 (manylinux2014)
               # Remove once `openssl-src` builds OpenSSL > 3.3.2 by default
               # Ref: https://github.com/openssl/openssl/pull/25367#issuecomment-2327177830
@@ -82,48 +103,72 @@ jobs:
           path: dist
 
   windows:
-    runs-on: ${{ matrix.platform.runner }}
+    needs: [sdist]
+    runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
-        platform:
-          - runner: windows-latest
-            arch: 64
-            target: x64
-          - runner: windows-latest
-            arch: 32
-            target: x86
+        WINDOWS:
+          - {ARCH: 'x86', WINDOWS: 'win32', RUST_TRIPLE: 'i686-pc-windows-msvc'}
+          - {ARCH: 'x64', WINDOWS: 'win64', RUST_TRIPLE: 'x86_64-pc-windows-msvc'}
+        PYTHON:
+          - {VERSION: "3.11", "ABI_VERSION": "py37"}
+          - {VERSION: "3.11", "ABI_VERSION": "py39"}
+    name: "${{ matrix.PYTHON.VERSION }} ${{ matrix.WINDOWS.WINDOWS }} ${{ matrix.PYTHON.ABI_VERSION }}"
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-          architecture: ${{ matrix.platform.target }}
-      - name: Install OpenSSL
-        env:
-          OPENSSL_INSTALLER: "Win${{ matrix.platform.arch }}OpenSSL-3_3_2.exe"
-          OPENSSL_PATH: "C:\\OpenSSL-Win${{ matrix.platform.arch }}"
+          persist-credentials: false
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: rfc3161-sdist
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.18"
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - name: Install python
+        run: uv python install ${{ matrix.PYTHON.VERSION }}
+        shell: bash
+      - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+        with:
+          toolchain: stable
+          target: ${{ matrix.WINDOWS.RUST_TRIPLE }}
+      - uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
+        with:
+          repo: pyca/infra
+          workflow: build-windows-openssl.yml
+          branch: main
+          workflow_conclusion: success
+          name: "openssl-${{ matrix.WINDOWS.WINDOWS }}"
+          path: "C:/openssl-${{ matrix.WINDOWS.WINDOWS }}/"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure OpenSSL
         run: |
-          curl.exe -o "c:\\${env:OPENSSL_INSTALLER}" -fsSL "https://slproweb.com/download/${env:OPENSSL_INSTALLER}"
-          Start-Process -FilePath "c:\\${env:OPENSSL_INSTALLER}" -ArgumentList "/silent /verysilent /DIR=${env:OPENSSL_PATH}" -NoNewWindow -Wait
-          echo "Installed OpenSSL version:"
-          Start-Process -FilePath "${env:OPENSSL_PATH}\\bin\\openssl.exe" -ArgumentList "version" -Wait -NoNewWindow
-          echo "Folder contents:"
-          ls ${env:OPENSSL_PATH} -Recurse
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        env:
-          OPENSSL_DIR: "C:\\OpenSSL-Win${{ matrix.platform.arch }}"
-          OPENSSL_LIB_DIR: "C:\\OpenSSL-Win${{ matrix.platform.arch }}\\lib\\VC\\${{ matrix.platform.target }}\\MD"
-          # Do not build OpenSSL on Windows, since we are installing it
-          OPENSSL_NO_VENDOR: 1
-        with:
-          target: ${{ matrix.platform.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
+            echo "OPENSSL_DIR=C:/openssl-${{ matrix.WINDOWS.WINDOWS }}" >> $GITHUB_ENV
+            echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+        shell: bash
+      - run: mkdir wheelhouse
+      - name: Build wheel
+        run: |
+          if [ -n "${{ matrix.PYTHON.ABI_VERSION }}" ]; then
+              PY_LIMITED_API="--config-settings=build-args=--features=pyo3/abi3-${{ matrix.PYTHON.ABI_VERSION }}"
+          fi
+
+          uv build --wheel rfc3161*.tar.gz $PY_LIMITED_API -o wheelhouse/
+        shell: bash
+      - name: Test Install
+        run: |
+          uv venv
+          source ./.venv/Scripts/activate
+          uv pip install --no-index -f wheelhouse/ rfc3161_client
+          python -c "import rfc3161_client"
+        shell: bash
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-windows-${{ matrix.platform.target }}
+          name: wheels-windows-${{ matrix.WINDOWS.ARCH }}
           path: dist
 
   macos:
@@ -156,23 +201,6 @@ jobs:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
 
-  sdist:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
-      - name: Build sdist
-        uses: PyO3/maturin-action@v1
-        with:
-          command: sdist
-          args: --out dist
-      - name: Upload sdist
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-sdist
-          path: dist
 
   publish:
     name: Publish Python distributions to PyPI
