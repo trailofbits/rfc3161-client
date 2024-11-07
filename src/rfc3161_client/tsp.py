@@ -99,6 +99,10 @@ class TimeStampResponse(metaclass=abc.ABCMeta):
     def time_stamp_token(self) -> bytes:
         """Return the bytes of the TimestampToken field."""
 
+    @abc.abstractmethod
+    def as_bytes(self) -> bytes:
+        """Returns the Timestamp Response as bytes."""
+
 
 TimeStampResponse.register(_rust.TimeStampResp)
 

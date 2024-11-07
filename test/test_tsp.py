@@ -36,6 +36,10 @@ class TestTimestampResponse:
             (_FIXTURE / "response.tsr").read_bytes()
         ) == decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
 
+    def test_round_trip(self):
+        timestamp_response = decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
+        assert timestamp_response == decode_timestamp_response(timestamp_response.as_bytes())
+
 
 class TestTimestampRequest:
     def test_parsing_good(self):
@@ -53,3 +57,7 @@ class TestTimestampRequest:
         other_request = parse_timestamp_request((_FIXTURE / "other_request.der").read_bytes())
 
         assert timestamp_request != other_request
+
+    def test_round_trip(self):
+        timestamp_request = parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
+        assert timestamp_request == parse_timestamp_request(timestamp_request.as_bytes())
