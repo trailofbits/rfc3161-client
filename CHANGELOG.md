@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- TimestampResponse now has a `as_bytes` method to retrieve the original 
+  request bytes ([#XX](https://github.com/trailofbits/rfc3161-client/pull/XX))
+
 ## [0.0.3] - 2024-11-06
 
 ### Added
