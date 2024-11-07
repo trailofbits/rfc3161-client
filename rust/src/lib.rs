@@ -280,6 +280,17 @@ impl TimeStampResp {
         }
     }
 
+    fn as_bytes<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> PyResult<pyo3::Bound<'p, pyo3::types::PyBytes>> {
+        let result = asn1::write_single(&self.raw.borrow_dependent());
+        match result {
+            Ok(response_bytes) => Ok(pyo3::types::PyBytes::new_bound(py, &response_bytes)),
+            Err(e) => Err(pyo3::exceptions::PyValueError::new_err(format!("{e}"))),
+        }
+    }
+
     // Timestamp Token (as_bytes)
     fn time_stamp_token<'p>(
         &self,
@@ -771,13 +782,6 @@ mod tests {
             .unwrap();
 
             let py_bytes = pyo3::types::PyBytes::new_bound(py, &data);
-
-            // Does not work
-            // let raw = OwnedTimeStampResp::try_new(py_bytes.into(), |v| {
-            //     RawTimeStampResp::parse_data(v.as_bytes(py))
-            // }).unwrap();
-
-            // Works
             let raw = OwnedTimeStampResp::try_new(py_bytes.into(), |v| {
                 asn1::parse_single::<RawTimeStampResp>(v.as_bytes(py))
             })
