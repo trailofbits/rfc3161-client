@@ -165,7 +165,7 @@ class TimeStampTokenInfo(metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def nonce(self) -> bytes:
+    def nonce(self) -> int:
         """Returns the nonce."""
 
     @property
