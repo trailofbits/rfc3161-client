@@ -24,14 +24,17 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
+
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@e779db74266a80753577425b0f4ee823649f251d # v3.2.3
         with:
           version: "0.4.18"
           enable-cache: true
           cache-dependency-glob: pyproject.toml
+
       - name: Make sdist (rfc3161_client)
         run: uv build --sdist
+
       - name: Upload sdist
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -49,9 +52,13 @@ jobs:
           - target: armv7
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5
         with:
           python-version: 3.x
+
       - name: Build wheels
         uses: PyO3/maturin-action@ea5bac0f1ccd0ab11c805e2b804bfcb65dac2eab # v1
         with:
@@ -69,6 +76,7 @@ jobs:
               # Ref: https://github.com/openssl/openssl/pull/25367#issuecomment-2327177830
               cpanm --verbose --notest install Sub::Util
             fi
+
       - name: Upload wheels
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -86,9 +94,13 @@ jobs:
           - target: armv7
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5
         with:
           python-version: 3.x
+
       - name: Build wheels
         uses: PyO3/maturin-action@ea5bac0f1ccd0ab11c805e2b804bfcb65dac2eab # v1
         with:
@@ -96,6 +108,7 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: musllinux_1_2
+
       - name: Upload wheels
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -116,15 +129,18 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         with:
           persist-credentials: false
+
       - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
           name: rfc3161-sdist
+
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@e779db74266a80753577425b0f4ee823649f251d # v3.2.3
         with:
           version: "0.4.18"
           enable-cache: true
           cache-dependency-glob: pyproject.toml
+
       # We cannot use `uv python install` because it doesn't allow to install python
       # version for another architecture
       - name: Setup python
@@ -132,10 +148,12 @@ jobs:
         with:
           python-version: 3.x
           architecture: ${{ matrix.WINDOWS.ARCH }}
+
       - uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
         with:
           toolchain: stable
           target: ${{ matrix.WINDOWS.RUST_TRIPLE }}
+
       - uses: dawidd6/action-download-artifact@bf251b5aa9c2f7eeb574a96ee720e24f801b7c11 # v6
         with:
           repo: pyca/infra
@@ -145,17 +163,20 @@ jobs:
           name: "openssl-${{ matrix.WINDOWS.WINDOWS }}"
           path: "C:/openssl-${{ matrix.WINDOWS.WINDOWS }}/"
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Configure OpenSSL
         run: |
             echo "OPENSSL_DIR=C:/openssl-${{ matrix.WINDOWS.WINDOWS }}" >> $GITHUB_ENV
             echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
             echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
         shell: bash
+
       - run: mkdir wheelhouse
       - name: Build wheel
         run: |
           uv build --wheel rfc3161*.tar.gz -o wheelhouse/
         shell: bash
+
       - name: Test Install
         run: |
           uv venv
@@ -163,6 +184,7 @@ jobs:
           uv pip install wheelhouse/rfc3161_client*.whl
           python -c "import rfc3161_client"
         shell: bash
+
       - name: Upload wheels
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -180,9 +202,13 @@ jobs:
             target: aarch64
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
+
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5
         with:
           python-version: 3.x
+
       - name: Build wheels
         uses: PyO3/maturin-action@ea5bac0f1ccd0ab11c805e2b804bfcb65dac2eab # v1
         env:
@@ -193,6 +219,7 @@ jobs:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
           sccache: 'true'
+
       - name: Upload wheels
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4
         with:
@@ -217,6 +244,7 @@ jobs:
         with:
           path: dist/
           merge-multiple: true
+
       - name: Publish distributions
         uses: pypa/gh-action-pypi-publish@15c56dba361d8335944d31a2ecd17d700fc7bcbc # release/v1
         with:
