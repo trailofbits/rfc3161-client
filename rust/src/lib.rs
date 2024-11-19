@@ -357,10 +357,7 @@ impl SignedData {
     }
 
     #[getter]
-    fn certificates<'p>(
-        &self,
-        py: pyo3::Python<'p>,
-    ) -> pyo3::PyResult<pyo3::PyObject> {
+    fn certificates<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::PyObject> {
         let py_certs = pyo3::types::PySet::empty(py)?;
         let certs = match self.raw.borrow_dependent().certificates.clone() {
             Some(certs) => certs,
@@ -402,9 +399,7 @@ impl SignedData {
                     })
                     .unwrap(),
                 };
-                py_set.add(
-                    py_signer_info.into_pyobject(py)?.unbind()
-                )?;
+                py_set.add(py_signer_info.into_pyobject(py)?.unbind())?;
             }
         }
 
@@ -755,8 +750,7 @@ mod _rust {
 
     #[pymodule_export]
     use super::{
-        Accuracy, PyMessageImprint, PyTSTInfo, SignedData, SignerInfo, TimeStampReq,
-        TimeStampResp,
+        Accuracy, PyMessageImprint, PyTSTInfo, SignedData, SignerInfo, TimeStampReq, TimeStampResp,
     };
 
     #[pyo3::pymodule]

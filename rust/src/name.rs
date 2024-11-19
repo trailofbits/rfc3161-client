@@ -32,7 +32,7 @@ fn parse_name_attribute<'p>(
         }
     };
     let kwargs = [(pyo3::intern!(py, "_validate"), false)].into_py_dict(py)?;
-        //.map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to parse argument"))?;
+    //.map_err(|_| pyo3::exceptions::PyValueError::new_err("Unable to parse argument"))?;
     let o = crate::util::NAME_ATTRIBUTE.get(py)?;
     Ok(o.call((oid, py_data, py_tag), Some(&kwargs))?)
 }
