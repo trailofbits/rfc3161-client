@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2024-11-20
+
 ### Added
 
 - TimestampResponse now has a `as_bytes` method to retrieve the original 
@@ -47,7 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.4...HEAD
+[0.0.3]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/trailofbits/rfc3161-client/releases/tag/v0.0.1
