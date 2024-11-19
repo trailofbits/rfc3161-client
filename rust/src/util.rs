@@ -20,7 +20,7 @@ impl LazyPyImport {
 
     pub fn get<'p>(&'p self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
         let p = self.value.get_or_try_init(py, || {
-            let mut obj = py.import_bound(self.module)?.into_any();
+            let mut obj = py.import(self.module)?.into_any();
             for name in self.names {
                 obj = obj.getattr(*name)?;
             }
@@ -35,8 +35,8 @@ pub fn big_byte_slice_to_py_int<'p>(
     py: pyo3::Python<'p>,
     v: &'_ [u8],
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    let int_type = py.get_type_bound::<pyo3::types::PyLong>();
-    let kwargs = [("signed", true)].into_py_dict_bound(py);
+    let int_type = py.get_type::<pyo3::types::PyInt>();
+    let kwargs = [("signed", true)].into_py_dict(py)?;
     int_type.call_method(pyo3::intern!(py, "from_bytes"), (v, "big"), Some(&kwargs))
 }
 
@@ -44,7 +44,7 @@ pub(crate) fn big_asn1_uint_to_py<'p>(
     py: pyo3::Python<'p>,
     v: asn1::BigUint<'_>,
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    let int_type = py.get_type_bound::<pyo3::types::PyLong>();
+    let int_type = py.get_type::<pyo3::types::PyInt>();
     Ok(int_type.call_method1(
         pyo3::intern!(py, "from_bytes"),
         (v.as_bytes(), pyo3::intern!(py, "big")),
@@ -58,7 +58,6 @@ pub(crate) fn oid_to_py_oid<'p>(
     py: pyo3::Python<'p>,
     oid: &asn1::ObjectIdentifier,
 ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-    //Ok(pyo3::Bound::new(py, crate::oid::ObjectIdentifier { oid: oid.clone() })?.into_any())
     let oid_object = OBJECT_IDENTIFIER.get(py)?;
     oid_object.call1((oid.to_string(),))
 }
