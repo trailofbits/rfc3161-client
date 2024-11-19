@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
@@ -10,19 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- TimestampResponse now has a `as_bytes` method to retrieve the original 
-  request bytes ([#XX](https://github.com/trailofbits/rfc3161-client/pull/XX))
+- TimestampResponse now has a `as_bytes` method to retrieve the original
+  request bytes ([#62](https://github.com/trailofbits/rfc3161-client/pull/62))
 
 ## [0.0.3] - 2024-11-06
 
 ### Added
 
-- Magic method (`__eq__` and `__repr__`) has been added for TimestampResponse 
+- Magic method (`__eq__` and `__repr__`) has been added for TimestampResponse
   and TimestampRequest ([#48](https://github.com/trailofbits/rfc3161-client/pull/48))
 
 ### Fixed
 
-- The CI now correctly builds wheels for Windows 
+- The CI now correctly builds wheels for Windows
   ([49](https://github.com/trailofbits/rfc3161-client/pull/49))
 
 
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Magic methods (`__hash__` and `__repr__`) have been added for TimestampResponse and 
+- Magic methods (`__hash__` and `__repr__`) have been added for TimestampResponse and
   TimestampRequest ([#32](https://github.com/trailofbits/rfc3161-client/pull/32))
 - `VerifierBuilder` is now the only way to create a `Verifier` ([#35](https://github.com/trailofbits/rfc3161-client/pull/35))
 
