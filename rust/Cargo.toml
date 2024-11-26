@@ -14,13 +14,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 tsp-asn1 = { path = "tsp-asn1" }
-pyo3 = { version = "0.23.1", features = ["abi3"] }
-asn1 = "0.19"
+pyo3 = { version = "0.23.2", features = ["abi3"] }
+asn1 = "0.20"
 self_cell = "1"
 hex = "0.4"
 sha2 = "0.10.8"
 rand = "0.8.5"
-cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", rev = "4c72f368234e60a06e4a0beaf87be55940dd49c1" }
+cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", rev = "8f522feb12999085680ae224ede0b8756ea079a0" }
 openssl = { version = "0.10.68", features = ["vendored"] }
 
 [features]
