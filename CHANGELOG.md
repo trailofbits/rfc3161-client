@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The minimum version of `cryptography` required is now `44`
+  ([#75](https://github.com/trailofbits/rfc3161-client/pull/75))
+
 ## [0.0.4] - 2024-11-20
 
 ### Added
