@@ -13,14 +13,11 @@ classifiers = [
 ]
 # Maturin does not support dynamic fields
 # So we keep the version number here instead of __init__
-version = "0.0.4"
+version = "0.0.5"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
-dependencies = [
-    "maturin>=1.7,<2.0",
-    "cryptography>=44,<45",
-]
+dependencies = ["maturin>=1.7,<2.0", "cryptography>=44,<45"]
 
 [project.optional-dependencies]
 doc = []
@@ -53,6 +50,4 @@ target-version = "py39"
 select = ["E", "F", "I", "W", "UP", "TCH"]
 
 [tool.coverage.report]
-exclude_also = [
-    "if TYPE_CHECKING:",
-]
+exclude_also = ["if TYPE_CHECKING:"]
