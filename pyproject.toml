@@ -19,7 +19,7 @@ license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
 dependencies = [
     "maturin>=1.7,<2.0",
-    "cryptography>=44,<45",
+    "cryptography>=43,<45",
 ]
 
 [project.optional-dependencies]
