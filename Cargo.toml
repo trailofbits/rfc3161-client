@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "rust/",
+    "rust/tsp-asn1",
+]
+
+[workspace.dependencies]
+asn1 = "0.20"
+cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.0" }
+hex = "0.4"
+
+[workspace.package]
+version = "0.0.1"
+edition = "2021"
+authors = [
+    "Trail of Bits <opensource@trailofbits.com>"
+]
+publish = false

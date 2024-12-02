@@ -1,11 +1,9 @@
 [package]
 name = "rfc3161-client"
-version = "0.1.0"
-edition = "2021"
-authors = [
-    "Trail of Bits <opensource@trailofbits.com>"
-]
-publish = false
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -15,12 +13,12 @@ crate-type = ["cdylib"]
 [dependencies]
 tsp-asn1 = { path = "tsp-asn1" }
 pyo3 = { version = "0.23.2", features = ["abi3"] }
-asn1 = "0.20"
+asn1.workspace = true
 self_cell = "1"
-hex = "0.4"
+hex.workspace = true
 sha2 = "0.10.8"
 rand = "0.8.5"
-cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.0" }
+cryptography-x509.workspace = true
 openssl = { version = "0.10.68", features = ["vendored"] }
 
 [features]

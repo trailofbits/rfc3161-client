@@ -23,6 +23,7 @@ updates:
     directories:
       - "/rust"
       - "/rust/tsp-asn1"
+      - "/"
     groups:
       actions:
         patterns:
