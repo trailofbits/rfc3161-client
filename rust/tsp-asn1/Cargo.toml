@@ -12,7 +12,7 @@ name = "tsp_asn1"
 
 [dependencies]
 asn1 = "0.20"
-cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", rev = "8f522feb12999085680ae224ede0b8756ea079a0" }
+cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.0" }
 
 [dev-dependencies]
 hex = "0.4"
