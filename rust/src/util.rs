@@ -114,6 +114,7 @@ pub fn generate_random_bytes_for_asn1_biguint() -> Vec<u8> {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::generate_random_bytes_for_asn1_biguint;
 

@@ -40,6 +40,7 @@ features = ["pyo3/abi3-py39", "pyo3/extension-module"]
 python-source = "src"
 manifest-path = "rust/Cargo.toml"
 module-name = "rfc3161_client._rust"
+sdist-generator = "git"
 
 [tool.ruff]
 line-length = 100

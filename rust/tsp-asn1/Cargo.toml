@@ -1,18 +1,16 @@
 [package]
 name = "tsp-asn1"
-version = "0.0.1"
-edition = "2021"
-authors = [
-    "Trail of Bits <opensource@trailofbits.com>"
-]
-publish = false
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+publish.workspace = true
 
 [lib]
 name = "tsp_asn1"
 
 [dependencies]
-asn1 = "0.20"
-cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.0" }
+asn1.workspace = true
+cryptography-x509.workspace = true
 
 [dev-dependencies]
-hex = "0.4"
+hex.workspace = true
