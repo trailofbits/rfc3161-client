@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2024-12-10
+
+### Changed
+
+- `rfc3161-client` release `0.1.0` was previously published and yanked on PyPI, preventing
+  republication ([83](https://github.com/trailofbits/rfc3161-client/pull/83))
+
 ## [0.1.0] - 2024-12-10
+
+### Changed
 
 - `rfc3161-client` is now in beta ([82](https://github.com/trailofbits/rfc3161-client/pull/82)).
 
@@ -60,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.5...v0.1.0
 [0.0.4]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.3...v0.0.4
