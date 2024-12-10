@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2024-12-09
+## [0.1.0] - 2024-12-10
 
 - `rfc3161-client` is now in beta ([82](https://github.com/trailofbits/rfc3161-client/pull/82)).
 
