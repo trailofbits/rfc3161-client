@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `rfc3161-client` release `0.1.0` was previously published and yanked on PyPI, preventing
-  republication ([83](https://github.com/trailofbits/rfc3161-client/pull/83))
+  republication ([85](https://github.com/trailofbits/rfc3161-client/pull/85))
 
 ## [0.1.0] - 2024-12-10
 
