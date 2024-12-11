@@ -17,13 +17,13 @@ version = "0.1.1"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
-dependencies = ["maturin>=1.7,<2.0", "cryptography>=44,<45"]
+dependencies = ["cryptography>=44,<45"]
 
 [project.optional-dependencies]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
 lint = ["ruff >= 0.7,< 0.9"]
-dev = ["rfc3161-client[test,lint,doc]"]
+dev = ["rfc3161-client[test,lint,doc]", "maturin>=1.7,<2.0"]
 
 [project.urls]
 Homepage = "https://pypi.org/project/rfc3161-client"
