@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Moved `maturin` dependency from main project dependencies to development dependencies
+  since it's only needed for development tasks ([88](https://github.com/trailofbits/rfc3161-client/pull/88))
+
 ## [0.1.1] - 2024-12-10
 
 ### Changed
