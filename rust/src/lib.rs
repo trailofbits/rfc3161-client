@@ -760,6 +760,9 @@ mod _rust {
     }
 }
 
+// We cannot run tests when used with PyPy because it lacks Py_Initialize
+// https://github.com/pypy/pypy/issues/3836
+#[cfg(not(PyPy))]
 #[cfg(test)]
 mod tests {
     use super::OwnedTimeStampResp;
@@ -781,5 +784,6 @@ mod tests {
 
             assert_eq!(raw.borrow_dependent().status.status, 0);
         });
+
     }
 }

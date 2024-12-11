@@ -372,6 +372,7 @@ dependencies = [
  "hex",
  "openssl",
  "pyo3",
+ "pyo3-build-config",
  "rand",
  "self_cell",
  "sha2",
