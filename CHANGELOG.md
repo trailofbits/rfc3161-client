@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Relax cryptography version requirement ([91](https://github.com/trailofbits/rfc3161-client/pull/91))
 
+### Fixed
+
+- The project now correctly runs tests with PyPy
+  ([89](https://github.com/trailofbits/rfc3161-client/pull/89))
+
 ## [0.1.1] - 2024-12-10
 
 ### Changed
