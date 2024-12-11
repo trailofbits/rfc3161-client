@@ -21,5 +21,8 @@ rand = "0.8.5"
 cryptography-x509.workspace = true
 openssl = { version = "0.10.68", features = ["vendored"] }
 
+[build-dependencies]
+pyo3-build-config = { version = "0.23.1", features = ["resolve-config"] }
+
 [features]
 extension-module = ["pyo3/extension-module"]
