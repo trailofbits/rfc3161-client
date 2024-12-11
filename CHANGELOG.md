@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2024-12-11
+
 ### Changed
 
 - Moved `maturin` dependency from main project dependencies to development dependencies
@@ -79,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.5...v0.1.0
 [0.0.4]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.4...v0.0.5
