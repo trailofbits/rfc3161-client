@@ -784,6 +784,5 @@ mod tests {
 
             assert_eq!(raw.borrow_dependent().status.status, 0);
         });
-
     }
 }
