@@ -623,21 +623,63 @@ pub(crate) fn parse_timestamp_request(
     Ok(TimeStampReq { raw: raw.into() })
 }
 
+struct HashInfo<'a> {
+    params: cryptography_x509::common::AlgorithmParameters<'a>,
+    hash_fn: fn(&[u8]) -> Vec<u8>,
+}
+
+fn detect_hash_algorithm<'a>(
+    py: Python<'a>,
+    hash_algorithm: Option<pyo3::Bound<'a, pyo3::PyAny>>,
+) -> PyResult<HashInfo<'a>> {
+    let name = if hash_algorithm.is_none() {
+        "SHA512".to_string()
+    } else {
+        let algorithm = hash_algorithm.unwrap();
+        if !algorithm.is_instance(&crate::util::HASH_ALGORITHM.get(py)?)? {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid hash algorithm",
+            ));
+        }
+        let name_str = algorithm
+            .getattr(pyo3::intern!(py, "name"))?
+            .extract::<pyo3::pybacked::PyBackedStr>()?;
+        name_str.to_string()
+    };
+
+    match name.as_str() {
+        "SHA256" => Ok(HashInfo {
+            params: cryptography_x509::common::AlgorithmParameters::Sha256(Some(())),
+            hash_fn: |data| sha2::Sha256::digest(data).to_vec(),
+        }),
+        "SHA512" => Ok(HashInfo {
+            params: cryptography_x509::common::AlgorithmParameters::Sha512(Some(())),
+            hash_fn: |data| sha2::Sha512::digest(data).to_vec(),
+        }),
+        _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "unsupported hash algorithm {:?}",
+            name
+        ))),
+    }
+}
+
 #[pyo3::pyfunction]
-#[pyo3(signature = (data, nonce, cert))]
+#[pyo3(signature = (data, nonce, cert, hash_algorithm=None))]
 pub(crate) fn create_timestamp_request(
     py: pyo3::Python<'_>,
     data: pyo3::Py<pyo3::types::PyBytes>,
     nonce: bool,
     cert: bool,
+    hash_algorithm: Option<pyo3::Bound<'_, pyo3::PyAny>>,
 ) -> PyResult<TimeStampReq> {
-    let data_bytes = data.as_bytes(py);
-    let hash = sha2::Sha512::digest(data_bytes);
+    let hash_info = detect_hash_algorithm(py, hash_algorithm)?;
 
+    let data_bytes = data.as_bytes(py);
+    let hash = (hash_info.hash_fn)(data_bytes);
     let message_imprint = tsp_asn1::tsp::MessageImprint {
         hash_algorithm: cryptography_x509::common::AlgorithmIdentifier {
             oid: asn1::DefinedByMarker::marker(),
-            params: cryptography_x509::common::AlgorithmParameters::Sha512(Some(())),
+            params: hash_info.params,
         },
         hashed_message: hash.as_slice(),
     };

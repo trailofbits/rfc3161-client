@@ -1,4 +1,5 @@
 from rfc3161_client.tsp import TimeStampRequest, TimeStampResponse
+from rfc3161_client.base import HashAlgorithm
 
 class PyMessageImprint: ...
 
@@ -18,6 +19,7 @@ def create_timestamp_request(
     data: bytes,
     nonce: bool,
     cert: bool,
+    hash_algorithm: HashAlgorithm | None = None,
 ) -> TimeStampRequest: ...
 
 
