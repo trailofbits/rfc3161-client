@@ -19,7 +19,7 @@ jobs:
           python-version-file: pyproject.toml
 
       - name: Setup rust
-        uses: dtolnay/rust-toolchain@1482605bfc5719782e1267fd0c0cc350fe7646b8
+        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
         with:
           components: rustfmt
           toolchain: 1.81.0
