@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class HashAlgorithm(enum.Enum):
     """Hash algorithms."""
 
+    SHA256 = "SHA256"
     SHA512 = "SHA512"
 
 
@@ -83,6 +84,7 @@ class TimestampRequestBuilder:
             data=self._data,
             nonce=self._nonce,
             cert=self._cert_req,
+            hash_algorithm=self._algorithm,
         )
 
 

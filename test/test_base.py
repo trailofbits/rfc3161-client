@@ -1,10 +1,9 @@
-import cryptography.x509
 import pytest
 from cryptography.hazmat.primitives import hashes
 
 from rfc3161_client.base import HashAlgorithm, TimestampRequestBuilder
 
-SHA512_OID = cryptography.x509.ObjectIdentifier("2.16.840.1.101.3.4.2.3")
+from .common import SHA256_OID, SHA512_OID
 
 
 class TestRequestBuilder:
@@ -18,13 +17,6 @@ class TestRequestBuilder:
         assert request.nonce is not None
         assert request.policy is None
 
-        message_imprint = request.message_imprint
-        assert message_imprint.hash_algorithm == SHA512_OID
-
-        digest = hashes.Hash(hashes.SHA512())
-        digest.update(message)
-        assert digest.finalize() == message_imprint.message
-
     def test_data(self):
         with pytest.raises(ValueError):
             TimestampRequestBuilder().build()
@@ -35,15 +27,33 @@ class TestRequestBuilder:
         with pytest.raises(ValueError, match="once"):
             TimestampRequestBuilder().data(b"hello").data(b"world")
 
-    def test_set_algorithm(self):
+    def test_algorithm_sha256(self):
+        message = b"random-message"
         request = (
-            TimestampRequestBuilder().hash_algorithm(HashAlgorithm.SHA512).data(b"hello").build()
+            TimestampRequestBuilder().data(message).hash_algorithm(HashAlgorithm.SHA256).build()
+        )
+        assert request.message_imprint.hash_algorithm == SHA256_OID
+
+        digest = hashes.Hash(hashes.SHA256())
+        digest.update(message)
+        assert digest.finalize() == request.message_imprint.message
+
+    def test_algorithm_sha512(self):
+        message = b"random-message"
+        request = (
+            TimestampRequestBuilder().data(message).hash_algorithm(HashAlgorithm.SHA512).build()
         )
         assert request.message_imprint.hash_algorithm == SHA512_OID
 
+        digest = hashes.Hash(hashes.SHA512())
+        digest.update(message)
+        assert digest.finalize() == request.message_imprint.message
+
+    def test_set_algorithm(self):
         with pytest.raises(TypeError):
             TimestampRequestBuilder().hash_algorithm("invalid hash algorihtm")
 
+        # Default hash algorithm
         request = TimestampRequestBuilder().data(b"hello").build()
         assert request.message_imprint.hash_algorithm == SHA512_OID
 

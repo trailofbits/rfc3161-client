@@ -94,6 +94,9 @@ pub static NAME: LazyPyImport = LazyPyImport::new("cryptography.x509", &["Name"]
 pub static DIRECTORY_NAME: LazyPyImport =
     LazyPyImport::new("cryptography.x509", &["DirectoryName"]);
 
+pub static HASH_ALGORITHM: LazyPyImport =
+    LazyPyImport::new("rfc3161_client.base", &["HashAlgorithm"]);
+
 pub fn generate_random_bytes_for_asn1_biguint() -> Vec<u8> {
     let mut rng = rand::thread_rng();
     let nonce_random: u64 = rng.gen_range(0..u64::MAX);

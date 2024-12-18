@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Added
+
+- `TimestampRequest` now accepts setting the hash algorithm to `SHA256` (in addition to `SHA512`)
+  ([93](https://github.com/trailofbits/rfc3161-client/pull/93))
+
 ## [0.1.2] - 2024-12-11
 
 ### Changed
