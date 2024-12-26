@@ -35,10 +35,10 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: test
-        run: make test INSTALL_EXTRA=test
-        env:
-          VENV: not-default-venv
-          VIRTUAL_ENV: not-default-venv
+        run: |
+          # We need to do this in CI because setup-uv@v5 automatically creates a new venv and it prevents us from 
+          # installing our dependencies in the Makefile.      
+          touch pyproject.toml && make test INSTALL_EXTRA=test
 
   test-windows:
     strategy:
@@ -83,11 +83,11 @@ jobs:
 
       - name: test
         run: |
+          # We need to do this in CI because setup-uv@v5 automatically creates a new venv and it prevents us from 
+          # installing our dependencies in the Makefile.
+          touch pyproject.toml
           make test INSTALL_EXTRA=test
         shell: bash
-        env:
-          VENV: not-default-venv
-          VIRTUAL_ENV: not-default-venv
 
   all-tests-pass:
     if: always()
