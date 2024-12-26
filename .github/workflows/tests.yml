@@ -32,13 +32,12 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
-          python-version: ${{ matrix.python }}
+
+      - name: Install python
+        run: uv python install ${{ matrix.python }}
 
       - name: test
-        run: |
-          # We need to do this in CI because setup-uv@v5 automatically creates a new venv and it prevents us from 
-          # installing our dependencies in the Makefile.      
-          touch pyproject.toml && make test INSTALL_EXTRA=test
+        run: make test INSTALL_EXTRA=test
 
   test-windows:
     strategy:
@@ -63,7 +62,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
-          python-version: ${{ matrix.python }}
+
+      - name: Install python
+        run: uv python install ${{ matrix.python }}
 
       - uses: dawidd6/action-download-artifact@80620a5d27ce0ae443b965134db88467fc607b43 # v7
         with:
