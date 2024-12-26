@@ -28,11 +28,13 @@ jobs:
           persist-credentials: false
 
       - name: Install the latest version of uv and set the python version
-        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
+        uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
-          python-version: ${{ matrix.python }}
+
+      - name: Install python
+        run: uv python install ${{ matrix.python }}
 
       - name: test
         run: make test INSTALL_EXTRA=test
@@ -56,11 +58,17 @@ jobs:
           persist-credentials: false
 
       - name: Install the latest version of uv and set the python version
-        uses: astral-sh/setup-uv@38f3f104447c67c051c4a08e39b64a148898af3a # v4.2.0
+        uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
-          python-version: ${{ matrix.python }}
+
+      # Split Python installation from virtual environment creation.
+      # setup-uv@v5's python-version parameter automatically creates and activates a venv, which conflicts with our
+      # Makefile's venv management.
+      # https://github.com/astral-sh/setup-uv/pull/194
+      - name: Install python
+        run: uv python install ${{ matrix.python }}
 
       - uses: dawidd6/action-download-artifact@80620a5d27ce0ae443b965134db88467fc607b43 # v7
         with:
@@ -80,6 +88,9 @@ jobs:
 
       - name: test
         run: |
+          # We need to do this in CI because setup-uv@v5 automatically creates a new venv and it prevents us from 
+          # installing our dependencies in the Makefile.
+          touch pyproject.toml
           make test INSTALL_EXTRA=test
         shell: bash
 
