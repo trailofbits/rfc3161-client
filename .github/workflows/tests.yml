@@ -63,6 +63,10 @@ jobs:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
 
+      # Split Python installation from virtual environment creation.
+      # setup-uv@v5's python-version parameter automatically creates and activates a venv, which conflicts with our
+      # Makefile's venv management.
+      # https://github.com/astral-sh/setup-uv/pull/194
       - name: Install python
         run: uv python install ${{ matrix.python }}
 
