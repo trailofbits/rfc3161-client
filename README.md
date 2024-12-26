@@ -12,9 +12,9 @@ described in [RFC 3161](https://www.ietf.org/rfc/rfc3161.txt).
 
 It is composed of three subprojects:
 
-- [:crab: tsp-asn1](./rust/tsp-asn1/Cargo.toml): A Rust crate using 
-  [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html) to create the 
-  types used by the Time-Stamp protocol. This crate depends on `rust-asn1` 
+- [:crab: tsp-asn1](./rust/tsp-asn1/Cargo.toml): A Rust crate using
+  [`rust-asn1`](https://docs.rs/asn1/latest/asn1/index.html) to create the
+  types used by the Time-Stamp protocol. This crate depends on `rust-asn1`
   and `cryptography` to minimize the amount of duplicated code. While
   it is usable as a standalone crate, this is not officially supported. Drop
   us a message if you are interested in using it.
@@ -34,7 +34,21 @@ It is composed of three subprojects:
 
 # License
 
-Apache 2.0
+```
+Copyright 2024 Trail of Bits
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
 
 # Authors
 
