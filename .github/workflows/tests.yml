@@ -36,6 +36,9 @@ jobs:
 
       - name: test
         run: make test INSTALL_EXTRA=test
+        env:
+          VENV: not-default-venv
+          VIRTUAL_ENV: not-default-venv
 
   test-windows:
     strategy:
@@ -82,6 +85,9 @@ jobs:
         run: |
           make test INSTALL_EXTRA=test
         shell: bash
+        env:
+          VENV: not-default-venv
+          VIRTUAL_ENV: not-default-venv
 
   all-tests-pass:
     if: always()
