@@ -33,8 +33,7 @@ ifneq ($(TESTS),)
 	COV_ARGS :=
 else
 	TEST_ARGS :=
-	#TODO(dm) We need to enforce this but later
-	COV_ARGS := --fail-under 0
+	COV_ARGS := --fail-under 100
 endif
 
 .PHONY: all

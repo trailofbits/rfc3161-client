@@ -4,7 +4,7 @@ from rfc3161_client.base import HashAlgorithm
 from .common import SHA256_OID, SHA512_OID
 
 
-def test_create_timestamp_request():
+def test_create_timestamp_request() -> None:
     request = create_timestamp_request(
         data=b"hello", nonce=True, cert=False, hash_algorithm=HashAlgorithm.SHA512
     )

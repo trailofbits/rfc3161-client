@@ -9,7 +9,7 @@ _FIXTURE = _HERE / "fixtures"
 
 
 class TestTimestampResponse:
-    def test_parsing_good(self):
+    def test_parsing_good(self) -> None:
         timestamp_response = decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
         assert timestamp_response.status == 0
 
@@ -27,7 +27,7 @@ class TestTimestampResponse:
         assert tst_info.accuracy.millis is None
         assert tst_info.accuracy.micros is None
 
-    def test_equality(self):
+    def test_equality(self) -> None:
         timestamp_response = decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
         other_response = decode_timestamp_response((_FIXTURE / "other_response.tsr").read_bytes())
 
@@ -36,13 +36,13 @@ class TestTimestampResponse:
             (_FIXTURE / "response.tsr").read_bytes()
         ) == decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
 
-    def test_round_trip(self):
+    def test_round_trip(self) -> None:
         timestamp_response = decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
         assert timestamp_response == decode_timestamp_response(timestamp_response.as_bytes())
 
 
 class TestTimestampRequest:
-    def test_parsing_good(self):
+    def test_parsing_good(self) -> None:
         timestamp_request: TimeStampRequest = parse_timestamp_request(
             (_FIXTURE / "request.der").read_bytes()
         )
@@ -52,12 +52,12 @@ class TestTimestampRequest:
         assert timestamp_request.policy is None
         assert timestamp_request.message_imprint.message.hex().startswith("9b71d224bd62f3785d96d")
 
-    def test_equality(self):
+    def test_equality(self) -> None:
         timestamp_request = parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
         other_request = parse_timestamp_request((_FIXTURE / "other_request.der").read_bytes())
 
         assert timestamp_request != other_request
 
-    def test_round_trip(self):
+    def test_round_trip(self) -> None:
         timestamp_request = parse_timestamp_request((_FIXTURE / "request.der").read_bytes())
         assert timestamp_request == parse_timestamp_request(timestamp_request.as_bytes())
