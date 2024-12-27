@@ -14,6 +14,8 @@ from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 
 class VerifierBuilder:
+    """Builder for a Verifier."""
+
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None = None,
@@ -121,11 +123,22 @@ class VerifierBuilder:
 
 
 class Verifier(metaclass=abc.ABCMeta):
+    """Verifier.
+
+    This class should not be instantiated directly but through a VerifierBuilder.
+    """
+
     @abc.abstractmethod
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool: ...
+    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
+        """Verify a timestamp response."""
 
 
 class _Verifier(Verifier):
+    """Inner implementation of the Verifier.
+
+    This pattern helps us ensure that the Verifier is never created directly.
+    """
+
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None,
