@@ -50,7 +50,7 @@ class TestRequestBuilder:
         assert digest.finalize() == request.message_imprint.message
 
     def test_set_algorithm(self) -> None:
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError, match="is not a supported hash."):
             TimestampRequestBuilder().hash_algorithm("invalid hash algorihtm")
 
         # Default hash algorithm

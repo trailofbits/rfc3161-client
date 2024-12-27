@@ -49,7 +49,7 @@ class TimestampRequestBuilder:
 
     def hash_algorithm(self, hash_algorihtm: _AllowedHashTypes) -> TimestampRequestBuilder:
         """Set the Hash algorithm used."""
-        if hash_algorihtm not in HashAlgorithm:
+        if not isinstance(hash_algorihtm, HashAlgorithm):
             msg = f"{hash_algorihtm} is not a supported hash."
             raise TypeError(msg)
 
