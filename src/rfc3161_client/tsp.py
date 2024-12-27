@@ -1,3 +1,5 @@
+"""Timestamp protocol objects."""
+
 from __future__ import annotations
 
 import abc
@@ -66,6 +68,8 @@ TimeStampRequest.register(_rust.TimeStampReq)
 
 
 class PKIStatus(enum.IntEnum):
+    """Response status."""
+
     GRANTED = 0
     GRANTED_WITH_MODS = 1
     REJECTION = 2
@@ -75,6 +79,8 @@ class PKIStatus(enum.IntEnum):
 
 
 class TimeStampResponse(metaclass=abc.ABCMeta):
+    """Timestamp response (per RFC 3161)."""
+
     @property
     @abc.abstractmethod
     def status(self) -> int:
@@ -108,6 +114,8 @@ TimeStampResponse.register(_rust.TimeStampResp)
 
 
 class Accuracy(metaclass=abc.ABCMeta):
+    """Accuracy of the timestamp response."""
+
     @property
     @abc.abstractmethod
     def seconds(self) -> int:
@@ -128,6 +136,8 @@ Accuracy.register(_rust.Accuracy)
 
 
 class TimeStampTokenInfo(metaclass=abc.ABCMeta):
+    """Timestamp token info (per RFC 3161)."""
+
     @property
     @abc.abstractmethod
     def version(self) -> int:
@@ -178,6 +188,8 @@ TimeStampTokenInfo.register(_rust.PyTSTInfo)
 
 
 class SignedData(metaclass=abc.ABCMeta):
+    """Signed data (CMS - RFC 2630)"""
+
     @property
     @abc.abstractmethod
     def version(self) -> int:
@@ -205,6 +217,8 @@ SignedData.register(_rust.SignedData)
 
 
 class SignerInfo(metaclass=abc.ABCMeta):
+    """Signer info (RFC 2634)."""
+
     @property
     @abc.abstractmethod
     def version(self) -> int:

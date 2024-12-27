@@ -14,6 +14,8 @@ from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
 
 class VerifierBuilder:
+    """Builder for a Verifier."""
+
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None = None,
@@ -121,11 +123,22 @@ class VerifierBuilder:
 
 
 class Verifier(metaclass=abc.ABCMeta):
+    """Verifier.
+
+    This class should not be instantiated directly but through a VerifierBuilder.
+    """
+
     @abc.abstractmethod
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool: ...
+    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
+        """Verify a timestamp response."""
 
 
 class _Verifier(Verifier):
+    """Inner implementation of the Verifier.
+
+    This pattern helps us ensure that the Verifier is never created directly.
+    """
+
     def __init__(
         self,
         policy_id: cryptography.x509.ObjectIdentifier | None,
@@ -190,7 +203,9 @@ class _Verifier(Verifier):
             leaf_certificate_bytes = next(iter(tsp_response.signed_data.certificates))
             leaf_certificate = cryptography.x509.load_der_x509_certificate(leaf_certificate_bytes)
 
-            if self._tsa_certificate is not None and leaf_certificate != self._tsa_certificate:
+            # Note: The order of comparison is important here since we mock
+            # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's
+            if self._tsa_certificate is not None and self._tsa_certificate != leaf_certificate:
                 msg = "Embedded certificate does not match the one in the Verification Options."
                 raise VerificationError(msg)
 
