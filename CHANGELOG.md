@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-12-27
+
 ## Added
 
 - `TimestampRequest` now accepts setting the hash algorithm to `SHA256` (in addition to `SHA512`)
@@ -88,7 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.2...v1.0.0
 [0.1.2]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/trailofbits/rfc3161-client/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/trailofbits/rfc3161-client/compare/v0.0.5...v0.1.0

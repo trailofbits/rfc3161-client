@@ -1,12 +1,5 @@
 # `rfc3161-client`
 
-> [!WARNING]
-> This project is currently in beta. While it is already being used in
-> production by downstream projects, we reserve the right to make breaking
-> changes to the API. We recommend pinning to specific versions until we reach
-> a stable 1.0 release.
-
-
 `rfc3161-client` is a Python library implementing the Time-Stamp Protocol (TSP)
 described in [RFC 3161](https://www.ietf.org/rfc/rfc3161.txt).
 
