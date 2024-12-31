@@ -2,7 +2,7 @@
 name = "rfc3161-client"
 requires-python = ">=3.9"
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Rust",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -13,7 +13,7 @@ classifiers = [
 ]
 # Maturin does not support dynamic fields
 # So we keep the version number here instead of __init__
-version = "0.1.2"
+version = "1.0.0"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
@@ -56,10 +56,6 @@ exclude_also = ["if TYPE_CHECKING:"]
 [tool.interrogate]
 # don't enforce documentation coverage for testing, the virtual
 # environment, or the scripts.
-exclude = [
-    ".venv",
-    "test",
-    "scripts",
-]
+exclude = [".venv", "test", "scripts"]
 ignore-semiprivate = true
 fail-under = 100
