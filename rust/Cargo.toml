@@ -19,7 +19,7 @@ hex.workspace = true
 sha2 = "0.10.8"
 rand = "0.8.5"
 cryptography-x509.workspace = true
-openssl = { version = "0.10.68", features = ["vendored"] }
+openssl = { version = "0.10.69", features = ["vendored"] }
 
 [build-dependencies]
 pyo3-build-config = { version = "0.23.1", features = ["resolve-config"] }
