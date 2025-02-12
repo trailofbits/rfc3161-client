@@ -8,7 +8,7 @@ members = [
 
 [workspace.dependencies]
 asn1 = "0.20"
-cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.0" }
+cryptography-x509 = { git = "https://github.com/pyca/cryptography.git", tag = "44.0.1" }
 hex = "0.4"
 
 [workspace.package]
