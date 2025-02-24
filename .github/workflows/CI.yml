@@ -35,7 +35,7 @@ jobs:
         run: uv build --sdist
 
       - name: Upload sdist
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: rfc3161-sdist
           path: dist/rfc3161_client*
@@ -59,7 +59,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@5f8a1b3b0aad13193f46c9131f9b9e663def8ce5 # v1
+        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -77,7 +77,7 @@ jobs:
             fi
 
       - name: Upload wheels
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: wheels-linux-${{ matrix.platform.target }}
           path: dist
@@ -101,7 +101,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@5f8a1b3b0aad13193f46c9131f9b9e663def8ce5 # v1
+        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -109,7 +109,7 @@ jobs:
           manylinux: musllinux_1_2
 
       - name: Upload wheels
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: wheels-musllinux-${{ matrix.platform.target }}
           path: dist
@@ -184,7 +184,7 @@ jobs:
         shell: bash
 
       - name: Upload wheels
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: "wheels-windows-${{ matrix.WINDOWS.ARCH }}"
           path: wheelhouse
@@ -208,7 +208,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@5f8a1b3b0aad13193f46c9131f9b9e663def8ce5 # v1
+        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
         env:
           # Do not build OpenSSL on MacOS, since it's already installed
           # and we don't need to cross-compile.
@@ -219,7 +219,7 @@ jobs:
           sccache: 'true'
 
       - name: Upload wheels
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
         with:
           name: wheels-macos-${{ matrix.platform.target }}
           path: dist
