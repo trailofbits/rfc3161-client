@@ -59,7 +59,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
+        uses: PyO3/maturin-action@36db84001d74475ad1b8e6613557ae4ee2dc3598 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -101,7 +101,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
+        uses: PyO3/maturin-action@36db84001d74475ad1b8e6613557ae4ee2dc3598 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -208,7 +208,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@53965ae436bfa278197425c78ac1e3eeebc7cc33 # v1
+        uses: PyO3/maturin-action@36db84001d74475ad1b8e6613557ae4ee2dc3598 # v1
         env:
           # Do not build OpenSSL on MacOS, since it's already installed
           # and we don't need to cross-compile.
