@@ -129,7 +129,11 @@ class Verifier(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes, critical_only: bool=True) -> bool:
+    def verify(
+        self,
+        timestamp_response: TimeStampResponse,
+        hashed_message: bytes,
+        critical_only: bool=True) -> bool:
         """Verify a timestamp response."""
 
 
@@ -156,7 +160,11 @@ class _Verifier(Verifier):
         self._nonce: int | None = nonce
         self._common_name: str | None = common_name
 
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes, critical_only: bool=True) -> bool:
+    def verify(
+            self,
+            timestamp_response: TimeStampResponse,
+            hashed_message: bytes,
+            critical_only: bool=True) -> bool:
         """Verify a Timestamp Response.
 
         Inspired by:
@@ -219,7 +227,7 @@ class _Verifier(Verifier):
             if extension.oid == cryptography.x509.ObjectIdentifier("2.5.29.37"):
                 valid_eku = True
                 critical_eku = extension.critical
-        
+
         if not valid_eku:
             msg = "The certificate does not contain the Timesatmping EKU extension."
             raise VerificationError(msg)
