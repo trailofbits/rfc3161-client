@@ -194,7 +194,21 @@ class TestVerifier:
     ) -> None:
         monkeypatch.setattr(cryptography.x509.Certificate, "extensions", [])
         with pytest.raises(
-            VerificationError, match="The certificate does not contain the critical EKU extension"
+            VerificationError,
+            match="The certificate does not contain the Timestamping EKU extension."
+        ):
+            verifier._verify_leaf_certs(tsp_response=ts_response)
+
+    def test_verify_leaf_certs_no_critical_eku(
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            cryptography.x509.Certificate,
+            "extensions",
+            [pretend.stub(critical=False, oid=cryptography.x509.ObjectIdentifier("2.5.29.37"))]
+            )
+        with pytest.raises(
+            VerificationError, match="The certificate does not contain the critical EKU extension."
         ):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
