@@ -129,7 +129,7 @@ class Verifier(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
+    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes, critical_only: bool=True) -> bool:
         """Verify a timestamp response."""
 
 
@@ -156,7 +156,7 @@ class _Verifier(Verifier):
         self._nonce: int | None = nonce
         self._common_name: str | None = common_name
 
-    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
+    def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes, critical_only: bool=True) -> bool:
         """Verify a Timestamp Response.
 
         Inspired by:
@@ -181,7 +181,7 @@ class _Verifier(Verifier):
             msg = "Policy ID mismatch"
             raise VerificationError(msg)
 
-        self._verify_leaf_certs(timestamp_response)
+        self._verify_leaf_certs(timestamp_response, critical_only)
 
         # Verify message
         response_message = timestamp_response.tst_info.message_imprint.message
@@ -191,7 +191,7 @@ class _Verifier(Verifier):
 
         return True
 
-    def _verify_leaf_certs(self, tsp_response: TimeStampResponse) -> bool:
+    def _verify_leaf_certs(self, tsp_response: TimeStampResponse, critical_only: bool=True) -> bool:
         """
         Verify the timestamp response regarding the leaf certificate
         """
@@ -213,12 +213,18 @@ class _Verifier(Verifier):
             leaf_certificate = self._tsa_certificate
 
         critical_eku = False
+        valid_eku = False
         for extension in leaf_certificate.extensions:
             # EKUOID is the Extended Key Usage OID, per RFC 5280
             if extension.oid == cryptography.x509.ObjectIdentifier("2.5.29.37"):
+                valid_eku = True
                 critical_eku = extension.critical
+        
+        if not valid_eku:
+            msg = "The certificate does not contain the Timesatmping EKU extension."
+            raise VerificationError(msg)
 
-        if not critical_eku:
+        if critical_only and not critical_eku:
             msg = "The certificate does not contain the critical EKU extension."
             raise VerificationError(msg)
 
