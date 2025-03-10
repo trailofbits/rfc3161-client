@@ -224,7 +224,8 @@ class TestVerifier:
         monkeypatch.setattr(
             cryptography.x509.Extension,
             "value",
-            [cryptography.x509.ObjectIdentifier("1.3.6.1.5.5.7.3.2")],
+            # this is a random OID, not id-kp-timeStamping
+            [cryptography.x509.ObjectIdentifier("1.9.9.9.9.9.9.9.9")],
         )
         with pytest.raises(
             VerificationError,
