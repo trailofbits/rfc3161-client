@@ -198,8 +198,42 @@ class TestVerifier:
         ):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
-    def test_verify_leaf_cert_mismatch(
+    def test_verify_leaf_certs_non_critical_eku(
         self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(cryptography.x509.Extension, "critical", False)
+        with pytest.raises(VerificationError, match="The EKU extension is not critical"):
+            verifier._verify_leaf_certs(tsp_response=ts_response)
+
+    def test_verify_leaf_certs_eku_no_values(
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            cryptography.x509.Extension,
+            "value",
+            [],
+        )
+        with pytest.raises(
+            VerificationError, match="The EKU extension does not have any KeyPurposeID"
+        ):
+            verifier._verify_leaf_certs(tsp_response=ts_response)
+
+    def test_verify_leaf_certs_non_time_stamping_eku(
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            cryptography.x509.Extension,
+            "value",
+            [cryptography.x509.ObjectIdentifier("1.3.6.1.5.5.7.3.2")],
+        )
+        with pytest.raises(
+            VerificationError,
+            match="The EKU extension does not have KeyPurposeID id-kp-timeStamping",
+        ):
+            verifier._verify_leaf_certs(tsp_response=ts_response)
+
+    def test_verify_leaf_cert_mismatch(
+        self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
         verifier._tsa_certificate = pretend.stub(
             __ne__=lambda *args: False,
