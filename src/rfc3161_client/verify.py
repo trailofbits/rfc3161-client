@@ -133,7 +133,8 @@ class Verifier(metaclass=abc.ABCMeta):
         self,
         timestamp_response: TimeStampResponse,
         hashed_message: bytes,
-        critical_only: bool=True) -> bool:
+        critical_only: bool = True,
+    ) -> bool:
         """Verify a timestamp response."""
 
 
@@ -161,10 +162,11 @@ class _Verifier(Verifier):
         self._common_name: str | None = common_name
 
     def verify(
-            self,
-            timestamp_response: TimeStampResponse,
-            hashed_message: bytes,
-            critical_only: bool=True) -> bool:
+        self,
+        timestamp_response: TimeStampResponse,
+        hashed_message: bytes,
+        critical_only: bool = True,
+    ) -> bool:
         """Verify a Timestamp Response.
 
         Inspired by:
@@ -199,7 +201,9 @@ class _Verifier(Verifier):
 
         return True
 
-    def _verify_leaf_certs(self, tsp_response: TimeStampResponse, critical_only: bool=True) -> bool:
+    def _verify_leaf_certs(
+        self, tsp_response: TimeStampResponse, critical_only: bool = True
+    ) -> bool:
         """
         Verify the timestamp response regarding the leaf certificate
         """
