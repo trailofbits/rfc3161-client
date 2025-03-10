@@ -229,7 +229,7 @@ class _Verifier(Verifier):
                 critical_eku = extension.critical
 
         if not valid_eku:
-            msg = "The certificate does not contain the Timesatmping EKU extension."
+            msg = "The certificate does not contain the Timestamping EKU extension."
             raise VerificationError(msg)
 
         if critical_only and not critical_eku:
