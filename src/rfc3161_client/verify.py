@@ -200,8 +200,16 @@ class _Verifier(Verifier):
             raise VerificationError(msg)
 
         if len(tsp_response.signed_data.certificates) > 0:
-            leaf_certificate_bytes = next(iter(tsp_response.signed_data.certificates))
-            leaf_certificate = cryptography.x509.load_der_x509_certificate(leaf_certificate_bytes)
+            certs = [
+                cryptography.x509.load_der_x509_certificate(cert)
+                for cert in tsp_response.signed_data.certificates
+            ]
+            leaf_certificate = None
+
+            for cert in certs:
+                if not [c for c in certs if c.issuer == cert.subject]:
+                    leaf_certificate = cert
+                    break
 
             # Note: The order of comparison is important here since we mock
             # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's
