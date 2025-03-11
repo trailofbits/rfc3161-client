@@ -204,12 +204,15 @@ class _Verifier(Verifier):
                 cryptography.x509.load_der_x509_certificate(cert)
                 for cert in tsp_response.signed_data.certificates
             ]
-            leaf_certificate = None
 
+            leaf_certificate = None
             for cert in certs:
                 if not [c for c in certs if c.issuer == cert.subject]:
                     leaf_certificate = cert
                     break
+            else:
+                msg = "No leaf certificate found in the chain."
+                raise VerificationError(msg)
 
             # Note: The order of comparison is important here since we mock
             # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's

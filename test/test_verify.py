@@ -245,6 +245,25 @@ class TestVerifier:
         ):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
+    def test_verify_leaf_cert_no_leaf_cert(
+        self, verifier: Verifier, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_load_der_x509_certificate(_cert: bytes) -> cryptography.x509.Certificate:
+            return pretend.stub(issuer="fake-name", subject="fake-name")
+
+        monkeypatch.setattr(
+            cryptography.x509,
+            "load_der_x509_certificate",
+            mock_load_der_x509_certificate,
+        )
+
+        response = pretend.stub(
+            signed_data=pretend.stub(certificates=[b"fake-cert", b"fake-cert-2"])
+        )
+
+        with pytest.raises(VerificationError, match="No leaf certificate found in the chain."):
+            verifier._verify_leaf_certs(tsp_response=response)
+
     def test_verify_leaf_name_mismatch(
         self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
