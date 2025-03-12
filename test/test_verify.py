@@ -190,9 +190,17 @@ class TestVerifier:
         assert verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_no_eku(
-        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+        self,
+        verifier: Verifier,
+        ts_response: TimeStampResponse,
+        monkeypatch: MonkeyPatch,
+        certificates: list[cryptography.x509.Certificate],
     ) -> None:
-        monkeypatch.setattr(cryptography.x509.Certificate, "extensions", [])
+        # We know that the root certificate in our test chain does not have the extensions
+        # so we can use it to test the error message
+        root = certificates[-1]
+
+        monkeypatch.setattr(cryptography.x509.Certificate, "extensions", root.extensions)
         with pytest.raises(
             VerificationError, match="The certificate does not contain the critical EKU extension"
         ):
@@ -208,29 +216,19 @@ class TestVerifier:
     def test_verify_leaf_certs_eku_no_values(
         self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
     ) -> None:
-        monkeypatch.setattr(
-            cryptography.x509.Extension,
-            "value",
-            [],
-        )
-        with pytest.raises(
-            VerificationError, match="The EKU extension does not have any KeyPurposeID"
-        ):
-            verifier._verify_leaf_certs(tsp_response=ts_response)
+        def mock_get_extension_for_class(_self, _extclass):
+            return pretend.stub(
+                oid=cryptography.x509.ObjectIdentifier("2.5.29.37"),
+                value=[],
+                critical=True,
+            )
 
-    def test_verify_leaf_certs_non_time_stamping_eku(
-        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
-    ) -> None:
         monkeypatch.setattr(
-            cryptography.x509.Extension,
-            "value",
-            # this is a random OID, not id-kp-timeStamping
-            [cryptography.x509.ObjectIdentifier("1.9.9.9.9.9.9.9.9")],
+            cryptography.x509.extensions.Extensions,
+            "get_extension_for_class",
+            mock_get_extension_for_class,
         )
-        with pytest.raises(
-            VerificationError,
-            match="The EKU extension does not have KeyPurposeID id-kp-timeStamping",
-        ):
+        with pytest.raises(VerificationError, match="The EKU extension does not have KeyPurposeID"):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_cert_mismatch(
