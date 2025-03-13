@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The Verifier now enforces that the EKU (Extended Key Usage) explicitly includes the `id-kp-timeStamping` OID ([#120](https://github.com/trailofbits/rfc3161-client/pull/120))
+
+
 ## [1.0.0] - 2024-12-31
 
 ## Added
