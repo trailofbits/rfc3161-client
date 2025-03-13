@@ -235,7 +235,7 @@ class _Verifier(Verifier):
             msg = "The EKU extension is not critical."
             raise VerificationError(msg)
 
-            # id-kp-timeStamping - RFC3161 2.3
+        # id-kp-timeStamping - RFC3161 2.3
         if cryptography.x509.ExtendedKeyUsageOID.TIME_STAMPING not in eku_extension.value:
             msg = "The EKU extension does not have KeyPurposeID id-kp-timeStamping."
             raise VerificationError(msg)
