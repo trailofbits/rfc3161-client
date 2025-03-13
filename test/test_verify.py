@@ -190,9 +190,17 @@ class TestVerifier:
         assert verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_no_eku(
-        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+        self,
+        verifier: Verifier,
+        ts_response: TimeStampResponse,
+        monkeypatch: MonkeyPatch,
+        certificates: list[cryptography.x509.Certificate],
     ) -> None:
-        monkeypatch.setattr(cryptography.x509.Certificate, "extensions", [])
+        # We know that the root certificate in our test chain does not have the extensions
+        # so we can use it to test the error message
+        root = certificates[-1]
+
+        monkeypatch.setattr(cryptography.x509.Certificate, "extensions", root.extensions)
         with pytest.raises(
             VerificationError, match="The certificate does not contain the critical EKU extension"
         ):
@@ -210,8 +218,9 @@ class TestVerifier:
     ) -> None:
         monkeypatch.setattr(
             cryptography.x509.Extension,
+                oid=cryptography.x509.ObjectIdentifier("2.5.29.37"),
             "value",
-            [],
+                value=[],
         )
         with pytest.raises(
             VerificationError, match="The EKU extension does not have any KeyPurposeID"

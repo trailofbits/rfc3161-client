@@ -223,13 +223,11 @@ class _Verifier(Verifier):
         else:
             leaf_certificate = self._tsa_certificate
 
-        eku_extension = None
-        for extension in leaf_certificate.extensions:
-            # EKUOID is the Extended Key Usage OID, per RFC 5280
-            if extension.oid == cryptography.x509.ObjectIdentifier("2.5.29.37"):
-                eku_extension = extension
-                break
-        else:
+        try:
+            eku_extension = leaf_certificate.extensions.get_extension_for_class(
+                cryptography.x509.ExtendedKeyUsage
+            )
+        except cryptography.x509.ExtensionNotFound:
             msg = "The certificate does not contain the critical EKU extension."
             raise VerificationError(msg)
 
@@ -239,8 +237,8 @@ class _Verifier(Verifier):
 
         try:
             # id-kp-timeStamping - RFC3161 2.3
-            if eku_extension.value[0] != cryptography.x509.ObjectIdentifier("1.3.6.1.5.5.7.3.8"):
-                msg = "The EKU extension does not have KeyPurposeID id-kp-timeStamping."
+        if cryptography.x509.ExtendedKeyUsageOID.TIME_STAMPING not in eku_extension.value:
+            msg = "The EKU extension does not have KeyPurposeID id-kp-timeStamping."
                 raise VerificationError(msg)
         except IndexError:
             msg = "The EKU extension does not have any KeyPurposeID."
