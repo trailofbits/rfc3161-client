@@ -243,6 +243,25 @@ class TestVerifier:
         ):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
+    def test_verify_leaf_cert_no_leaf_cert(
+        self, verifier: Verifier, monkeypatch: MonkeyPatch
+    ) -> None:
+        def mock_load_der_x509_certificate(_cert: bytes) -> cryptography.x509.Certificate:
+            return pretend.stub(issuer="fake-name", subject="fake-name")
+
+        monkeypatch.setattr(
+            cryptography.x509,
+            "load_der_x509_certificate",
+            mock_load_der_x509_certificate,
+        )
+
+        response = pretend.stub(
+            signed_data=pretend.stub(certificates=[b"fake-cert", b"fake-cert-2"])
+        )
+
+        with pytest.raises(VerificationError, match="No leaf certificate found in the chain."):
+            verifier._verify_leaf_certs(tsp_response=response)
+
     def test_verify_leaf_name_mismatch(
         self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
@@ -284,3 +303,26 @@ class TestVerifier:
             )
             is True
         )
+
+
+def test_verify_succeeds_when_leaf_cert_is_not_first():
+    """This is a regression test for a bug where the leaf certificate was not
+    being verified if it was not the first certificate in the chain.
+
+    https://github.com/trailofbits/rfc3161-client/issues/104#issuecomment-2711244010
+    """
+
+    root = cryptography.x509.load_der_x509_certificate(
+        (_FIXTURE / "regressions" / "issue-104.root.pem").read_bytes()
+    )
+    verifier = VerifierBuilder().add_root_certificate(root).build()
+
+    ts_response = decode_timestamp_response(
+        (_FIXTURE / "regressions" / "issue-104.tsr").read_bytes()
+    )
+
+    digest = hashes.Hash(hashes.SHA512())
+    digest.update(b"hello")
+    message = digest.finalize()
+
+    assert verifier.verify(ts_response, message)
