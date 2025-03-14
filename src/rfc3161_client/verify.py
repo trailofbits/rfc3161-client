@@ -200,8 +200,19 @@ class _Verifier(Verifier):
             raise VerificationError(msg)
 
         if len(tsp_response.signed_data.certificates) > 0:
-            leaf_certificate_bytes = next(iter(tsp_response.signed_data.certificates))
-            leaf_certificate = cryptography.x509.load_der_x509_certificate(leaf_certificate_bytes)
+            certs = [
+                cryptography.x509.load_der_x509_certificate(cert)
+                for cert in tsp_response.signed_data.certificates
+            ]
+
+            leaf_certificate = None
+            for cert in certs:
+                if not [c for c in certs if c.issuer == cert.subject]:
+                    leaf_certificate = cert
+                    break
+            else:
+                msg = "No leaf certificate found in the chain."
+                raise VerificationError(msg)
 
             # Note: The order of comparison is important here since we mock
             # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's
@@ -224,6 +235,7 @@ class _Verifier(Verifier):
             msg = "The EKU extension is not critical."
             raise VerificationError(msg)
 
+        # id-kp-timeStamping - RFC3161 2.3
         if cryptography.x509.ExtendedKeyUsageOID.TIME_STAMPING not in eku_extension.value:
             msg = "The EKU extension does not have KeyPurposeID id-kp-timeStamping."
             raise VerificationError(msg)
