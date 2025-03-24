@@ -39,7 +39,6 @@ import requests
 from rfc3161_client import (
     decode_timestamp_response,
     TimestampRequestBuilder,
-    TimeStampResponse,
     VerifierBuilder,
     VerificationError,
 )
@@ -49,13 +48,13 @@ message = b"Hello, World!"
 
 # build the timestamp request
 timestamp_request = (
-    TimestampRequestBuilder().data(message).nonce(nonce=True).build()
+    TimestampRequestBuilder().data(message).build()
     # Note: you could also add .hash_algorithm(XXX) to specify a specific hash algorithm
     # this means the algorithm check in the next section is not necessary
 )
 
 # TSA servers must be RFC 3161 compliant (see https://github.com/trailofbits/rfc3161-client/issues/46
-# for a list of working clients)
+# for a list of working servers)
 tsa_server = "http://timestamp.identrust.com"
 
 # make the request, remember to set content-type headers appropriately
@@ -67,7 +66,7 @@ response = requests.post(
 response.raise_for_status()
 
 # if successful, should give a valid TimeStampResponse object
-timestamp_response: TimeStampResponse = decode_timestamp_response(response.content)
+timestamp_response = decode_timestamp_response(response.content)
 
 ```
 
@@ -83,12 +82,6 @@ import certifi
 from cryptography import x509
 import hashlib
 
-# first get the timestamp certificate chain + intermediates
-# NOTE: certs must be ordered correctly, so you may need to reorder
-timestamp_certs = [
-    x509.load_der_x509_certificate(c) for c in timestamp_response.signed_data.certificates
-]
-intermediate_certs = timestamp_certs[1:-1]
 
 # get the message hash (hash method depends on what the TSA used)
 message_hash = None
@@ -105,13 +98,7 @@ with open(certifi.where(), "rb") as f:
 # for each of the root certs we have, try to verify the TSR with it
 root_cert = None
 for certificate in cert_authorities:
-    builder = VerifierBuilder()
-    builder.add_root_certificate(certificate)
-
-    for cert in intermediate_certs:
-        builder.add_intermediate_certificate(cert)
-
-    verifier = builder.build()
+    verifier = VerifierBuilder().add_root_certificate(certificate).build()
     try:
         verifier.verify(timestamp_response, message_hash)
         root_cert = certificate
