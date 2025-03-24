@@ -22,7 +22,7 @@ dependencies = ["cryptography>=43,<45"]
 [project.optional-dependencies]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
-lint = ["ruff >= 0.7,< 0.11", "interrogate"]
+lint = ["ruff >= 0.7,< 0.12", "interrogate"]
 dev = ["rfc3161-client[test,lint,doc]", "maturin>=1.7,<2.0"]
 
 [project.urls]
