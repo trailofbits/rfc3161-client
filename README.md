@@ -33,8 +33,13 @@ There are two parts to timestamping: retrieving + verifying the timestamp.
 
 The below code uses `requests` to get the timestamp from the Identrust TSA server:
 
-```{python}
-
+```python
+# /// script
+# dependencies = [
+#   "requests",
+#   "rfc3161-client",
+# ]
+# ///
 import requests
 from rfc3161_client import (
     decode_timestamp_response,
@@ -76,7 +81,7 @@ The second part is to verify the timestamp, this is done against a set of
 root certificates. In this example, we'll Mozilla's list of root certs
 provided in the  `certifi` package:
 
-```{python}
+```python
 
 import certifi
 from cryptography import x509
