@@ -25,6 +25,98 @@ It is composed of three subprojects:
   primitive to build and verify objects. Network activity must be handled
   separately.
 
+# Usage
+
+There are two parts to timestamping: retrieving + verifying the timestamp.
+
+### 1. Retrieving a timestamp
+
+The below code uses `requests` to get the timestamp from the Identrust TSA server:
+
+```python
+# /// script
+# dependencies = [
+#   "requests",
+#   "rfc3161-client",
+# ]
+# ///
+import requests
+from rfc3161_client import (
+    decode_timestamp_response,
+    TimestampRequestBuilder,
+    VerifierBuilder,
+    VerificationError,
+)
+
+# the data to sign. Could be a hash or any message. Should be bytes
+message = b"Hello, World!"
+
+# build the timestamp request
+timestamp_request = (
+    TimestampRequestBuilder().data(message).build()
+    # Note: you could also add .hash_algorithm(XXX) to specify a specific hash algorithm
+    # this means the algorithm check in the next section is not necessary
+)
+
+# TSA servers must be RFC 3161 compliant (see https://github.com/trailofbits/rfc3161-client/issues/46
+# for a list of working servers)
+tsa_server = "http://timestamp.identrust.com"
+
+# make the request, remember to set content-type headers appropriately
+response = requests.post(
+    tsa_server,
+    data=timestamp_request.as_bytes(),
+    headers={"Content-Type": "application/timestamp-query"},
+)
+response.raise_for_status()
+
+# if successful, should give a valid TimeStampResponse object
+timestamp_response = decode_timestamp_response(response.content)
+
+```
+
+### Verifying a timestamp
+
+The second part is to verify the timestamp, this is done against a set of
+root certificates. In this example, we'll Mozilla's list of root certs
+provided in the  `certifi` package:
+
+```python
+
+import certifi
+from cryptography import x509
+import hashlib
+
+
+# get the message hash (hash method depends on what the TSA used)
+message_hash = None
+hash_algorithm = timestamp_response.tst_info.message_imprint.hash_algorithm
+if hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.3"):
+    message_hash = hashlib.sha512(message).digest()
+elif hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.1"):
+    message_hash = hashlib.sha256(message).digest()
+
+# get trusted root certs from certifi
+with open(certifi.where(), "rb") as f:
+    cert_authorities = x509.load_pem_x509_certificates(f.read())
+
+# for each of the root certs we have, try to verify the TSR with it
+root_cert = None
+for certificate in cert_authorities:
+    verifier = VerifierBuilder().add_root_certificate(certificate).build()
+    try:
+        verifier.verify(timestamp_response, message_hash)
+        root_cert = certificate
+        break
+    except VerificationError:
+        continue
+
+# if successful, the TSR was verified and we should have the root cert that signed this TSR :)
+print("Here's the root cert that signed your TSR:")
+print(root_cert)
+
+```
+
 # License
 
 ```
