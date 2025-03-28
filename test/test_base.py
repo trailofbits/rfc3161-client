@@ -51,7 +51,7 @@ class TestRequestBuilder:
 
     def test_set_algorithm(self) -> None:
         with pytest.raises(TypeError, match="is not a supported hash."):
-            TimestampRequestBuilder().hash_algorithm("invalid hash algorihtm")
+            TimestampRequestBuilder().hash_algorithm("invalid hash algorithm")
 
         # Default hash algorithm
         request = TimestampRequestBuilder().data(b"hello").build()

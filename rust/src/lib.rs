@@ -141,8 +141,8 @@ impl PyMessageImprint {
         &self,
         py: pyo3::Python<'p>,
     ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
-        let hash_algoritm = self.contents.borrow_dependent().hash_algorithm.oid();
-        crate::util::oid_to_py_oid(py, hash_algoritm)
+        let hash_algorithm = self.contents.borrow_dependent().hash_algorithm.oid();
+        crate::util::oid_to_py_oid(py, hash_algorithm)
     }
 
     #[getter]

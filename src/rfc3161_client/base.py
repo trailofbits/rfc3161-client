@@ -47,13 +47,13 @@ class TimestampRequestBuilder:
             raise ValueError(msg)
         return TimestampRequestBuilder(data, self._algorithm, self._nonce, self._cert_req)
 
-    def hash_algorithm(self, hash_algorihtm: _AllowedHashTypes) -> TimestampRequestBuilder:
+    def hash_algorithm(self, hash_algorithm: _AllowedHashTypes) -> TimestampRequestBuilder:
         """Set the Hash algorithm used."""
-        if not isinstance(hash_algorihtm, HashAlgorithm):
-            msg = f"{hash_algorihtm} is not a supported hash."
+        if not isinstance(hash_algorithm, HashAlgorithm):
+            msg = f"{hash_algorithm} is not a supported hash."
             raise TypeError(msg)
 
-        return TimestampRequestBuilder(self._data, hash_algorihtm, self._nonce, self._cert_req)
+        return TimestampRequestBuilder(self._data, hash_algorithm, self._nonce, self._cert_req)
 
     def cert_request(self, *, cert_request: bool = False) -> TimestampRequestBuilder:
         """Set the cert request field."""
