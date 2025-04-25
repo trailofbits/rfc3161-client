@@ -14,7 +14,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version-file: pyproject.toml
 
@@ -25,7 +25,7 @@ jobs:
           toolchain: 1.81.0
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
+        uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
