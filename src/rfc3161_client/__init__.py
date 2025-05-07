@@ -1,6 +1,6 @@
 """rfc3161-client"""
 
-from .base import TimestampRequestBuilder, HashAlgorithm, decode_timestamp_response
+from .base import HashAlgorithm, TimestampRequestBuilder, decode_timestamp_response
 from .errors import VerificationError
 from .tsp import (
     Accuracy,
