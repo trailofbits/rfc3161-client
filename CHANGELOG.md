@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added `HashAlgorithm` to exports of the base package module.
+
 ## Fixed
 
 - Fixed spelling of `hash_algorithm` parameter in `TimestampRequestBuilder` class ([131](https://github.com/trailofbits/rfc3161-client/pull/131))
