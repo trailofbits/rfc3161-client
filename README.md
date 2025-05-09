@@ -88,14 +88,6 @@ from cryptography import x509
 import hashlib
 
 
-# get the message hash (hash method depends on what the TSA used)
-message_hash = None
-hash_algorithm = timestamp_response.tst_info.message_imprint.hash_algorithm
-if hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.3"):
-    message_hash = hashlib.sha512(message).digest()
-elif hash_algorithm == x509.ObjectIdentifier(value="2.16.840.1.101.3.4.2.1"):
-    message_hash = hashlib.sha256(message).digest()
-
 # get trusted root certs from certifi
 with open(certifi.where(), "rb") as f:
     cert_authorities = x509.load_pem_x509_certificates(f.read())
@@ -105,7 +97,7 @@ root_cert = None
 for certificate in cert_authorities:
     verifier = VerifierBuilder().add_root_certificate(certificate).build()
     try:
-        verifier.verify(timestamp_response, message_hash)
+        verifier.verify_message(timestamp_response, message)
         root_cert = certificate
         break
     except VerificationError:
