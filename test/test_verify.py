@@ -42,9 +42,8 @@ def ts_response() -> TimeStampResponse:
 
 
 @pytest.fixture
-def ts_response_for_algo(request) -> TimeStampResponse:
-    algo = request.param
-    return decode_timestamp_response((_FIXTURE / "sigstage" / f"response-{algo}.tsr").read_bytes())
+def ts_response_by_filename(request) -> TimeStampResponse:
+    return decode_timestamp_response((_FIXTURE / "sigstage" / request.param).read_bytes())
 
 
 @pytest.fixture
@@ -318,16 +317,20 @@ class TestVerifier:
             is True
         )
 
-    @pytest.mark.parametrize("ts_response_for_algo", ["sha256", "sha384", "sha512"], indirect=True)
-    def test_verify_message_with_algo(
-        self, ts_response_for_algo: TimeStampResponse, sigstage_certificates
-    ) -> None:
-        builder = VerifierBuilder()
-        for certificate in sigstage_certificates:
-            builder.add_root_certificate(certificate)
-        verifier = builder.build()
+    ts_response_files = ["response-sha256.tsr", "response-sha384.tsr", "response-sha512.tsr"]
 
-        assert verifier.verify_message(ts_response_for_algo, b"hello") is True
+    @pytest.mark.parametrize("ts_response_by_filename", ts_response_files, indirect=True)
+    def test_verify_message_with_algo(
+        self, ts_response_by_filename: TimeStampResponse, sigstage_certificates
+    ) -> None:
+        verifier = (
+            VerifierBuilder()
+            .add_root_certificate(sigstage_certificates[1])
+            .tsa_certificate(sigstage_certificates[0])
+            .build()
+        )
+
+        assert verifier.verify_message(ts_response_by_filename, b"hello") is True
 
     def test_verify_message_with_unsupported_algo(
         self, ts_response: TimeStampResponse, verifier: Verifier, monkeypatch: MonkeyPatch

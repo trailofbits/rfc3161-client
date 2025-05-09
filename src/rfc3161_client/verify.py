@@ -13,6 +13,7 @@ from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
+# See https://www.iana.org/assignments/hash-function-text-names/hash-function-text-names.xhtml
 SHA256_OID = "2.16.840.1.101.3.4.2.1"
 SHA384_OID = "2.16.840.1.101.3.4.2.2"
 SHA512_OID = "2.16.840.1.101.3.4.2.3"
