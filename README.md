@@ -55,7 +55,6 @@ message = b"Hello, World!"
 timestamp_request = (
     TimestampRequestBuilder().data(message).build()
     # Note: you could also add .hash_algorithm(XXX) to specify a specific hash algorithm
-    # this means the algorithm check in the next section is not necessary
 )
 
 # TSA servers must be RFC 3161 compliant (see https://github.com/trailofbits/rfc3161-client/issues/46
