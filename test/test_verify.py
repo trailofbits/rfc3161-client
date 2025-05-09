@@ -18,9 +18,17 @@ _HERE = Path(__file__).parent.resolve()
 _FIXTURE = _HERE / "fixtures"
 
 
+# test assets come from two different TSAs: provide two certificate methods
 @pytest.fixture
 def certificates() -> list[cryptography.x509.Certificate]:
     return cryptography.x509.load_pem_x509_certificates((_FIXTURE / "ts_chain.pem").read_bytes())
+
+
+@pytest.fixture
+def sigstage_certificates() -> list[cryptography.x509.Certificate]:
+    return cryptography.x509.load_pem_x509_certificates(
+        (_FIXTURE / "sigstage" / "ts_chain.pem").read_bytes()
+    )
 
 
 @pytest.fixture
@@ -31,6 +39,12 @@ def ts_request() -> TimeStampRequest:
 @pytest.fixture
 def ts_response() -> TimeStampResponse:
     return decode_timestamp_response((_FIXTURE / "response.tsr").read_bytes())
+
+
+@pytest.fixture
+def ts_response_for_algo(request) -> TimeStampResponse:
+    algo = request.param
+    return decode_timestamp_response((_FIXTURE / "sigstage" / f"response-{algo}.tsr").read_bytes())
 
 
 @pytest.fixture
@@ -303,6 +317,29 @@ class TestVerifier:
             )
             is True
         )
+
+    @pytest.mark.parametrize("ts_response_for_algo", ["sha256", "sha384", "sha512"], indirect=True)
+    def test_verify_message_with_algo(
+        self, ts_response_for_algo: TimeStampResponse, sigstage_certificates
+    ) -> None:
+        builder = VerifierBuilder()
+        for certificate in sigstage_certificates:
+            builder.add_root_certificate(certificate)
+        verifier = builder.build()
+
+        assert verifier.verify_message(ts_response_for_algo, b"hello") is True
+
+    def test_verify_message_with_unsupported_algo(
+        self, ts_response: TimeStampResponse, verifier: Verifier, monkeypatch: MonkeyPatch
+    ) -> None:
+        # tweak OID so the timestamp response hash algorithm won't match it
+        monkeypatch.setattr(rfc3161_client.verify, "SHA512_OID", rfc3161_client.verify.SHA384_OID)
+
+        with pytest.raises(VerificationError, match="Unsupported hash"):
+            verifier.verify_message(
+                timestamp_response=ts_response,
+                message=b"hello",
+            )
 
 
 def test_verify_succeeds_when_leaf_cert_is_not_first():

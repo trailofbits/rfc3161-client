@@ -13,12 +13,10 @@ from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
 
-SHA224_OID = "2.16.840.1.101.3.4.2.4"
 SHA256_OID = "2.16.840.1.101.3.4.2.1"
 SHA384_OID = "2.16.840.1.101.3.4.2.2"
 SHA512_OID = "2.16.840.1.101.3.4.2.3"
-SHAKE128_OID = "2.16.840.1.101.3.4.2.11"
-SHAKE256_OID = "2.16.840.1.101.3.4.2.12"
+
 
 class VerifierBuilder:
     """Builder for a Verifier."""
@@ -165,22 +163,17 @@ class _Verifier(Verifier):
 
     def verify_message(self, timestamp_response: TimeStampResponse, message: bytes) -> bool:
         """Verify a Timestamp Response over a given message
+
+        Supports timestamp responses with SHA-256, SHA-384 or SHA-512 hash algorithms.
         """
 
         algo = timestamp_response.tst_info.message_imprint.hash_algorithm
-        length = len(timestamp_response.tst_info.message_imprint.message)
-        if algo == cryptography.x509.ObjectIdentifier(value=SHA224_OID):
-            hashed_message = hashlib.sha224(message).digest()
         if algo == cryptography.x509.ObjectIdentifier(value=SHA256_OID):
             hashed_message = hashlib.sha256(message).digest()
         elif algo == cryptography.x509.ObjectIdentifier(value=SHA384_OID):
             hashed_message = hashlib.sha384(message).digest()
         elif algo == cryptography.x509.ObjectIdentifier(value=SHA512_OID):
             hashed_message = hashlib.sha512(message).digest()
-        elif algo == cryptography.x509.ObjectIdentifier(value=SHAKE128_OID):
-            hashed_message = hashlib.shake_128(message).digest(length)
-        elif algo == cryptography.x509.ObjectIdentifier(value=SHAKE256_OID):
-            hashed_message = hashlib.shake_256(message).digest(length)
         else:
             raise VerificationError(f"Unsupported hash algorithm {algo}")
 
