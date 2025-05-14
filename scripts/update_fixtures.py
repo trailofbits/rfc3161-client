@@ -14,7 +14,7 @@ import requests
 
 from rfc3161_client.base import TimestampRequestBuilder, decode_timestamp_response
 
-_FIXTURE_DIRECTORY = Path(__file__).parent.parent / "test" / "fixtures"
+_FIXTURE_DIRECTORY = Path(__file__).parent.parent / "test" / "fixtures" / "test_tsa"
 
 TIMESTAMP_SERVER_URL = "http://localhost:3000"
 
