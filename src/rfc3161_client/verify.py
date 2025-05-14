@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import abc
+import hashlib
 from copy import copy
 
 import cryptography.x509
@@ -11,6 +12,11 @@ from cryptography.hazmat.primitives._serialization import Encoding
 from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
+
+# See https://www.iana.org/assignments/hash-function-text-names/hash-function-text-names.xhtml
+SHA256_OID = "2.16.840.1.101.3.4.2.1"
+SHA384_OID = "2.16.840.1.101.3.4.2.2"
+SHA512_OID = "2.16.840.1.101.3.4.2.3"
 
 
 class VerifierBuilder:
@@ -156,8 +162,29 @@ class _Verifier(Verifier):
         self._nonce: int | None = nonce
         self._common_name: str | None = common_name
 
+    def verify_message(self, timestamp_response: TimeStampResponse, message: bytes) -> bool:
+        """Verify a Timestamp Response over a given message
+
+        Supports timestamp responses with SHA-256, SHA-384 or SHA-512 hash algorithms.
+        """
+
+        algo = timestamp_response.tst_info.message_imprint.hash_algorithm
+        if algo == cryptography.x509.ObjectIdentifier(value=SHA256_OID):
+            hashed_message = hashlib.sha256(message).digest()
+        elif algo == cryptography.x509.ObjectIdentifier(value=SHA384_OID):
+            hashed_message = hashlib.sha384(message).digest()
+        elif algo == cryptography.x509.ObjectIdentifier(value=SHA512_OID):
+            hashed_message = hashlib.sha512(message).digest()
+        else:
+            raise VerificationError(f"Unsupported hash algorithm {algo}")
+
+        return self.verify(timestamp_response, hashed_message)
+
     def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
-        """Verify a Timestamp Response.
+        """Verify a Timestamp Response over given message digest
+
+        Note that caller is responsible for hashing the message appropriately for the
+        given timestamp response.
 
         Inspired by:
             https://github.com/sigstore/timestamp-authority/blob/main/pkg/verification/verify.go#L209

@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Added `HashAlgorithm` to exports of the base package module.
+- Added `HashAlgorithm` to exports of the base package module ([#143](https://github.com/trailofbits/rfc3161-client/pull/143))
+
+- Added `verify_message` method to `Verifier` class ([#144](https://github.com/trailofbits/rfc3161-client/pull/144))
 
 ## Fixed
 
