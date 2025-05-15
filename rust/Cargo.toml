@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 tsp-asn1 = { path = "tsp-asn1" }
-pyo3 = { version = "0.24.2", features = ["abi3"] }
+pyo3 = { version = "0.25.0", features = ["abi3"] }
 asn1.workspace = true
 self_cell = "1"
 hex.workspace = true
@@ -22,7 +22,7 @@ cryptography-x509.workspace = true
 openssl = { version = "0.10.72", features = ["vendored"] }
 
 [build-dependencies]
-pyo3-build-config = { version = "0.24.0", features = ["resolve-config"] }
+pyo3-build-config = { version = "0.25.0", features = ["resolve-config"] }
 
 [features]
 extension-module = ["pyo3/extension-module"]
