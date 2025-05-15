@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Slight refactoring of the tests to ease how to test with multiple TSA ([#145](https://github.com/trailofbits/rfc3161-client/pull/145))
 
+- Changed return value of `VerifierBuilder.build()` from `_Verifier` to `Verifier`: This is technically
+  an API change but should have minimal user impact. ([#147](https://github.com/trailofbits/rfc3161-client/pull/147))
+
 ### Fixed
 
 - Fixed spelling of `hash_algorithm` parameter in `TimestampRequestBuilder` class ([131](https://github.com/trailofbits/rfc3161-client/pull/131))
