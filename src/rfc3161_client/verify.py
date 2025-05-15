@@ -104,7 +104,7 @@ class VerifierBuilder:
         builder._common_name = name
         return builder
 
-    def build(self) -> _Verifier:
+    def build(self) -> Verifier:
         """Build the Verifier."""
         if not self._roots:
             msg = "Verifier must have at least one root certificate set"
