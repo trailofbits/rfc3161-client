@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
 - Added `HashAlgorithm` to exports of the base package module ([#143](https://github.com/trailofbits/rfc3161-client/pull/143))
 
 - Added `verify_message` method to `Verifier` class ([#144](https://github.com/trailofbits/rfc3161-client/pull/144))
 
-## Fixed
+- Slight refactoring of the tests to ease how to test with multiple TSA ([#145](https://github.com/trailofbits/rfc3161-client/pull/145))
+
+### Fixed
 
 - Fixed spelling of `hash_algorithm` parameter in `TimestampRequestBuilder` class ([131](https://github.com/trailofbits/rfc3161-client/pull/131))
 
@@ -25,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2024-12-31
 
-## Added
+### Added
 
 - `TimestampRequest` now accepts setting the hash algorithm to `SHA256` (in addition to `SHA512`)
   ([93](https://github.com/trailofbits/rfc3161-client/pull/93))
