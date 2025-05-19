@@ -13,7 +13,7 @@ classifiers = [
 ]
 # Maturin does not support dynamic fields
 # So we keep the version number here instead of __init__
-version = "1.0.1"
+version = "1.0.2"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
