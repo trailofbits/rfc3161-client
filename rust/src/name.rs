@@ -1,3 +1,4 @@
+use asn1::SimpleAsn1Readable;
 use pyo3::types::IntoPyDict;
 use pyo3::types::{PyAnyMethods, PyListMethods};
 
@@ -12,23 +13,27 @@ fn parse_name_attribute<'p>(
         )
     })?;
     let py_tag = crate::util::ASN1_TYPE_TO_ENUM.get(py)?.get_item(tag_val)?;
-    let py_data = match attribute.value.tag().as_u8() {
-        // BitString tag value
-        Some(3) => pyo3::types::PyBytes::new(py, attribute.value.data()).into_any(),
-        // BMPString tag value
-        Some(30) => {
-            let py_bytes = pyo3::types::PyBytes::new(py, attribute.value.data());
-            py_bytes.call_method1(pyo3::intern!(py, "decode"), ("utf_16_be",))?
+    let py_data = match &attribute.value {
+        cryptography_x509::common::AttributeValue::AnyString(s) => {
+            if s.tag() == asn1::BitString::TAG {
+                pyo3::types::PyBytes::new(py, s.data()).into_any()
+            } else {
+                let parsed = std::str::from_utf8(s.data()).map_err(|_| {
+                    pyo3::exceptions::PyValueError::new_err("Parsing error in ASN1")
+                })?;
+                pyo3::types::PyString::new(py, parsed).into_any()
+            }
         }
-        // UniversalString
-        Some(28) => {
-            let py_bytes = pyo3::types::PyBytes::new(py, attribute.value.data());
+        cryptography_x509::common::AttributeValue::PrintableString(printable_string) => {
+            pyo3::types::PyString::new(py, printable_string.as_str()).into_any()
+        }
+        cryptography_x509::common::AttributeValue::UniversalString(universal_string) => {
+            let py_bytes = pyo3::types::PyBytes::new(py, universal_string.as_utf32_be_bytes());
             py_bytes.call_method1(pyo3::intern!(py, "decode"), ("utf_32_be",))?
         }
-        _ => {
-            let parsed = std::str::from_utf8(attribute.value.data())
-                .map_err(|_| pyo3::exceptions::PyValueError::new_err("Parsing error in ASN1"))?;
-            pyo3::types::PyString::new(py, parsed).into_any()
+        cryptography_x509::common::AttributeValue::BmpString(bmp_string) => {
+            let py_bytes = pyo3::types::PyBytes::new(py, bmp_string.as_utf16_be_bytes());
+            py_bytes.call_method1(pyo3::intern!(py, "decode"), ("utf_16_be",))?
         }
     };
     let kwargs = [(pyo3::intern!(py, "_validate"), false)].into_py_dict(py)?;
