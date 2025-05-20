@@ -135,8 +135,19 @@ class Verifier(metaclass=abc.ABCMeta):
     """
 
     @abc.abstractmethod
+    def verify_message(self, timestamp_response: TimeStampResponse, message: bytes) -> bool:
+        """Verify a Timestamp Response over a given message
+
+        Supports timestamp responses with SHA-256, SHA-384 or SHA-512 hash algorithms.
+        """
+
+    @abc.abstractmethod
     def verify(self, timestamp_response: TimeStampResponse, hashed_message: bytes) -> bool:
-        """Verify a timestamp response."""
+        """Verify a Timestamp Response over given message digest
+
+        Note that caller is responsible for hashing the message appropriately for the
+        given timestamp response.
+        """
 
 
 class _Verifier(Verifier):
