@@ -180,11 +180,11 @@ class _Verifier(Verifier):
         """
 
         algo = timestamp_response.tst_info.message_imprint.hash_algorithm
-        if algo == cryptography.x509.ObjectIdentifier(value=SHA256_OID):
+        if algo == cryptography.x509.ObjectIdentifier(SHA256_OID):
             hashed_message = hashlib.sha256(message).digest()
-        elif algo == cryptography.x509.ObjectIdentifier(value=SHA384_OID):
+        elif algo == cryptography.x509.ObjectIdentifier(SHA384_OID):
             hashed_message = hashlib.sha384(message).digest()
-        elif algo == cryptography.x509.ObjectIdentifier(value=SHA512_OID):
+        elif algo == cryptography.x509.ObjectIdentifier(SHA512_OID):
             hashed_message = hashlib.sha512(message).digest()
         else:
             raise VerificationError(f"Unsupported hash algorithm {algo}")
@@ -237,20 +237,25 @@ class _Verifier(Verifier):
             msg = "Certificates neither found in the answer or in the Verification Options."
             raise VerificationError(msg)
 
+        leaf_certificate: cryptography.x509.Certificate
+
         if len(tsp_response.signed_data.certificates) > 0:
             certs = [
                 cryptography.x509.load_der_x509_certificate(cert)
                 for cert in tsp_response.signed_data.certificates
             ]
 
-            leaf_certificate = None
+            leaf_certificate_found = None
             for cert in certs:
                 if not [c for c in certs if c.issuer == cert.subject]:
-                    leaf_certificate = cert
+                    leaf_certificate_found = cert
                     break
             else:
                 msg = "No leaf certificate found in the chain."
                 raise VerificationError(msg)
+
+            # Now leaf_certificate_found is guaranteed to be not None
+            leaf_certificate = leaf_certificate_found
 
             # Note: The order of comparison is important here since we mock
             # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's
@@ -259,6 +264,7 @@ class _Verifier(Verifier):
                 raise VerificationError(msg)
 
         else:
+            assert self._tsa_certificate is not None
             leaf_certificate = self._tsa_certificate
 
         try:

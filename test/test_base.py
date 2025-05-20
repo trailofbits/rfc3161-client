@@ -51,7 +51,7 @@ class TestRequestBuilder:
 
     def test_set_algorithm(self) -> None:
         with pytest.raises(TypeError, match="is not a supported hash."):
-            TimestampRequestBuilder().hash_algorithm("invalid hash algorithm")
+            TimestampRequestBuilder().hash_algorithm("invalid hash algorithm")  # type: ignore[arg-type]
 
         # Default hash algorithm
         request = TimestampRequestBuilder().data(b"hello").build()
@@ -59,7 +59,7 @@ class TestRequestBuilder:
 
     def test_cert_request(self) -> None:
         with pytest.raises(TypeError):
-            TimestampRequestBuilder().cert_request(cert_request="not valid")
+            TimestampRequestBuilder().cert_request(cert_request="not valid")  # type: ignore[arg-type]
 
         request = TimestampRequestBuilder().cert_request(cert_request=False).data(b"hello").build()
         assert request.cert_req is False
@@ -69,7 +69,7 @@ class TestRequestBuilder:
 
     def test_nonce(self) -> None:
         with pytest.raises(TypeError):
-            TimestampRequestBuilder().nonce(nonce="not valid")
+            TimestampRequestBuilder().nonce(nonce="not valid")  # type: ignore[arg-type]
 
         request = TimestampRequestBuilder().nonce(nonce=False).data(b"hello").build()
         assert request.nonce is None
