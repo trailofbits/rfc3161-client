@@ -57,6 +57,8 @@ lint: $(VENV)/pyvenv.cfg
 	cargo fmt --check --manifest-path rust/tsp-asn1/Cargo.toml
 	. $(VENV_BIN)/activate && \
 		interrogate -c pyproject.toml .
+	. $(VENV_BIN)/activate && \
+		mypy src test scripts
 
 .PHONY: reformat
 reformat:
