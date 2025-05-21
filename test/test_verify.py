@@ -83,7 +83,7 @@ def ts_response_by_filename(request: pytest.FixtureRequest, tsa_path: Path) -> T
 @pytest.fixture
 def verifier(
     ts_request: TimeStampRequest, certificates: list[cryptography.x509.Certificate]
-) -> _Verifier:
+) -> Verifier:
     builder = VerifierBuilder.from_request(ts_request)
     builder = (
         builder.tsa_certificate(certificates[0])
@@ -92,7 +92,7 @@ def verifier(
     )
     for intermediate in certificates[1:-1]:
         builder = builder.add_intermediate_certificate(intermediate)
-    return cast("_Verifier", builder.build())
+    return builder.build()
 
 
 class TestVerifierBuilder:
@@ -190,15 +190,17 @@ class TestVerifierBuilder:
 
 class TestVerifierPrivate:
     def test_verify_tsr_with_chains(
-        self, ts_response: TimeStampResponse, verifier: _Verifier
+        self, ts_response: TimeStampResponse, verifier: Verifier
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         assert verifier._verify_tsr_with_chains(ts_response) is True
 
     def test_verify_tsr_with_chains_without_roots(
         self,
         ts_response: TimeStampResponse,
-        verifier: _Verifier,
+        verifier: Verifier,
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._roots = []
         with pytest.raises(VerificationError, match="No roots"):
             verifier._verify_tsr_with_chains(ts_response)
@@ -206,8 +208,9 @@ class TestVerifierPrivate:
     def test_verify_tsr_with_chains_without_certs(
         self,
         ts_response: TimeStampResponse,
-        verifier: _Verifier,
+        verifier: Verifier,
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         with pytest.raises(VerificationError, match="Error while verifying"):
             verifier._verify_tsr_with_chains(
                 pretend.stub(
@@ -218,39 +221,44 @@ class TestVerifierPrivate:
 
     def test_verify_tsr_with_chains_without_signer(
         self,
-        verifier: _Verifier,
+        verifier: Verifier,
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         with pytest.raises(VerificationError, match="0 signer infos"):
             verifier._verify_tsr_with_chains(
                 pretend.stub(signed_data=pretend.stub(signer_infos=[]))
             )
 
-    def test_verify_leaf_certs_no_certs(self, verifier: _Verifier) -> None:
+    def test_verify_leaf_certs_no_certs(self, verifier: Verifier) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._tsa_certificate = None
         response = pretend.stub(signed_data=pretend.stub(certificates=[]))
         with pytest.raises(VerificationError, match="Certificates neither"):
             verifier._verify_leaf_certs(tsp_response=response)
 
     def test_verify_leaf_certs_mismatch(
-        self, verifier: _Verifier, ts_response: TimeStampResponse
+        self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._tsa_certificate = "fake-certificate"  # type: ignore[assignment]
         with pytest.raises(VerificationError, match="Embedded certificate"):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_update_cert(
-        self, verifier: _Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         monkeypatch.setattr(rfc3161_client._rust.SignedData, "certificates", [])
         assert verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_no_eku(
         self,
-        verifier: _Verifier,
+        verifier: Verifier,
         ts_response: TimeStampResponse,
         monkeypatch: MonkeyPatch,
         certificates: list[cryptography.x509.Certificate],
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         # We know that the root certificate in our test chain does not have the extensions
         # so we can use it to test the error message
         root = certificates[-1]
@@ -262,15 +270,18 @@ class TestVerifierPrivate:
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_non_critical_eku(
-        self, verifier: _Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         monkeypatch.setattr(cryptography.x509.Extension, "critical", False)
         with pytest.raises(VerificationError, match="The EKU extension is not critical"):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_eku_no_values(
-        self, verifier: _Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
+        self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
     ) -> None:
+        verifier = cast("_Verifier", verifier)
+
         def mock_get_extension_for_class(_self: Any, _extclass: Any) -> Any:
             return pretend.stub(
                 oid=cryptography.x509.ObjectIdentifier("2.5.29.37"),
@@ -287,8 +298,9 @@ class TestVerifierPrivate:
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_cert_mismatch(
-        self, verifier: _Verifier, ts_response: TimeStampResponse
+        self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._tsa_certificate = pretend.stub(
             __ne__=lambda *args: False,
             issuer=None,
@@ -299,8 +311,10 @@ class TestVerifierPrivate:
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_cert_no_leaf_cert(
-        self, verifier: _Verifier, monkeypatch: MonkeyPatch
+        self, verifier: Verifier, monkeypatch: MonkeyPatch
     ) -> None:
+        verifier = cast("_Verifier", verifier)
+
         def mock_load_der_x509_certificate(_cert: bytes) -> cryptography.x509.Certificate:
             return cast(
                 "cryptography.x509.Certificate",
@@ -321,37 +335,38 @@ class TestVerifierPrivate:
             verifier._verify_leaf_certs(tsp_response=response)
 
     def test_verify_leaf_name_mismatch(
-        self, verifier: _Verifier, ts_response: TimeStampResponse
+        self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._common_name = "fake-name"
         with pytest.raises(VerificationError, match="The name provided in the opts does not match"):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
-    def test_verify_wrong_status(self, verifier: _Verifier) -> None:
+    def test_verify_wrong_status(self, verifier: Verifier) -> None:
         with pytest.raises(VerificationError, match="GRANTED"):
             verifier.verify(pretend.stub(status=2), b"")
 
     def test_verify_wrong_nonce(
-        self, ts_response: TimeStampResponse, verifier: _Verifier, monkeypatch: MonkeyPatch
+        self, ts_response: TimeStampResponse, verifier: Verifier, monkeypatch: MonkeyPatch
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._nonce = 0xABCD
         with pytest.raises(VerificationError, match="Nonce mismatch"):
             verifier.verify(ts_response, b"")
 
     def test_verify_wrong_policy_oid(
-        self, ts_response: TimeStampResponse, verifier: _Verifier
+        self, ts_response: TimeStampResponse, verifier: Verifier
     ) -> None:
+        verifier = cast("_Verifier", verifier)
         verifier._policy_id = cryptography.x509.ObjectIdentifier("1.1")
         with pytest.raises(VerificationError, match="Policy ID mismatch"):
             verifier.verify(ts_response, b"")
 
-    def test_verify_wrong_message(
-        self, ts_response: TimeStampResponse, verifier: _Verifier
-    ) -> None:
+    def test_verify_wrong_message(self, ts_response: TimeStampResponse, verifier: Verifier) -> None:
         with pytest.raises(VerificationError, match="messages"):
             verifier.verify(ts_response, b"not-the-correct-message")
 
-    def test_verify_succeeds(self, ts_response: TimeStampResponse, verifier: _Verifier) -> None:
+    def test_verify_succeeds(self, ts_response: TimeStampResponse, verifier: Verifier) -> None:
         digest = hashes.Hash(hashes.SHA512())
         digest.update(b"hello")  # This is used in scripts/update_fixtures.py
         message = digest.finalize()
@@ -382,7 +397,7 @@ class TestVerifierPrivate:
         assert verifier.verify_message(ts_response_by_filename, b"hello") is True
 
     def test_verify_message_with_unsupported_algo(
-        self, ts_response: TimeStampResponse, verifier: _Verifier, monkeypatch: MonkeyPatch
+        self, ts_response: TimeStampResponse, verifier: Verifier, monkeypatch: MonkeyPatch
     ) -> None:
         # tweak OID so the timestamp response hash algorithm won't match it
         monkeypatch.setattr(rfc3161_client.verify, "SHA512_OID", rfc3161_client.verify.SHA384_OID)
@@ -395,10 +410,6 @@ class TestVerifierPrivate:
 
 
 class TestVerifierPublic:
-    @pytest.fixture
-    def verifier(self, verifier: _Verifier) -> Verifier:
-        return cast("Verifier", verifier)
-
     def test_verify_message_succeeds(
         self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
