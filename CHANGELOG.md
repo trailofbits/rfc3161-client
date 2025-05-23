@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposed `verify_message` in the actual `Verify` interface, not just the implementation
   ([#153](https://github.com/trailofbits/rfc3161-client/pull/153))
 
+### Changed
+
+- Use `mypy` for type checking ([#154](https://github.com/trailofbits/rfc3161-client/pull/154))
+
 ## [1.0.2] - 2025-05-19
 
 ### Changed
