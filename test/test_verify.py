@@ -441,3 +441,18 @@ def test_verify_succeeds_when_leaf_cert_is_not_first() -> None:
     message = digest.finalize()
 
     assert verifier.verify(ts_response, message)
+
+
+def test_verify_unknown() -> None:
+    """Unsure at this point why this fails
+
+    https://github.com/trailofbits/rfc3161-client/issues/162
+    """
+    chain_path = _FIXTURE / "unknown" / "ts_chain.pem"
+    tsr_path = _FIXTURE / "unknown" / "response.tsr"
+    payload_path = _FIXTURE / "unknown" / "payload"
+    certs = cryptography.x509.load_pem_x509_certificates(chain_path.read_bytes())
+    verifier = VerifierBuilder().add_root_certificate(certs[-1]).tsa_certificate(certs[0]).build()
+
+    ts_response = decode_timestamp_response(tsr_path.read_bytes())
+    assert verifier.verify_message(ts_response, payload_path.read_bytes())
