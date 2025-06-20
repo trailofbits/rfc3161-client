@@ -441,3 +441,56 @@ def test_verify_succeeds_when_leaf_cert_is_not_first() -> None:
     message = digest.finalize()
 
     assert verifier.verify(ts_response, message)
+
+
+def test_verify_succeeds_without_embedded_cert() -> None:
+    """Ensure that a timestamp is considered valid even if it does not
+    contain any embedded certificates (as long as the full certificate
+    chain is provided to the verifier).
+
+    The test asset was produced with timestamp-cli from sigstore/timestamp-authority:
+
+        $ echo -n "hello > artifact
+        $ timestamp-cli --timestamp_server https://timestamp.sigstage.dev \
+            timestamp --artifact artifact --certificate=false
+
+    https://github.com/trailofbits/rfc3161-client/issues/162
+    """
+    cert_path = _FIXTURE / "sigstage" / "ts_chain.pem"
+    tsr_path = _FIXTURE / "sigstage" / "response-no-embedded-cert.tsr"
+
+    certificates = cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())
+    verifier = (
+        VerifierBuilder()
+        .add_root_certificate(certificates[-1])
+        .tsa_certificate(certificates[0])
+        .build()
+    )
+
+    ts_response = decode_timestamp_response(tsr_path.read_bytes())
+
+    assert verifier.verify_message(ts_response, b"hello")
+
+
+def test_verify_fails_invalid_tsr_signature() -> None:
+    """Ensure that a TSR is rejected if it has an invalid signature,
+    even if the certificate chain is valid.
+
+    This test asset was produced by taking `response-sha256.tsr`
+    and twiddling the signature bytes to make it invalid.
+    """
+    cert_path = _FIXTURE / "sigstage" / "ts_chain.pem"
+    tsr_path = _FIXTURE / "sigstage" / "response-invalid-signature.tsr"
+
+    certificates = cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())
+    verifier = (
+        VerifierBuilder()
+        .add_root_certificate(certificates[-1])
+        .tsa_certificate(certificates[0])
+        .build()
+    )
+
+    ts_response = decode_timestamp_response(tsr_path.read_bytes())
+
+    with pytest.raises(VerificationError, match="signature failure"):
+        verifier.verify_message(ts_response, b"hello")

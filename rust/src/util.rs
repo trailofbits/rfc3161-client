@@ -98,8 +98,8 @@ pub static HASH_ALGORITHM: LazyPyImport =
     LazyPyImport::new("rfc3161_client.base", &["HashAlgorithm"]);
 
 pub fn generate_random_bytes_for_asn1_biguint() -> Vec<u8> {
-    let mut rng = rand::thread_rng();
-    let nonce_random: u64 = rng.gen_range(0..u64::MAX);
+    let mut rng = rand::rng();
+    let nonce_random: u64 = rng.random_range(0..u64::MAX);
     let nonce_bytes = nonce_random.to_be_bytes();
 
     // Remove leading 0

@@ -738,43 +738,28 @@ fn pkcs7_verify(
                     ))
                 })?;
         }
-        b.build()
-    };
-    let certs = openssl::stack::Stack::new().map_err(|e| {
-        pyo3::exceptions::PyValueError::new_err(format!("Unable to create certs stack: {:?}", e))
-    })?;
 
-    let signers = p7.signers(&certs, flags).map_err(|e| {
-        pyo3::exceptions::PyValueError::new_err(format!("Unable to create signers: {:?}", e))
-    })?;
-    if signers.len() == 0 {
-        return Err(pyo3::exceptions::PyValueError::new_err("No signers found"));
-    }
-
-    for signer in signers {
-        let mut store_ctx = openssl::x509::X509StoreContext::new().map_err(|e| {
-            pyo3::exceptions::PyValueError::new_err(format!(
-                "Unable to create store context. {:?}",
-                e
-            ))
-        })?;
-        let is_valid = store_ctx
-            .init(&store, &signer, &certs, |ctx| ctx.verify_cert())
+        b.set_purpose(openssl::x509::X509PurposeId::TIMESTAMP_SIGN)
             .map_err(|e| {
                 pyo3::exceptions::PyValueError::new_err(format!(
-                    "Unable to create verification context. {:?}",
+                    "Unable to set purpose for store: {:?}",
                     e
                 ))
             })?;
 
-        if !is_valid {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "Unable to verify certificate",
-            ));
-        }
-    }
+        b.build()
+    };
 
-    Ok(())
+    // NOTE(ww): Passing the store's certificates as the first argument
+    // is superfluous here, but rust-openssl requires _something_
+    // here where the underlying `PKCS7_verify` allows it to be NULL.
+    p7.verify(&store.all_certificates(), &store, None, None, flags)
+        .map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Unable to verify pkcs7 signature: {:?}",
+                e
+            ))
+        })
 }
 
 /// A Python module implemented in Rust.
