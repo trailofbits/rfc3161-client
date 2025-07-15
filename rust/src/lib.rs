@@ -1,6 +1,7 @@
 pub mod name;
 pub mod util;
 
+use openssl::x509::verify::X509VerifyParam;
 use pyo3::{exceptions::PyValueError, prelude::*};
 use sha2::Digest;
 use std::collections::hash_map::DefaultHasher;
@@ -709,10 +710,11 @@ pub(crate) fn create_timestamp_request(
 }
 
 #[pyo3::pyfunction]
-#[pyo3(signature = (sig, certs))]
+#[pyo3(signature = (sig, verification_time, certs))]
 fn pkcs7_verify(
     py: pyo3::Python<'_>,
     sig: &[u8],
+    verification_time: pyo3::Py<pyo3::types::PyDateTime>,
     certs: Vec<pyo3::Py<pyo3::types::PyBytes>>,
 ) -> pyo3::PyResult<()> {
     let p7 = openssl::pkcs7::Pkcs7::from_der(sig).map_err(|e| {
@@ -738,6 +740,23 @@ fn pkcs7_verify(
                     ))
                 })?;
         }
+
+        // Set verification time, set purpose to TIMESTAMP_SIGN
+        let verification_time_i64 = verification_time
+            .bind(py)
+            .call_method0(pyo3::intern!(py, "timestamp"))?
+            .extract::<f64>()? as i64;
+
+        let mut params = X509VerifyParam::new().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Unable to create X509VerifyParam: {:?}",
+                e
+            ))
+        })?;
+        params.set_time(verification_time_i64);
+        b.set_param(&params).map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!("Unable to set verify param: {:?}", e))
+        })?;
 
         b.set_purpose(openssl::x509::X509PurposeId::TIMESTAMP_SIGN)
             .map_err(|e| {
