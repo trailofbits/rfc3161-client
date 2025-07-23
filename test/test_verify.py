@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -216,6 +217,7 @@ class TestVerifierPrivate:
                 pretend.stub(
                     signed_data=ts_response.signed_data,
                     time_stamp_token=lambda: b"",
+                    tst_info=ts_response.tst_info,
                 )
             )
 
@@ -494,3 +496,46 @@ def test_verify_fails_invalid_tsr_signature() -> None:
 
     with pytest.raises(VerificationError, match="signature failure"):
         verifier.verify_message(ts_response, b"hello")
+
+
+def test_verify_succeeds_even_if_cert_is_currently_expired() -> None:
+    """Ensure that a timestamp is considered valid even if it is expired
+    at verification time (as long as the full certificate
+    chain was valid at timestamp time).
+
+    The test asset comes from sigstore-conformance test suite:
+
+    https://github.com/trailofbits/rfc3161-client/issues/171
+    """
+    cert_path = _FIXTURE / "sigstore.mock" / "ts_chain.pem"
+    tsr_path = _FIXTURE / "sigstore.mock" / "response-expired.tsr"
+    payload_path = _FIXTURE / "sigstore.mock" / "payload"
+
+    certificates = cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())
+    verifier = (
+        VerifierBuilder()
+        .add_root_certificate(certificates[-1])
+        .tsa_certificate(certificates[0])
+        .build()
+    )
+
+    ts_response = decode_timestamp_response(tsr_path.read_bytes())
+
+    # timestamp verifies because timestamp time is within certificate validity window
+    # (even though currently the certificate chain is expired)
+    assert verifier.verify_message(ts_response, payload_path.read_bytes())
+
+    # same timestamp fails to verify if timestamp time is mocked to be outside validity window
+    with pytest.raises(VerificationError, match="certificate has expired"):
+        verifier.verify_message(
+            pretend.stub(
+                signed_data=ts_response.signed_data,
+                time_stamp_token=ts_response.time_stamp_token,
+                tst_info=pretend.stub(
+                    message_imprint=ts_response.tst_info.message_imprint,
+                    gen_time=datetime(2025, 7, 21),
+                ),
+                status=ts_response.status,
+            ),
+            payload_path.read_bytes(),
+        )
