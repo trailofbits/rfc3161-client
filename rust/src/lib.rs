@@ -753,8 +753,14 @@ fn pkcs7_verify(
                 e
             ))
         })?;
-        // argument is libc::time_t: 32 bit systems will fail with timestamps from 2038 onwards
-        params.set_time(verification_time_i64.try_into().unwrap());
+        // openssl time parameter is a time_t: 32 bit platforms may have issues
+        let native_verification_time = verification_time_i64.try_into().map_err(|e| {
+            pyo3::exceptions::PyValueError::new_err(format!(
+                "Unable to handle verification time using platform native time_t: {}",
+                e
+            ))
+        })?;
+        params.set_time(native_verification_time);
         b.set_param(&params).map_err(|e| {
             pyo3::exceptions::PyValueError::new_err(format!("Unable to set verify param: {:?}", e))
         })?;
