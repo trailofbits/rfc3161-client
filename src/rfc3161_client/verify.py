@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 import hashlib
 from copy import copy
+from typing import TYPE_CHECKING
 
 import cryptography.x509
 from cryptography.hazmat.primitives._serialization import Encoding
@@ -12,6 +13,9 @@ from cryptography.hazmat.primitives._serialization import Encoding
 from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
 from rfc3161_client.tsp import PKIStatus, TimeStampRequest, TimeStampResponse
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 # See https://www.iana.org/assignments/hash-function-text-names/hash-function-text-names.xhtml
 SHA256_OID = "2.16.840.1.101.3.4.2.1"
@@ -333,24 +337,32 @@ class _Verifier(Verifier):
                 cert.public_bytes(Encoding.DER) for cert in self._intermediates
             )
 
+        # Provide the timestamp gen_time as the PKCS7 verification time: the certificates only
+        # need to be valid at timestamp time, not currently.
         p7 = tsp_response.time_stamp_token()
+        tsp_time = tsp_response.tst_info.gen_time
         try:
-            self._verify_signed_data(p7, verification_certificate)
+            self._verify_signed_data(p7, tsp_time, verification_certificate)
         except ValueError as e:
             msg = f"Error while verifying certificates: {e}"
             raise VerificationError(msg)
 
         return True
 
-    def _verify_signed_data(self, sig: bytes, certificates: set[bytes]) -> None:
+    def _verify_signed_data(
+        self, sig: bytes, verification_time: datetime, certificates: set[bytes]
+    ) -> None:
         """Verify signed data.
 
         This function verifies that the bytes used in a signature are signed by a certificate
-        trusted in the `certificates` list.
+        trusted in the `certificates` list. The certificates are verified to be valid at
+        given verification time.
+
         The function does not return anything, but raises an exception if the verification fails.
 
         :param sig: Bytes of a PKCS7 object. This must be in DER format and will be unserialized.
+        :param timestamp: Verification time.
         :param certificates: A list of trusted certificates to verify the response against.
         :raise: ValueError if the signature verification fails.
         """
-        return _rust_verify.pkcs7_verify(sig, list(certificates))
+        return _rust_verify.pkcs7_verify(sig, verification_time, list(certificates))

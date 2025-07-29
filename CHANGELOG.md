@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Timestamps are now verified with the timestamp time as reference time like the RFC
+  says: this means that the certificate chain no longer needs to be valid at current
+  time, it is enough for it to have been valid at timestamp time
+  ([#174](https://github.com/trailofbits/rfc3161-client/pull/174))
+
 ## [1.0.3] - 2025-06-20
 
 ### Fixed
