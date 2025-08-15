@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc # v6.4.3
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1 # v6.5.0
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
@@ -59,7 +59,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@e10f6c464b90acceb5f640d31beda6d586ba7b4a # v1
+        uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -101,7 +101,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@e10f6c464b90acceb5f640d31beda6d586ba7b4a # v1
+        uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
@@ -134,7 +134,7 @@ jobs:
           name: rfc3161-sdist
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc # v6.4.3
+        uses: astral-sh/setup-uv@d9e0f98d3fc6adb07d1e3d37f3043649ddad06a1 # v6.5.0
         with:
           enable-cache: true
           cache-dependency-glob: pyproject.toml
@@ -208,7 +208,7 @@ jobs:
           python-version: 3.x
 
       - name: Build wheels
-        uses: PyO3/maturin-action@e10f6c464b90acceb5f640d31beda6d586ba7b4a # v1
+        uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1
         env:
           # Do not build OpenSSL on MacOS, since it's already installed
           # and we don't need to cross-compile.
