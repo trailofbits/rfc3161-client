@@ -8,7 +8,7 @@ from copy import copy
 from typing import TYPE_CHECKING
 
 import cryptography.x509
-from cryptography.hazmat.primitives._serialization import Encoding
+from cryptography.hazmat.primitives.serialization import Encoding
 
 from rfc3161_client._rust import verify as _rust_verify
 from rfc3161_client.errors import VerificationError
