@@ -17,7 +17,7 @@ version = "1.0.5"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
-dependencies = ["cryptography>=43,<47"]
+dependencies = ["cryptography>=43"]
 
 [project.optional-dependencies]
 doc = []
