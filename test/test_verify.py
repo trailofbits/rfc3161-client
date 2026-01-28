@@ -228,9 +228,7 @@ class TestVerifierPrivate:
         verifier = cast("_Verifier", verifier)
         with pytest.raises(VerificationError, match="0 signer infos"):
             verifier._verify_tsr_with_chains(
-                pretend.stub(
-                    signed_data=pretend.stub(signer_infos=[])
-                )  # ty: ignore[invalid-argument-type]
+                pretend.stub(signed_data=pretend.stub(signer_infos=[]))  # ty: ignore[invalid-argument-type]
             )
 
     def test_verify_leaf_certs_no_certs(self, verifier: Verifier) -> None:
