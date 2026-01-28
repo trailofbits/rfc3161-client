@@ -214,7 +214,7 @@ class TestVerifierPrivate:
         verifier = cast("_Verifier", verifier)
         with pytest.raises(VerificationError, match="Error while verifying"):
             verifier._verify_tsr_with_chains(
-                pretend.stub(
+                pretend.stub(  # ty: ignore[invalid-argument-type]
                     signed_data=ts_response.signed_data,
                     time_stamp_token=lambda: b"",
                     tst_info=ts_response.tst_info,
@@ -228,7 +228,9 @@ class TestVerifierPrivate:
         verifier = cast("_Verifier", verifier)
         with pytest.raises(VerificationError, match="0 signer infos"):
             verifier._verify_tsr_with_chains(
-                pretend.stub(signed_data=pretend.stub(signer_infos=[]))
+                pretend.stub(
+                    signed_data=pretend.stub(signer_infos=[])
+                )  # ty: ignore[invalid-argument-type]
             )
 
     def test_verify_leaf_certs_no_certs(self, verifier: Verifier) -> None:
@@ -236,7 +238,7 @@ class TestVerifierPrivate:
         verifier._tsa_certificate = None
         response = pretend.stub(signed_data=pretend.stub(certificates=[]))
         with pytest.raises(VerificationError, match="Certificates neither"):
-            verifier._verify_leaf_certs(tsp_response=response)
+            verifier._verify_leaf_certs(tsp_response=response)  # ty: ignore[invalid-argument-type]
 
     def test_verify_leaf_certs_mismatch(
         self, verifier: Verifier, ts_response: TimeStampResponse
@@ -250,7 +252,11 @@ class TestVerifierPrivate:
         self, verifier: Verifier, ts_response: TimeStampResponse, monkeypatch: MonkeyPatch
     ) -> None:
         verifier = cast("_Verifier", verifier)
-        monkeypatch.setattr(rfc3161_client._rust.SignedData, "certificates", [])
+        monkeypatch.setattr(
+            rfc3161_client._rust.SignedData,  # ty: ignore[possibly-missing-attribute]
+            "certificates",
+            [],
+        )
         assert verifier._verify_leaf_certs(tsp_response=ts_response)
 
     def test_verify_leaf_certs_no_eku(
@@ -303,7 +309,7 @@ class TestVerifierPrivate:
         self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
         verifier = cast("_Verifier", verifier)
-        verifier._tsa_certificate = pretend.stub(
+        verifier._tsa_certificate = pretend.stub(  # ty: ignore[invalid-assignment]
             __ne__=lambda *args: False,
             issuer=None,
         )
@@ -334,7 +340,7 @@ class TestVerifierPrivate:
         )
 
         with pytest.raises(VerificationError, match="No leaf certificate found in the chain."):
-            verifier._verify_leaf_certs(tsp_response=response)
+            verifier._verify_leaf_certs(tsp_response=response)  # ty: ignore[invalid-argument-type]
 
     def test_verify_leaf_name_mismatch(
         self, verifier: Verifier, ts_response: TimeStampResponse
@@ -346,7 +352,7 @@ class TestVerifierPrivate:
 
     def test_verify_wrong_status(self, verifier: Verifier) -> None:
         with pytest.raises(VerificationError, match="GRANTED"):
-            verifier.verify(pretend.stub(status=2), b"")
+            verifier.verify(pretend.stub(status=2), b"")  # ty: ignore[invalid-argument-type]
 
     def test_verify_wrong_nonce(
         self, ts_response: TimeStampResponse, verifier: Verifier, monkeypatch: MonkeyPatch
@@ -528,7 +534,7 @@ def test_verify_succeeds_even_if_cert_is_currently_expired() -> None:
     # same timestamp fails to verify if timestamp time is mocked to be outside validity window
     with pytest.raises(VerificationError, match="certificate has expired"):
         verifier.verify_message(
-            pretend.stub(
+            pretend.stub(  # ty: ignore[invalid-argument-type]
                 signed_data=ts_response.signed_data,
                 time_stamp_token=ts_response.time_stamp_token,
                 tst_info=pretend.stub(
