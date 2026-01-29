@@ -53,6 +53,9 @@ select = ["E", "F", "I", "W", "UP", "TCH"]
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
 
+[tool.ty.src]
+include = ["src", "test"]
+
 [tool.interrogate]
 # don't enforce documentation coverage for testing, the virtual
 # environment, or the scripts.

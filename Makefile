@@ -58,7 +58,7 @@ lint: $(VENV)/pyvenv.cfg
 	. $(VENV_BIN)/activate && \
 		interrogate -c pyproject.toml .
 	. $(VENV_BIN)/activate && \
-		ty check src test
+		ty check
 
 .PHONY: reformat
 reformat:
