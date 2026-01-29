@@ -50,7 +50,7 @@ class TimestampRequestBuilder:
     def hash_algorithm(self, hash_algorithm: _AllowedHashTypes) -> TimestampRequestBuilder:
         """Set the Hash algorithm used."""
         if not isinstance(hash_algorithm, HashAlgorithm):
-            msg = f"{hash_algorithm} is not a supported hash."  # type: ignore[unreachable]
+            msg = f"{hash_algorithm} is not a supported hash."
             raise TypeError(msg)
 
         return TimestampRequestBuilder(self._data, hash_algorithm, self._nonce, self._cert_req)
@@ -58,7 +58,7 @@ class TimestampRequestBuilder:
     def cert_request(self, *, cert_request: bool = False) -> TimestampRequestBuilder:
         """Set the cert request field."""
         if not isinstance(cert_request, bool):
-            msg = "Cert request must be a boolean."  # type: ignore[unreachable]
+            msg = "Cert request must be a boolean."
             raise TypeError(msg)
 
         return TimestampRequestBuilder(self._data, self._algorithm, self._nonce, cert_request)
@@ -66,7 +66,7 @@ class TimestampRequestBuilder:
     def nonce(self, *, nonce: bool = True) -> TimestampRequestBuilder:
         """Set the request policy field."""
         if not isinstance(nonce, bool):
-            msg = "Request policy must be a boolean."  # type: ignore[unreachable]
+            msg = "Request policy must be a boolean."
             raise TypeError(msg)
 
         return TimestampRequestBuilder(self._data, self._algorithm, nonce, self._cert_req)
