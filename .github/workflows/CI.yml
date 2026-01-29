@@ -171,11 +171,7 @@ jobs:
         shell: bash
 
       - name: Test Install
-        run: |
-          uv venv
-          source ./.venv/Scripts/activate
-          uv pip install wheelhouse/rfc3161_client*.whl
-          python -c "import rfc3161_client"
+        run: uv run --with wheelhouse/rfc3161_client*.whl python -c "import rfc3161_client"
         shell: bash
 
       - name: Upload wheels

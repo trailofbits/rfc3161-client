@@ -39,7 +39,7 @@ jobs:
         run: uv python install ${{ matrix.python }}
 
       - name: test
-        run: make test INSTALL_EXTRA=test
+        run: make test
 
   test-windows:
     strategy:
@@ -89,11 +89,7 @@ jobs:
           echo "OPENSSL_NO_VENDOR=1" >> $GITHUB_ENV
 
       - name: test
-        run: |
-          # We need to do this in CI because setup-uv@v5 automatically creates a new venv and it prevents us from 
-          # installing our dependencies in the Makefile.
-          touch pyproject.toml
-          make test INSTALL_EXTRA=test
+        run: make test
         shell: bash
 
   all-tests-pass:
