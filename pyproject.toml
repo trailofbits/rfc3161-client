@@ -19,11 +19,11 @@ license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
 dependencies = ["cryptography>=43"]
 
-[project.optional-dependencies]
+[dependency-groups]
 doc = []
 test = ["pytest", "pytest-cov", "pretend", "coverage[toml]"]
-lint = ["ruff >= 0.7,< 0.15", "interrogate", "ty>=0.0.14", "rfc3161-client[test]"]
-dev = ["rfc3161-client[test,lint,doc]", "maturin>=1.7,<2.0"]
+lint = ["ruff >= 0.7,< 0.15", "interrogate", "ty>=0.0.14", { include-group = "test" }]
+dev = [{ include-group = "lint" }, { include-group = "doc" }, "maturin>=1.7,<2.0"]
 
 [project.urls]
 Homepage = "https://pypi.org/project/rfc3161-client"
