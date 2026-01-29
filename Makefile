@@ -40,7 +40,7 @@ lint:
 		cargo fmt --check --manifest-path rust/Cargo.toml && \
 		cargo fmt --check --manifest-path rust/tsp-asn1/Cargo.toml && \
 		uv run interrogate -c pyproject.toml . && \
-		uv run mypy src test
+		uv run ty check
 
 .PHONY: reformat
 reformat:

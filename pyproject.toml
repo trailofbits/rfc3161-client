@@ -53,23 +53,12 @@ select = ["E", "F", "I", "W", "UP", "TCH"]
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
 
+[tool.ty.src]
+include = ["src", "test"]
+
 [tool.interrogate]
 # don't enforce documentation coverage for testing, the virtual
 # environment, or the scripts.
 exclude = [".venv", "test", "scripts"]
 ignore-semiprivate = true
 fail-under = 100
-
-[tool.mypy]
-mypy_path = "src"
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_return_any = true
-warn_unreachable = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_decorators = false
-check_untyped_defs = true
-disallow_any_unimported = false
-ignore_missing_imports = true
