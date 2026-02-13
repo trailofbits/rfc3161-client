@@ -1,14 +1,14 @@
 version: 2
 
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /
     groups:
       python:
         patterns:
           - "*"
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
       default-days: 7
 
@@ -19,7 +19,7 @@ updates:
         patterns:
           - "*"
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
       default-days: 7
 
@@ -29,10 +29,10 @@ updates:
       - "/rust/tsp-asn1"
       - "/"
     groups:
-      actions:
+      cargo:
         patterns:
           - "*"
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
-      default-days: 7      
+      default-days: 7
