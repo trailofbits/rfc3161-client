@@ -153,7 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.6...HEAD
 [1.0.6]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.3...v1.0.4
