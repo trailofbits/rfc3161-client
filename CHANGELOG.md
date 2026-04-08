@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-XX-XX
+
+### Fixed
+
+- Fixed a bug where the verification incorrectly picked the leaf certificate. This
+  allowed an attacker who could modify a timestamp response to make a
+  legitimately-signed timestamp from TSA-A pass verification as if it came from
+  TSA-B.
+
 ## [1.0.5] - 2025-09-23
 
 ### Changed

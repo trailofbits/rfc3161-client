@@ -324,7 +324,7 @@ class TestVerifierPrivate:
         def mock_load_der_x509_certificate(_cert: bytes) -> cryptography.x509.Certificate:
             return cast(
                 "cryptography.x509.Certificate",
-                pretend.stub(issuer="fake-name", subject="fake-name"),
+                pretend.stub(issuer="fake-name", subject="fake-name", serial_number=0),
             )
 
         monkeypatch.setattr(
@@ -333,11 +333,43 @@ class TestVerifierPrivate:
             mock_load_der_x509_certificate,
         )
 
+        signer_info_stub = pretend.stub(
+            issuer="non-matching-issuer",
+            serial_number=999,
+        )
         response = pretend.stub(
-            signed_data=pretend.stub(certificates=[b"fake-cert", b"fake-cert-2"])
+            signed_data=pretend.stub(
+                certificates=[b"fake-cert", b"fake-cert-2"],
+                signer_infos=[signer_info_stub],
+            )
         )
 
-        with pytest.raises(VerificationError, match="No leaf certificate found in the chain."):
+        with pytest.raises(
+            VerificationError, match="No leaf certificate found matching the SignerInfo"
+        ):
+            verifier._verify_leaf_certs(tsp_response=response)  # ty: ignore[invalid-argument-type]
+
+    def test_verify_leaf_certs_multiple_signer_infos(
+        self, verifier: Verifier, monkeypatch: MonkeyPatch
+    ) -> None:
+        verifier = cast("_Verifier", verifier)
+
+        monkeypatch.setattr(
+            cryptography.x509,
+            "load_der_x509_certificate",
+            lambda _cert: pretend.stub(),
+        )
+
+        si_a = pretend.stub(issuer="a", serial_number=1)
+        si_b = pretend.stub(issuer="b", serial_number=2)
+        response = pretend.stub(
+            signed_data=pretend.stub(
+                certificates=[b"fake-cert"],
+                signer_infos=[si_a, si_b],
+            )
+        )
+
+        with pytest.raises(VerificationError, match="Expected exactly one SignerInfo, got 2"):
             verifier._verify_leaf_certs(tsp_response=response)  # ty: ignore[invalid-argument-type]
 
     def test_verify_leaf_name_mismatch(
@@ -500,6 +532,48 @@ def test_verify_fails_invalid_tsr_signature() -> None:
 
     with pytest.raises(VerificationError, match="signature failure"):
         verifier.verify_message(ts_response, b"hello")
+
+
+def test_verify_rejects_injected_cert_bag_spoofing_common_name() -> None:
+    """Regression test for GHSA-3xxc-pwj6-jgrj: an attacker injects a spoofed
+    certificate (CN=Spoofed TSA) and a dummy certificate into the PKCS#7
+    certificate bag of a legitimate TSR.
+
+    Before the fix, the naive leaf-finding heuristic would select the spoofed
+    certificate as the "leaf", allowing common_name pinning to be bypassed
+    while the real signature remained valid against the authentic signer.
+
+    The fix identifies the leaf via SignerInfo.issuerAndSerialNumber instead.
+    """
+    cert_path = _FIXTURE / "test_tsa" / "ts_chain.pem"
+    tsr_path = _FIXTURE / "test_tsa" / "response-injected-certs.tsr"
+
+    chain = cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())
+    root_cert = chain[-1]
+    intermediate_cert = chain[1]
+
+    ts_response = decode_timestamp_response(tsr_path.read_bytes())
+
+    # Verify that the spoofed cert IS in the bag (precondition)
+    subjects = [
+        cryptography.x509.load_der_x509_certificate(c).subject.rfc4514_string()
+        for c in ts_response.signed_data.certificates
+    ]
+    assert "CN=Spoofed TSA" in subjects
+
+    # Attempt to verify with the spoofed common_name — must be rejected
+    verifier = VerifierBuilder(
+        common_name="CN=Spoofed TSA",
+        roots=[root_cert],
+        intermediates=[intermediate_cert],
+    ).build()
+
+    digest = hashes.Hash(hashes.SHA512())
+    digest.update(b"hello")
+    message = digest.finalize()
+
+    with pytest.raises(VerificationError, match="name provided in the opts does not match"):
+        verifier.verify(ts_response, message)
 
 
 def test_verify_succeeds_even_if_cert_is_currently_expired() -> None:

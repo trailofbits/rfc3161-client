@@ -241,7 +241,7 @@ class _Verifier(Verifier):
             msg = "Certificates neither found in the answer or in the Verification Options."
             raise VerificationError(msg)
 
-        leaf_certificate: cryptography.x509.Certificate
+        leaf_certificate: cryptography.x509.Certificate | None = None
 
         if len(tsp_response.signed_data.certificates) > 0:
             certs = [
@@ -249,17 +249,24 @@ class _Verifier(Verifier):
                 for cert in tsp_response.signed_data.certificates
             ]
 
-            leaf_certificate_found = None
-            for cert in certs:
-                if not [c for c in certs if c.issuer == cert.subject]:
-                    leaf_certificate_found = cert
-                    break
-            else:
-                msg = "No leaf certificate found in the chain."
+            # Identify the leaf certificate using the SignerInfo's
+            # issuerAndSerialNumber (sid), which is covered by the PKCS#7
+            # signature and cannot be tampered with.
+            signer_infos = tsp_response.signed_data.signer_infos
+            if len(signer_infos) != 1:
+                msg = f"Expected exactly one SignerInfo, got {len(signer_infos)}."
                 raise VerificationError(msg)
 
-            # Now leaf_certificate_found is guaranteed to be not None
-            leaf_certificate = leaf_certificate_found
+            si = signer_infos.pop()
+
+            for cert in certs:
+                if cert.issuer == si.issuer and cert.serial_number == si.serial_number:
+                    leaf_certificate = cert
+                    break
+
+            if leaf_certificate is None:
+                msg = "No leaf certificate found matching the SignerInfo."
+                raise VerificationError(msg)
 
             # Note: The order of comparison is important here since we mock
             # _tsa_certificate's __ne__ method in tests, rather than leaf_certificate's

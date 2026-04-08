@@ -224,5 +224,15 @@ class SignerInfo(metaclass=abc.ABCMeta):
     def version(self) -> int:
         """Returns the version."""
 
+    @property
+    @abc.abstractmethod
+    def issuer(self) -> cryptography.x509.Name:
+        """Returns the issuer from the SignerIdentifier (issuerAndSerialNumber)."""
+
+    @property
+    @abc.abstractmethod
+    def serial_number(self) -> int:
+        """Returns the serial number from the SignerIdentifier (issuerAndSerialNumber)."""
+
 
 SignerInfo.register(_rust.SignerInfo)

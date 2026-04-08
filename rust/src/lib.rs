@@ -427,6 +427,27 @@ impl SignerInfo {
     fn version(&self) -> pyo3::PyResult<u8> {
         Ok(self.raw.borrow_dependent().version)
     }
+
+    #[getter]
+    fn issuer<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        let issuer = &self.raw.borrow_dependent().issuer_and_serial_number.issuer;
+        let py_name = crate::name::parse_name(py, issuer.unwrap_read())?;
+        Ok(py_name)
+    }
+
+    #[getter]
+    fn serial_number<'p>(
+        &self,
+        py: pyo3::Python<'p>,
+    ) -> pyo3::PyResult<pyo3::Bound<'p, pyo3::PyAny>> {
+        let serial = self
+            .raw
+            .borrow_dependent()
+            .issuer_and_serial_number
+            .serial_number
+            .as_bytes();
+        crate::util::big_byte_slice_to_py_int(py, serial)
+    }
 }
 
 #[pyo3::pyclass(frozen, module = "rfc3161_client._rust")]
