@@ -17,7 +17,7 @@ asn1.workspace = true
 self_cell = "1"
 hex.workspace = true
 sha2 = "0.10.9"
-rand = "0.9.1"
+rand = "0.9.3"
 cryptography-x509.workspace = true
 openssl = { version = "0.10.73", features = ["vendored"] }
 
