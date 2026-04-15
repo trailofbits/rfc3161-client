@@ -145,6 +145,10 @@ impl<'a> SimpleAsn1Writable for Accuracy<'a> {
     fn write_data(&self, dest: &mut asn1::WriteBuf) -> asn1::WriteResult {
         self.0.write_data(dest)
     }
+
+    fn data_length(&self) -> Option<usize> {
+        self.0.data_length()
+    }
 }
 
 /// RFC 3161 2.4.2
