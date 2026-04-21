@@ -71,7 +71,7 @@ pub(crate) fn parse_name<'p>(
 pub(crate) fn parse_general_name(
     py: pyo3::Python<'_>,
     gn: &cryptography_x509::name::GeneralName<'_>,
-) -> pyo3::PyResult<pyo3::PyObject> {
+) -> pyo3::PyResult<pyo3::Py<pyo3::PyAny>> {
     let py_gn = match gn {
         cryptography_x509::name::GeneralName::OtherName(data) => {
             let oid = crate::util::oid_to_py_oid(py, &data.type_id)?;
