@@ -6,7 +6,7 @@ use pyo3::types::PyAnyMethods;
 pub struct LazyPyImport {
     module: &'static str,
     names: &'static [&'static str],
-    value: pyo3::sync::GILOnceCell<pyo3::PyObject>,
+    value: pyo3::sync::PyOnceLock<pyo3::Py<pyo3::PyAny>>,
 }
 
 impl LazyPyImport {
@@ -14,7 +14,7 @@ impl LazyPyImport {
         LazyPyImport {
             module,
             names,
-            value: pyo3::sync::GILOnceCell::new(),
+            value: pyo3::sync::PyOnceLock::new(),
         }
     }
 
