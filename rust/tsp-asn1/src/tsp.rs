@@ -140,6 +140,7 @@ impl<'a> SimpleAsn1Readable<'a> for Accuracy<'a> {
 }
 
 impl<'a> SimpleAsn1Writable for Accuracy<'a> {
+    type Error = asn1::WriteError;
     const TAG: asn1::Tag = <AccuracyInner as SimpleAsn1Writable>::TAG;
 
     fn write_data(&self, dest: &mut asn1::WriteBuf) -> asn1::WriteResult {
