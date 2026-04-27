@@ -1,4 +1,4 @@
-use rand::{Rng, RngExt};
+use rand::RngExt;
 
 use pyo3::types::IntoPyDict;
 use pyo3::types::PyAnyMethods;
