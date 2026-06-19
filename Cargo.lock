@@ -97,8 +97,8 @@ dependencies = [
 
 [[package]]
 name = "cryptography-x509"
-version = "0.49.0"
-source = "git+https://github.com/pyca/cryptography.git?tag=49.0.0#e300bbe2f1bec75e5ee7e0ab7b196958831b3db6"
+version = "0.1.0"
+source = "git+https://github.com/pyca/cryptography.git?tag=47.0.0#59c5f5e4b9395f32d407f66467d59ccea9f9829f"
 dependencies = [
  "asn1",
 ]
@@ -338,18 +338,9 @@ dependencies = [
  "libc",
  "once_cell",
  "portable-atomic",
- "pyo3-build-config 0.29.0",
+ "pyo3-build-config",
  "pyo3-ffi",
  "pyo3-macros",
-]
-
-[[package]]
-name = "pyo3-build-config"
-version = "0.28.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e368e7ddfdeb98c9bca7f8383be1648fd84ab466bf2bc015e94008db6d35611e"
-dependencies = [
- "target-lexicon",
 ]
 
 [[package]]
@@ -368,7 +359,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca85c467da1bbc8d866eea5deff9cf29ea5f7785054a17da36e65bda9c05845b"
 dependencies = [
  "libc",
- "pyo3-build-config 0.29.0",
+ "pyo3-build-config",
 ]
 
 [[package]]
@@ -436,7 +427,7 @@ dependencies = [
  "hex",
  "openssl",
  "pyo3",
- "pyo3-build-config 0.28.3",
+ "pyo3-build-config",
  "rand",
  "self_cell",
  "sha2",
