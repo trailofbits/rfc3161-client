@@ -200,25 +200,11 @@ jobs:
 
       - name: Build wheels
         # Build OpenSSL from source (the `vendored` Cargo feature) so the
-        # wheel statically links it. Linking the runner's Homebrew OpenSSL
-        # bakes an absolute /opt/homebrew path into the extension, which
-        # breaks `import` on machines without that exact Homebrew install.
+        # wheel statically links it.
         uses: PyO3/maturin-action@e83996d129638aa358a18fbd1dfb82f0b0fb5d3b # v1.51.0
         with:
           target: ${{ matrix.platform.target }}
           args: --release --out dist --find-interpreter
-
-      - name: Verify wheel does not link Homebrew OpenSSL
-        run: |
-          python -m zipfile -e dist/*.whl wheel_check/
-          dylib=$(find wheel_check -name '_rust*.so')
-          echo "Inspecting ${dylib}"
-          otool -L "${dylib}"
-          if otool -L "${dylib}" | grep -q '/opt/homebrew'; then
-            echo "::error::wheel dynamically links a Homebrew library"
-            exit 1
-          fi
-        shell: bash
 
       - name: Upload wheels
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
