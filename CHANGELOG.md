@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-07-07
+
+### Fixed
+
+- macOS wheels are now self-contained: OpenSSL is vendored and statically linked
+  like the Linux wheels. Previously the published macOS wheel baked in an absolute
+  path to Homebrew's `openssl@3` and failed to import on machines without that exact
+  install ([#276](https://github.com/trailofbits/rfc3161-client/pull/276))
+
 ## [1.0.6] - 2026-04-08
 
 ### Fixed
@@ -153,7 +162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.3...v1.0.4
