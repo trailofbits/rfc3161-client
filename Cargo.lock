@@ -97,8 +97,8 @@ dependencies = [
 
 [[package]]
 name = "cryptography-x509"
-version = "0.49.0"
-source = "git+https://github.com/pyca/cryptography.git?tag=49.0.0#e300bbe2f1bec75e5ee7e0ab7b196958831b3db6"
+version = "0.1.0"
+source = "git+https://github.com/pyca/cryptography.git?tag=47.0.0#59c5f5e4b9395f32d407f66467d59ccea9f9829f"
 dependencies = [
  "asn1",
 ]
@@ -403,9 +403,9 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "rand"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2e8e8bcc7961af1fdac401278c6a831614941f6164ee3bf4ce61b7edb162207"
+checksum = "c7f5fa3a058cd35567ef9bfa5e75732bee0f9e4c55fa90477bef2dfcdbc4be80"
 dependencies = [
  "chacha20",
  "getrandom",
