@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `make lint` now fails when `Cargo.lock` is out of date with respect to `Cargo.toml`
+  ([#290](https://github.com/trailofbits/rfc3161-client/pull/290))
+
 ## [1.0.7] - 2026-07-07
 
 ### Fixed
