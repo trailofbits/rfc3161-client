@@ -32,8 +32,17 @@ dev:
 	uv sync --group dev
 	uv run maturin develop --uv
 
+# Fail if `Cargo.lock` does not match the workspace manifests. Dependabot cannot
+# rewrite the `tag = ...` pin of our `cryptography-x509` git dependency
+# (dependabot/dependabot-core#13219), so it lands lockfile-only bumps that any
+# later `cargo` run silently reverts. Without this check the two files can drift
+# apart unnoticed and break `--locked` / offline builds (issue #287).
+.PHONY: lockfile
+lockfile:
+	cargo metadata --locked --format-version 1 --manifest-path Cargo.toml > /dev/null
+
 .PHONY: lint
-lint:
+lint: lockfile
 	uv sync --group lint
 	uv run ruff format --check && \
 		uv run ruff check && \
