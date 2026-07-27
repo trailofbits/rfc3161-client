@@ -32,8 +32,12 @@ dev:
 	uv sync --group dev
 	uv run maturin develop --uv
 
+.PHONY: lockfile
+lockfile:
+	cargo metadata --locked --format-version 1 --manifest-path Cargo.toml > /dev/null
+
 .PHONY: lint
-lint:
+lint: lockfile
 	uv sync --group lint
 	uv run ruff format --check && \
 		uv run ruff check && \
