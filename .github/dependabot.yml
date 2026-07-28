@@ -1,14 +1,14 @@
 version: 2
 
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /
     groups:
       python:
         patterns:
           - "*"
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
       default-days: 7
 
@@ -19,20 +19,21 @@ updates:
         patterns:
           - "*"
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
       default-days: 7
 
   - package-ecosystem: cargo
-    directories:
-      - "/rust"
-      - "/rust/tsp-asn1"
-      - "/"
+    directory: /  # one workspace, one Cargo.lock
     groups:
-      actions:
+      cargo:
         patterns:
           - "*"
+    ignore:
+      # workspace git tag pin; lockfile-only updates cause the drift in #287.
+      # https://github.com/dependabot/dependabot-core/issues/13219
+      - dependency-name: cryptography-x509
     schedule:
-      interval: daily
+      interval: weekly
     cooldown:
-      default-days: 7      
+      default-days: 7
