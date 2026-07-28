@@ -32,6 +32,7 @@ updates:
     ignore:
       # workspace git tag pin; lockfile-only updates cause the drift in #287.
       # https://github.com/dependabot/dependabot-core/issues/13219
+      # Tracked by .github/workflows/cryptography-x509.yml instead.
       - dependency-name: cryptography-x509
     schedule:
       interval: weekly

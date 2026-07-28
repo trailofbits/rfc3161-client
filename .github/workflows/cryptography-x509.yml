@@ -1,0 +1,129 @@
+name: Check cryptography-x509
+
+# cryptography-x509 is a git tag pin in [workspace.dependencies], which dependabot
+# cannot rewrite: https://github.com/dependabot/dependabot-core/issues/13219
+# Until that ships, poll upstream ourselves.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: cryptography-x509
+  # never cancel: a run interrupted between git push and gh pr create leaves an
+  # orphan branch that makes every later run skip.
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Bump the pin if upstream moved
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required to push the bump branch
+      pull-requests: write # required to open the PR for it
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve the current and latest tags
+        id: tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current="$(sed -n 's/^cryptography-x509 = .*tag = "\([0-9.]*\)".*/\1/p' Cargo.toml)"
+          if [[ -z "${current}" ]]; then
+            echo "::error::no cryptography-x509 git tag found in Cargo.toml"
+            exit 1
+          fi
+
+          # pyca/cryptography publishes no GitHub releases, so rank the tag list instead.
+          # The grep is also the injection guard: everything downstream is bare X.Y.Z.
+          latest="$(gh api --paginate repos/pyca/cryptography/tags --jq '.[].name' \
+            | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)"
+          if [[ -z "${latest}" ]]; then
+            echo "::error::no upstream tags matched X.Y.Z"
+            exit 1
+          fi
+
+          branch="chore/cryptography-x509-${latest}"
+          if [[ "${current}" == "${latest}" ]]; then
+            echo "pinned at ${current}, which is current"
+            bump=false
+          elif gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/${branch}" >/dev/null 2>&1; then
+            echo "${branch} already exists; nothing to do"
+            bump=false
+          else
+            echo "${current} -> ${latest}"
+            bump=true
+          fi
+
+          {
+            echo "current=${current}"
+            echo "latest=${latest}"
+            echo "branch=${branch}"
+            echo "bump=${bump}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Install the latest version of uv
+        if: steps.tags.outputs.bump == 'true'
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Rewrite the pin
+        if: steps.tags.outputs.bump == 'true'
+        env:
+          LATEST: ${{ steps.tags.outputs.latest }}
+        run: |
+          sed -i "s|\(^cryptography-x509 = .*tag = \"\)[0-9.]*\"|\1${LATEST}\"|" Cargo.toml
+          if git diff --quiet -- Cargo.toml; then
+            echo "::error::Cargo.toml was not rewritten"
+            exit 1
+          fi
+          # Re-resolve so Cargo.lock follows the new tag.
+          cargo metadata --format-version 1 --manifest-path Cargo.toml > /dev/null
+          if git diff --quiet -- Cargo.lock; then
+            echo "::error::Cargo.lock did not move"
+            exit 1
+          fi
+
+      # `cargo metadata --locked`, the same gate lint.yml runs. CI does not run on
+      # GITHUB_TOKEN-authored PRs, so this is the only drift check the PR will get.
+      - name: Check Cargo.lock agrees with Cargo.toml
+        if: steps.tags.outputs.bump == 'true'
+        run: make lockfile
+
+      - name: Test against the new tag
+        if: steps.tags.outputs.bump == 'true'
+        run: make test
+
+      - name: Open the pull request
+        if: steps.tags.outputs.bump == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ github.event.repository.default_branch }}
+          BRANCH: ${{ steps.tags.outputs.branch }}
+          CURRENT: ${{ steps.tags.outputs.current }}
+          LATEST: ${{ steps.tags.outputs.latest }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${BRANCH}"
+          git add Cargo.toml Cargo.lock
+          git commit -m "build(deps): bump cryptography-x509 from ${CURRENT} to ${LATEST}"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            "HEAD:refs/heads/${BRANCH}"
+          # --repo is load-bearing: gh resolves the base repo to a fork's parent, so
+          # without it a test run in a fork opens its PR against the upstream repo.
+          gh pr create --repo "${GITHUB_REPOSITORY}" --base "${BASE}" --head "${BRANCH}" \
+            --title "build(deps): bump cryptography-x509 from ${CURRENT} to ${LATEST}" \
+            --body "$(cat <<EOF
+          Upstream tagged \`${LATEST}\`; the workspace was pinned to \`${CURRENT}\`.
+
+          EOF
+          )"
