@@ -16,11 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `Cargo.toml` and `Cargo.lock` no longer disagree on the `cryptography-x509` version. In
-  1.0.7 the manifest pinned `pyca/cryptography` tag 47.0.0 while the lockfile recorded
-  49.0.0, and because the wheel builds do not pass `--locked`, Cargo silently re-resolved:
-  the published 1.0.7 wheels were built against 47.0.0, not the 49.0.0 the lockfile claimed.
-  Both now pin 49.0.0, so this is the first release whose wheels actually contain it
+- `Cargo.toml` and `Cargo.lock` no longer disagree on the `cryptography-x509` version
   ([#293](https://github.com/trailofbits/rfc3161-client/pull/293))
 
 ## [1.0.7] - 2026-07-07
