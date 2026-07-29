@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-07-29
+
 ### Changed
 
 - `make lint` now fails when `Cargo.lock` is out of date with respect to `Cargo.toml`
   ([#290](https://github.com/trailofbits/rfc3161-client/pull/290))
+
+### Fixed
+
+- `Cargo.toml` and `Cargo.lock` no longer disagree on the `cryptography-x509` version. In
+  1.0.7 the manifest pinned `pyca/cryptography` tag 47.0.0 while the lockfile recorded
+  49.0.0, and because the wheel builds do not pass `--locked`, Cargo silently re-resolved:
+  the published 1.0.7 wheels were built against 47.0.0, not the 49.0.0 the lockfile claimed.
+  Both now pin 49.0.0, so this is the first release whose wheels actually contain it
+  ([#293](https://github.com/trailofbits/rfc3161-client/pull/293))
 
 ## [1.0.7] - 2026-07-07
 
@@ -167,7 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 This is the first alpha release of `rfc3161-client`.
 
-[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/trailofbits/rfc3161-client/compare/v1.0.4...v1.0.5
