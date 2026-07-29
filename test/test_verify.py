@@ -9,7 +9,7 @@ import pytest
 from cryptography.hazmat.primitives import hashes
 from pytest import MonkeyPatch
 
-import rfc3161_client
+import rfc3161_client._rust
 from rfc3161_client._rust import parse_timestamp_request
 from rfc3161_client.base import decode_timestamp_response
 from rfc3161_client.errors import VerificationError
@@ -242,7 +242,7 @@ class TestVerifierPrivate:
         self, verifier: Verifier, ts_response: TimeStampResponse
     ) -> None:
         verifier = cast("_Verifier", verifier)
-        verifier._tsa_certificate = "fake-certificate"  # type: ignore[assignment]
+        verifier._tsa_certificate = "fake-certificate"  # ty: ignore[invalid-assignment]
         with pytest.raises(VerificationError, match="Embedded certificate"):
             verifier._verify_leaf_certs(tsp_response=ts_response)
 
@@ -251,7 +251,7 @@ class TestVerifierPrivate:
     ) -> None:
         verifier = cast("_Verifier", verifier)
         monkeypatch.setattr(
-            rfc3161_client._rust.SignedData,  # ty: ignore[possibly-missing-attribute]
+            rfc3161_client._rust.SignedData,
             "certificates",
             [],
         )
