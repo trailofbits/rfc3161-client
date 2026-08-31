@@ -72,7 +72,7 @@ jobs:
       - name: Install python
         run: uv python install ${{ matrix.python }}
 
-      - uses: dawidd6/action-download-artifact@57aa996fc1713cc1579039614f4645a7f4841fd4 # v23
+      - uses: dawidd6/action-download-artifact@d63b86af1b34672e53c440b1b83979861906bad7 # v24
         with:
           repo: pyca/infra
           workflow: build-windows-openssl.yml
@@ -101,6 +101,6 @@ jobs:
 
     steps:
       - name: check test jobs
-        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
         with:
           jobs: ${{ toJSON(needs) }}
