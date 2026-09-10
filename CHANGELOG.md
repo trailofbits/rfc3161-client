@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a bug where the certificates embedded in a timestamp token were treated as
+  trusted when verifying that token ([#todo]())
+
 ## [1.0.8] - 2026-07-29
 
 ### Changed
