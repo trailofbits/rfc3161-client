@@ -1,6 +1,6 @@
 [project]
 name = "rfc3161-client"
-requires-python = ">=3.9"
+requires-python = ">=3.9.2"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Rust",
@@ -17,7 +17,7 @@ version = "1.0.8"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [{ name = "Trail of Bits", email = "opensource@trailofbits.com" }]
-dependencies = ["cryptography>=43"]
+dependencies = ["cryptography>=48.0.1"]
 
 [dependency-groups]
 doc = []
