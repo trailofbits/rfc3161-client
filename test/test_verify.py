@@ -7,6 +7,7 @@ import cryptography.x509
 import pretend
 import pytest
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
 from pytest import MonkeyPatch
 
 import rfc3161_client._rust
@@ -190,6 +191,28 @@ class TestVerifierBuilder:
 
 
 class TestVerifierPrivate:
+    def test_verify_tsr_with_chains_only_trusts_configured_certificates(
+        self,
+        ts_response: TimeStampResponse,
+        certificates: list[cryptography.x509.Certificate],
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        """Embedded certificates must not be added to the trust store."""
+        verifier = cast(
+            "_Verifier", VerifierBuilder().add_root_certificate(certificates[-1]).build()
+        )
+        verify_signed_data = pretend.call_recorder(lambda *args: None)
+        monkeypatch.setattr(verifier, "_verify_signed_data", verify_signed_data)
+
+        assert verifier._verify_tsr_with_chains(ts_response) is True
+        assert verify_signed_data.calls == [
+            pretend.call(
+                ts_response.time_stamp_token(),
+                ts_response.tst_info.gen_time,
+                {certificates[-1].public_bytes(Encoding.DER)},
+            )
+        ]
+
     def test_verify_tsr_with_chains(
         self, ts_response: TimeStampResponse, verifier: Verifier
     ) -> None:
@@ -458,6 +481,45 @@ class TestVerifierPublic:
         digest.update(b"hello")
         message = digest.finalize()
         assert verifier.verify(ts_response, message) is True
+
+
+@pytest.mark.parametrize("tsa_path", ["test_tsa_full_chain"], indirect=True)
+class TestVerifierEmbeddedRoot:
+    @pytest.fixture
+    def embedded_root(
+        self,
+        certificates: list[cryptography.x509.Certificate],
+        ts_response: TimeStampResponse,
+    ) -> cryptography.x509.Certificate:
+        """Require a complete embedded chain for the trust-anchor regression tests."""
+        root = certificates[-1]
+        root.verify_directly_issued_by(root)
+        for certificate in certificates:
+            assert certificate.public_bytes(Encoding.DER) in ts_response.signed_data.certificates
+        return root
+
+    def test_verify_message_succeeds_with_configured_root(
+        self,
+        ts_response: TimeStampResponse,
+        embedded_root: cryptography.x509.Certificate,
+    ) -> None:
+        verifier = VerifierBuilder().add_root_certificate(embedded_root).build()
+
+        assert verifier.verify_message(ts_response, b"hello") is True
+
+    def test_verify_message_rejects_unrelated_root(
+        self,
+        ts_response: TimeStampResponse,
+        embedded_root: cryptography.x509.Certificate,
+    ) -> None:
+        """An embedded root must not establish trust (GHSA-87gx-4x38-2j9q)."""
+        cert_path = _FIXTURE / "test_tsa" / "ts_chain.pem"
+        unrelated_root = cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())[-1]
+        assert unrelated_root != embedded_root
+        verifier = VerifierBuilder().add_root_certificate(unrelated_root).build()
+
+        with pytest.raises(VerificationError, match="Error while verifying certificates"):
+            verifier.verify_message(ts_response, b"hello")
 
 
 def test_verify_succeeds_when_leaf_cert_is_not_first() -> None:

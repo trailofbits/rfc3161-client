@@ -330,8 +330,6 @@ class _Verifier(Verifier):
             raise VerificationError(msg)
 
         verification_certificate: set[bytes] = set()
-        if signed_data.certificates:
-            verification_certificate.update(signed_data.certificates)
 
         if self._tsa_certificate:
             verification_certificate.add(self._tsa_certificate.public_bytes(Encoding.DER))
