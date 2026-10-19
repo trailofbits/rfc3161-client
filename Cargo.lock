@@ -97,8 +97,8 @@ dependencies = [
 
 [[package]]
 name = "cryptography-x509"
-version = "0.50.1"
-source = "git+https://github.com/pyca/cryptography.git?tag=50.0.1#ffde75a2b594822c740a2e4748b56c00548302bf"
+version = "0.50.2"
+source = "git+https://github.com/pyca/cryptography.git?tag=50.0.2#4dda5c7fe4ae71b8925f2551910a0ef959df9c7a"
 dependencies = [
  "asn1",
 ]
