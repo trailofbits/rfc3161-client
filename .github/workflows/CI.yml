@@ -39,7 +39,11 @@ jobs:
           path: dist/rfc3161_client*
 
   linux:
-    runs-on: ubuntu-latest
+    # Ubuntu 26.04's Docker seccomp profile blocks socketcall(2), breaking
+    # networking in 32-bit glibc containers. Keep x86 on 24.04 until fixed:
+    # https://github.com/actions/runner-images/issues/14790
+    # https://github.com/PyO3/maturin-action/issues/484
+    runs-on: ${{ matrix.platform.target == 'x86' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     strategy:
       matrix:
         platform:
