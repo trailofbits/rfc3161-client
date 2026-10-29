@@ -26,6 +26,12 @@ TSA_AUTHORITIES = [
     "sigstage",
 ]
 
+# The response in each TSA directory that answers request.der (sha512 of b"hello").
+# Defaults to "response.tsr".
+TSA_RESPONSE_FILES = {
+    "sigstage": "response-sha512.tsr",
+}
+
 
 @pytest.fixture(params=TSA_AUTHORITIES)
 def tsa_path(request: pytest.FixtureRequest) -> Path:
@@ -41,8 +47,6 @@ def certificates(tsa_path: Path) -> list[cryptography.x509.Certificate]:
     Load certificates for the current TSA provider.
     """
     cert_path = tsa_path / "ts_chain.pem"
-    if not cert_path.exists():
-        pytest.skip(f"Certificates not found for {tsa_path}")
     return cryptography.x509.load_pem_x509_certificates(cert_path.read_bytes())
 
 
@@ -52,8 +56,6 @@ def ts_request(tsa_path: Path) -> TimeStampRequest:
     Load timestamp request for the current TSA provider.
     """
     request_path = tsa_path / "request.der"
-    if not request_path.exists():
-        pytest.skip(f"Request file not found for {tsa_path}")
     return parse_timestamp_request(request_path.read_bytes())
 
 
@@ -62,9 +64,7 @@ def ts_response(tsa_path: Path) -> TimeStampResponse:
     """
     Load timestamp response for the current TSA provider.
     """
-    response_path = tsa_path / "response.tsr"
-    if not response_path.exists():
-        pytest.skip(f"Response file not found for {tsa_path}")
+    response_path = tsa_path / TSA_RESPONSE_FILES.get(tsa_path.name, "response.tsr")
     return decode_timestamp_response(response_path.read_bytes())
 
 
@@ -76,9 +76,6 @@ def ts_response_by_filename(request: pytest.FixtureRequest, tsa_path: Path) -> T
     filename = request.param
 
     response_path = tsa_path / filename
-    if not response_path.exists():
-        pytest.skip(f"Response file not found: {response_path}")
-
     return decode_timestamp_response(response_path.read_bytes())
 
 
@@ -442,6 +439,8 @@ class TestVerifierPrivate:
 
     ts_response_files = ["response-sha256.tsr", "response-sha384.tsr", "response-sha512.tsr"]
 
+    # Only the sigstage fixtures include a response for each supported hash algorithm.
+    @pytest.mark.parametrize("tsa_path", ["sigstage"], indirect=True)
     @pytest.mark.parametrize("ts_response_by_filename", ts_response_files, indirect=True)
     def test_verify_message_with_algo(
         self,
