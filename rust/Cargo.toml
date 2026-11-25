@@ -15,7 +15,6 @@ tsp-asn1 = { path = "tsp-asn1" }
 pyo3 = { version = "0.30.1", features = ["abi3"] }
 asn1.workspace = true
 self_cell = "1"
-hex.workspace = true
 sha2 = "0.11.0"
 rand = "0.10.0"
 cryptography-x509.workspace = true
@@ -23,6 +22,9 @@ openssl = { version = "0.10.80", features = ["vendored"] }
 
 [build-dependencies]
 pyo3-build-config = { version = "0.30.1", features = ["resolve-config"] }
+
+[dev-dependencies]
+hex.workspace = true
 
 [features]
 extension-module = ["pyo3/extension-module"]
